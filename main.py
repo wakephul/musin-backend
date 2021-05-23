@@ -1,8 +1,12 @@
 import sys
 from src.connection.connect import create_connection, close_connection
+from src.queries import spikes_queries
 from src.file_handling import file_handling
 
 if __name__ == '__main__':
+
+    # file: read Brian params from json
+    brian_params = file_handling.read_json('data/network_params/brian_nest_params.json')
 
     # connection: connect to database to create table if needed
     # sys.argv[1] sets whether or not spikes table has to be created
@@ -11,14 +15,7 @@ if __name__ == '__main__':
         try:
             connection = create_connection('data/db/database.db')
             if connection:
-                spikes_table_sql = " \
-                                        CREATE TABLE IF NOT EXISTS spikes ( \
-                                        spikeID integer PRIMARY KEY AUTOINCREMENT, \
-                                        filename varchar(255) NOT NULL, \
-                                        updated boolean NOT NULL, \
-                                        creation timestamp DEFAULT CURRENT_TIMESTAMP \
-                                        ); \
-                                    "
+                spikes_table_sql = spikes_queries.create_spikes_table()
                 create_table(connection, spikes_table_sql)
                 close_connection(connection)
                 print("Spikes table created")
@@ -31,11 +28,7 @@ if __name__ == '__main__':
     try:
         connection = create_connection('data/db/database.db')
         if connection:
-            select_spikes_sql = " \
-                                SELECT * FROM spikes \
-                                WHERE updated = 1 \
-                                ORDER BY creation ASC \
-                            "
+            select_spikes_sql = spikes_queries.select_existing_spikes()
             spikes_rows = select_rows(connection, select_spikes_sql)
             spikes = spikes_rows[-1][1]
             close_connection(connection)
@@ -67,11 +60,7 @@ if __name__ == '__main__':
         try:
             connection = create_connection('data/db/database.db')
             if connection:
-                save_spike_sql = " \
-                                    INSERT INTO spikes(filename, updated) \
-                                    VALUES(?,?) \
-                                    ; \
-                                "
+                save_spike_sql = spikes_queries.insert_new_spikes()
                 values_to_insert = (spikes_file_name, 1)
                 insert_row(connection, save_spike_sql, values_to_insert)
                 close_connection(connection)
@@ -95,9 +84,10 @@ if __name__ == '__main__':
     # # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
     # # questo lo facciamo in fase di importazione del json nella rete.
 
-    # file: read Brian params from json
-    brian_params = file_handling.read_json('data/network_params/brian_nest_params.json')
-    brian_params['imported_stimulus_A'] = spike_trains
+    # brian_params['imported_stimulus_A'] = spike_trains
+    import nest
+    N_group_A = int(brian_params['N_Excit'] * brian_params['f_Subpop_size']) # size of the excitatory subpopulation sensitive to stimulus A
+    brian_params['imported_stimulus_A'] = nest.Create('poisson_generator', N_group_A)
     print("params", brian_params)
 
     brian_nest.run(brian_params)

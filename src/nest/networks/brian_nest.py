@@ -114,7 +114,7 @@ def sim_decision_making_network(data):
 	tau_NMDA_x = 2.0 # (ms)
 	alpha_NMDA = 0.5 # (kHz)
 
-	"check which conductances of the paper go with each of the code conductances"
+	# "check which conductances of the paper go with each of the code conductances"
 
 	### projections from the external population
 	g_AMPA_extern2inhib = 1.62 # (nS)

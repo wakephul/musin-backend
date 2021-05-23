@@ -39,6 +39,10 @@ def poisson_spikes_generator(rate, start, stop):
                         )
     return spikes
 
+def poisson_spikes_generator_brian(size):
+    spikes = nest.Create('poisson_generator', size)
+    return spikes
+
 
 # from functions.file_handling import file_handling
 # file_handling.ndarray_to_json(spikes, 'spikes/spikes_')
