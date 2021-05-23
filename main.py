@@ -4,16 +4,19 @@ from src.queries import spikes_queries
 from src.file_handling import file_handling
 
 if __name__ == '__main__':
+    
+    # CONFIGURATION FILE
+    config = file_handling.read_json('data/config/config.json')
 
     # file: read Brian params from json
-    brian_params = file_handling.read_json('data/network_params/brian_nest_params.json')
+    brian_params = file_handling.read_json(config['networks']['brian_nest_params'])
 
     # connection: connect to database to create table if needed
     # sys.argv[1] sets whether or not spikes table has to be created
     if len(sys.argv) > 1 and sys.argv[1] == 'true':
         from src.connection.create import create_table
         try:
-            connection = create_connection('data/db/database.db')
+            connection = create_connection(config['app']['database'])
             if connection:
                 spikes_table_sql = spikes_queries.create_spikes_table()
                 create_table(connection, spikes_table_sql)
@@ -26,7 +29,7 @@ if __name__ == '__main__':
     from src.connection.select import select_rows
     spikes = False
     try:
-        connection = create_connection('data/db/database.db')
+        connection = create_connection(config['app']['database'])
         if connection:
             select_spikes_sql = spikes_queries.select_existing_spikes()
             spikes_rows = select_rows(connection, select_spikes_sql)
@@ -58,7 +61,7 @@ if __name__ == '__main__':
         # connection
         from src.connection.insert import insert_row
         try:
-            connection = create_connection('data/db/database.db')
+            connection = create_connection(config['app']['database'])
             if connection:
                 save_spike_sql = spikes_queries.insert_new_spikes()
                 values_to_insert = (spikes_file_name, 1)

@@ -1,0 +1,8 @@
+{
+    "app": {
+        "database": "data/db/database.db"
+    },
+    "networks": {
+        "brian_nest_params": "data/network_params/brian_nest_params.json"
+    }
+}
