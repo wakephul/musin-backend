@@ -1,5 +1,6 @@
 import sys
 from src.connection.connect import create_connection, close_connection
+from src.file_handling import file_handling
 
 if __name__ == '__main__':
 
@@ -36,7 +37,7 @@ if __name__ == '__main__':
                                 ORDER BY creation ASC \
                             "
             spikes_rows = select_rows(connection, select_spikes_sql)
-            spikes = spikes_rows[0][1]
+            spikes = spikes_rows[-1][1]
             close_connection(connection)
     except:
         print("Error while selecting spikes from db")
@@ -59,7 +60,6 @@ if __name__ == '__main__':
         print(spikes)
 
         # file: save spikes in json
-        from src.file_handling import file_handling
         spikes_file_name = file_handling.save_to_file(spikes, 'spikes/spikes_')
 
         # connection
@@ -84,7 +84,6 @@ if __name__ == '__main__':
         print('Spikes already exist:')
         print(spikes)
         # file: open spikes file
-        from src.file_handling import file_handling
         spike_trains = file_handling.file_open(spikes)
     # nest: connect spikes to input neurons
 
@@ -95,7 +94,13 @@ if __name__ == '__main__':
     # #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
     # # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
     # # questo lo facciamo in fase di importazione del json nella rete.
-    brian_nest.run(spike_trains)
+
+    # file: read Brian params from json
+    brian_params = file_handling.read_json('data/network_params/brian_nest_params.json')
+    brian_params['imported_stimulus_A'] = spike_trains
+    print("params", brian_params)
+
+    brian_nest.run(brian_params)
 
     # input_neurons = nest.Create('iaf_psc_exp', len(spike_trains))
     # print(input_neurons)

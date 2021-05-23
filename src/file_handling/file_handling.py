@@ -30,6 +30,10 @@ def dict_to_json(dictionary, file_name):
 def dump_to_json(obj, file_path):
     json.dump(obj, codecs.open(file_path, 'w+', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4) ### this saves the array in .json format
 
+def read_json(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
 def save_to_file(object, file_name):
     file_path = 'data/' + file_name + '{}.p'.format(int(time.time()))
 

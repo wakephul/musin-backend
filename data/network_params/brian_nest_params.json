@@ -1,0 +1,17 @@
+{
+    "N_Excit": 341, 
+    "N_Inhib": 85, 
+    "weight_scaling_factor": 6.0, 
+    "t_stimulus_start": 0, 
+    "t_stimulus_duration": 100.0, 
+    "coherence_level": 0.90, 
+    "stimulus_update_interval": 30, 
+    "mu0_mean_stimulus_Hz": 500.0, 
+    "stimulus_std_Hz": 20.0,
+    "N_extern": 1000, 
+    "firing_rate_extern": 9.8, 
+    "w_pos": 2.0, 
+    "f_Subpop_size": 0.25, 
+    "max_sim_time": 100.0, 
+    "monitored_subset_size": 50
+}

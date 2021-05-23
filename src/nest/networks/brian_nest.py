@@ -30,23 +30,25 @@ dt_rec = 1.
 nest.SetKernelStatus({"resolution": dt, "print_time": True, "overwrite_files": True})
 t0 = nest.GetKernelStatus('time')
 
-def sim_decision_making_network(N_Excit=384, # total number of neurons in the excitatory population
-                                N_Inhib=96, # nr of neurons in the inhibitory populations
-                                weight_scaling_factor=5.33, # When increasing the number of neurons by 2, the weights should be scaled down by 1/2
-                                t_stimulus_start=100, # time when the stimulation starts
-                                t_stimulus_duration=9999, # duration of the stimulation
-                                coherence_level=0, # coherence of the stimulus. Difference in mean between the PoissonGroups "left" stimulus and "right" stimulus
-                                stimulus_update_interval=30, # the mean of the stimulating PoissonGroups is re-sampled at this interval
-                                mu0_mean_stimulus_Hz=160., # maximum mean firing rate of the stimulus if c=+1 or c=-1. Each neuron in the populations "Left" and "Right" receives an independent poisson input.
-                                stimulus_std_Hz=20., # std deviation of the stimulating PoissonGroups.
-                                N_extern=1000, # nr of neurons in the stimulus independent poisson background population
-                                firing_rate_extern=9.8, # firing rate of the stimulus independent poisson background population
-                                w_pos=1.90, # Scaling (strengthening) of the recurrent weights within the subpopulations "Left" and "Right"
-                                f_Subpop_size=0.25, # fraction of the neurons in the subpopulations "Left" and "Right". #left = #right = int(f_Subpop_size*N_Excit).
-                                max_sim_time=1000., # simulated time.
-                                stop_condition_rate=None, # An optional stopping criteria: If not None, the simulation stops if the firing rate of either subpopulation "Left" or "Right" is above stop_condition_rate.
-                                monitored_subset_size=512, # max nr of neurons for which a state monitor is registered.
-								imported_stimulus_A=None):
+def sim_decision_making_network(data):
+
+	N_Excit=data.get('N_Excit', 384) # total number of neurons in the excitatory population
+	N_Inhib=data.get('N_Inhib', 96) # nr of neurons in the inhibitory populations
+	weight_scaling_factor=data.get('weight_scaling_factor', 5.33) # When increasing the number of neurons by 2, the weights should be scaled down by 1/2
+	t_stimulus_start=data.get('t_stimulus_start', 100) # time when the stimulation starts
+	t_stimulus_duration=data.get('t_stimulus_duration', 9999) # duration of the stimulation
+	coherence_level=data.get('coherence_level', 0) # coherence of the stimulus. Difference in mean between the PoissonGroups "left" stimulus and "right" stimulus
+	stimulus_update_interval=data.get('stimulus_update_interval', 30) # the mean of the stimulating PoissonGroups is re-sampled at this interval
+	mu0_mean_stimulus_Hz=data.get('mu0_mean_stimulus_Hz', 160.) # maximum mean firing rate of the stimulus if c=+1 or c=-1. Each neuron in the populations "Left" and "Right" receives an independent poisson input.
+	stimulus_std_Hz=data.get('stimulus_std_Hz', 20.) # std deviation of the stimulating PoissonGroups.
+	N_extern=data.get('N_extern', 1000) # nr of neurons in the stimulus independent poisson background population
+	firing_rate_extern=data.get('firing_rate_extern', 9.8) # firing rate of the stimulus independent poisson background population
+	w_pos=data.get('w_pos', 1.90) # Scaling (strengthening) of the recurrent weights within the subpopulations "Left" and "Right"
+	f_Subpop_size=data.get('f_Subpop_size', 0.25) # fraction of the neurons in the subpopulations "Left" and "Right". #left = #right = int(f_Subpop_size*N_Excit).
+	max_sim_time=data.get('max_sim_time', 1000.) # simulated time.
+	stop_condition_rate=data.get('stop_condition_rate', None) # An optional stopping criteria: If not None, the simulation stops if the firing rate of either subpopulation "Left" or "Right" is above stop_condition_rate.
+	monitored_subset_size=data.get('monitored_subset_size', 512) # max nr of neurons for which a state monitor is registered.
+	imported_stimulus_A=data.get('imported_stimulus_A', None)
 
 	"""
 	Returns:
@@ -474,35 +476,13 @@ def print_version():
 
 ###############################################################################################
 
-def getting_started(
-	imported_stimulus_A=None
-):
+def getting_started(data):
 
-	"""
-	A simple example to get started.
-	Returns:
-	"""
-	stim_start = 0.
-	stim_duration = 100.
-	max_sim_time = 100. 
-	print("stimulus start {}, stimulus end: {}".format(stim_start, stim_start+stim_duration))
+	print(data)
+
+	print("stimulus start {}, stimulus end: {}".format(data['t_stimulus_start'], data['t_stimulus_start']+data['t_stimulus_duration']))
 	
-	results = sim_decision_making_network(N_Excit=341, 
-										N_Inhib=85, 
-										weight_scaling_factor=6.0, 
-										t_stimulus_start=stim_start, 
-										t_stimulus_duration=stim_duration, 
-										coherence_level=+0.90, 
-										stimulus_update_interval=30, 
-										mu0_mean_stimulus_Hz=500., 
-										stimulus_std_Hz=20.,
-										N_extern=1000, 
-										firing_rate_extern=9.8, 
-										w_pos=2.0, 
-										f_Subpop_size=0.25, 
-										max_sim_time=max_sim_time, 
-										monitored_subset_size=50,
-										imported_stimulus_A=imported_stimulus_A)
+	results = sim_decision_making_network(data)
 	
 	"""###plotting with module packages
 	nest.raster_plot.from_device(results["spike_monitor_A"], hist=True)
@@ -537,8 +517,8 @@ def getting_started(
 	
 	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
 	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
-	rate_A = events_A / max_sim_time * 1000.0 / len(results["idx_monitored_neurons_B"])
-	rate_B = events_B / max_sim_time * 1000.0 / len(results["idx_monitored_neurons_B"])
+	rate_A = events_A / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
+	rate_B = events_B / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
 
 	print("Population A rate   : %.2f Hz" % rate_A)
 	print("Population B rate   : %.2f Hz" % rate_B)
@@ -565,7 +545,7 @@ def getting_started(
 	ax_raster.set_ylabel("neuron #")
 	ax_raster.set_title("Raster Plot", fontsize=10)
 	
-	t = np.arange(0., max_sim_time, dt_rec)
+	t = np.arange(0., data['max_sim_time'], dt_rec)
 	A_N = np.ones((t.size, 1)) * np.nan
 	trmA = rmA["events"]["times"]
 	trmA = trmA * dt - t0
@@ -605,7 +585,7 @@ def getting_started(
 	ax_raster.set_ylabel("neuron #")
 	ax_raster.set_title("Raster Plot", fontsize=10)
 
-	t = np.arange(0., max_sim_time, dt_rec)
+	t = np.arange(0., data['max_sim_time'], dt_rec)
 	A_N = np.ones((t.size, 1)) * np.nan
 	trmB = rmB["events"]["times"]
 	trmB = trmB * dt - t0
@@ -630,6 +610,6 @@ def getting_started(
 # if __name__ == "__main__":
 # 	getting_started()
 
-def run(imported_stimulus_A=None):
-	getting_started(imported_stimulus_A)
+def run(data):
+	getting_started(data)
 
