@@ -54,6 +54,8 @@ def sim_decision_making_network(N_Excit=384, # total number of neurons in the ex
         	"rate_monitor_A", "spike_monitor_A", "voltage_monitor_A", "idx_monitored_neurons_A", 			"rate_monitor_B","spike_monitor_B", "voltage_monitor_B", "idx_monitored_neurons_B", 			"rate_monitor_Z","spike_monitor_Z","voltage_monitor_Z", "idx_monitored_neurons_Z", 			"rate_monitor_inhib","spike_monitor_inhib","voltage_monitor_inhib", "idx_monitored_neurons_inhib"
    	"""
 
+	print("imported stimulus A:", imported_stimulus_A)
+
 	startbuild = time.time()
 
 	print("simulating {} neurons. Start: {}".format(N_Excit + N_Inhib, time.ctime()))
@@ -317,7 +319,11 @@ def sim_decision_making_network(N_Excit=384, # total number of neurons in the ex
 
 	# Define the stimulus: two PoissonInput with time-dependent mean.
 
-	poissonStimulus2A = nest.Create("poisson_generator", N_group_A)
+	if (imported_stimulus_A):
+		poissonStimulus2A = imported_stimulus_A
+	else:
+		poissonStimulus2A = nest.Create("poisson_generator", N_group_A)
+	print ("STIMOLO:", poissonStimulus2A)
 	poissonStimulus2B = nest.Create("poisson_generator", N_group_B)
 	nest.CopyModel("static_synapse", "poissonStimulus", {"weight": w_AMPA_ext2excit})
 	nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
@@ -621,7 +627,9 @@ def getting_started(
 
 	plt.show()
 
-if __name__ == "__main__":
-	getting_started()
+# if __name__ == "__main__":
+# 	getting_started()
 
+def run(imported_stimulus_A=None):
+	getting_started(imported_stimulus_A)
 
