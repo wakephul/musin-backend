@@ -1,4 +1,5 @@
 import sys
+from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_brian
 from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries
 from src.file_handling import file_handling
@@ -51,7 +52,9 @@ if __name__ == '__main__':
 
         # TODO: temporarily commented because of compatibility with brian_nest
         # spikes = poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, trial_duration)
-        spikes = poisson_spikes_generator(rate, start, stop)
+        # spikes = poisson_spikes_generator(rate, start, stop)
+        N_group_A = int(brian_params['N_Excit'] * brian_params['f_Subpop_size']) # size of the excitatory subpopulation sensitive to stimulus A
+        spikes = poisson_spikes_generator_brian(N_group_A)
         print("Spikes have been generated:")
         print(spikes)
 
@@ -87,10 +90,7 @@ if __name__ == '__main__':
     # # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
     # # questo lo facciamo in fase di importazione del json nella rete.
 
-    # brian_params['imported_stimulus_A'] = spike_trains
-    import nest
-    N_group_A = int(brian_params['N_Excit'] * brian_params['f_Subpop_size']) # size of the excitatory subpopulation sensitive to stimulus A
-    brian_params['imported_stimulus_A'] = nest.Create('poisson_generator', N_group_A)
+    brian_params['imported_stimulus_A'] = spike_trains
     print("params", brian_params)
 
     brian_nest.run(brian_params)
