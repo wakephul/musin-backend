@@ -49,6 +49,7 @@ def sim_decision_making_network(data):
 	stop_condition_rate=data.get('stop_condition_rate', None) # An optional stopping criteria: If not None, the simulation stops if the firing rate of either subpopulation "Left" or "Right" is above stop_condition_rate.
 	monitored_subset_size=data.get('monitored_subset_size', 512) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
+	imported_stimulus_B=data.get('imported_stimulus_B', None)
 
 	"""
 	Returns:
@@ -321,12 +322,11 @@ def sim_decision_making_network(data):
 
 	# Define the stimulus: two PoissonInput with time-dependent mean.
 
-	if (imported_stimulus_A):
-		poissonStimulus2A = imported_stimulus_A
-	else:
-		poissonStimulus2A = nest.Create("poisson_generator", N_group_A)
-	print ("STIMOLO:", poissonStimulus2A)
+	poissonStimulus2A = imported_stimulus_A if imported_stimulus_A else nest.Create("poisson_generator", N_group_A)
 	poissonStimulus2B = nest.Create("poisson_generator", N_group_B)
+	print ("STIMOLO A:", poissonStimulus2A)
+	print ("STIMOLO B:", poissonStimulus2B)
+
 	nest.CopyModel("static_synapse", "poissonStimulus", {"weight": w_AMPA_ext2excit})
 	nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
 	nest.Connect(poissonStimulus2B, excit_pop_B, 'one_to_one', syn_spec="poissonStimulus")

@@ -53,10 +53,13 @@ if __name__ == '__main__':
         # TODO: temporarily commented because of compatibility with brian_nest
         # spikes = poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, trial_duration)
         # spikes = poisson_spikes_generator(rate, start, stop)
-        N_group_A = int(brian_params['N_Excit'] * brian_params['f_Subpop_size']) # size of the excitatory subpopulation sensitive to stimulus A
-        spikes = poisson_spikes_generator_brian(N_group_A)
-        print("Spikes have been generated:")
-        print(spikes)
+        
+        # N_group_A = int(brian_params['N_Excit'] * brian_params['f_Subpop_size']) # size of the excitatory subpopulation sensitive to stimulus A
+        # spikes = poisson_spikes_generator_brian(N_group_A)
+        # print("Spikes have been generated:")
+        # print(spikes)
+
+        spikes = (1427, 1428, 1429, 1430, 1431, 1432, 1433, 1434, 1435, 1436, 1437, 1438, 1439, 1440, 1441, 1442, 1443, 1444, 1445, 1446, 1447, 1448, 1449, 1450, 1451, 1452, 1453, 1454, 1455, 1456, 1457, 1458, 1459, 1460, 1461, 1462, 1463, 1464, 1465, 1466, 1467, 1468, 1469, 1470, 1471, 1472, 1473, 1474, 1475, 1476, 1477, 1478, 1479, 1480, 1481, 1482, 1483, 1484, 1485, 1486, 1487, 1488, 1489, 1490, 1491, 1492, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511)
 
         # file: save spikes in json
         spikes_file_name = file_handling.save_to_file(spikes, 'spikes/spikes_')
