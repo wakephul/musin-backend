@@ -14,8 +14,9 @@
 # sp.plot_spikes(spikes)
 
 import nest
+from collections import defaultdict
 
-def poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, trial_duration):
+def poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration):
     spikes = nest.Create('poisson_generator',
                         params={'rate': rate,
                                 'start' : start,
@@ -27,22 +28,21 @@ def poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, tri
     nest.Connect(spikes, parrot_neurons, 'all_to_all')
     nest.Connect(parrot_neurons, spike_detector, 'all_to_all')
     nest.Simulate(trial_duration)
-    events = nest.GetStatus(spike_detector)[0]['events']
-    return events
+    events = nest.GetStatus(spike_detector ,keys="events")[0]
+    # ritornare i tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
 
-def poisson_spikes_generator(rate, start, stop):
-    spikes = nest.Create('poisson_generator',
-                        params={'rate': rate,
-                                'start' : start,
-                                'stop' : stop
-                                }
-                        )
-    return spikes
+    ordered_events = defaultdict(list)
+    for sender, time in zip(events['senders'], events['times']):
+        (ordered_events[str(sender)]).append(time)
+
+    return dict(ordered_events)
 
 def poisson_spikes_generator_brian(size):
     spikes = nest.Create('poisson_generator', size)
     return spikes
 
-
-# from functions.file_handling import file_handling
-# file_handling.ndarray_to_json(spikes, 'spikes/spikes_')
+#rate = 40.0
+#start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
+#number_of_neurons = 100
+#trial_duration = stop = 1000.0 # trial duration in ms
+#poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, trial_duration)

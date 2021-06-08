@@ -19,12 +19,8 @@ def ndarray_to_json(list_of_lists, file_name = ''):
 
 def dict_to_json(dictionary, file_name):
     file_path = 'data/' + file_name + '{}.json'.format(int(time.time()))
-    newdict = dict()
-    for key, value in dictionary.items():
-        newdict[key] = value.tolist() #if values are ndarrays
 
-    json_object = json.dumps(newdict, indent = 4) 
-    dump_to_json(newdict, file_path)
+    dump_to_json(dictionary, file_path)
     return file_path
 
 def dump_to_json(obj, file_path):

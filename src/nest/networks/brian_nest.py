@@ -323,7 +323,10 @@ def sim_decision_making_network(data):
 	# Define the stimulus: two PoissonInput with time-dependent mean.
 
 	poissonStimulus2A = imported_stimulus_A if imported_stimulus_A else nest.Create("poisson_generator", N_group_A)
-	poissonStimulus2B = nest.Create("poisson_generator", N_group_B)
+	poissonStimulus2B = imported_stimulus_B if imported_stimulus_B else nest.Create("poisson_generator", N_group_B)
+	# nota: queste sono delle classi di nest, non delle semplici liste!
+	# devo fare in modo che gli imported_stimuli siano degli spike generators
+
 	print ("STIMOLO A:", poissonStimulus2A)
 	print ("STIMOLO B:", poissonStimulus2B)
 
@@ -333,7 +336,7 @@ def sim_decision_making_network(data):
 
 	print("Stimulus created and connected")
 
-	def update_poisson_stimulus(t):
+	def update_poisson_stimulus(t): # questa non ci servirà perché sappiamo già se lo stimolo è dx o sx
 		if t >= t_stimulus_start and t < t_stimulus_end:
 			offset_A = mu0_mean_stimulus_Hz * (0.5 + 0.5 * coherence_level)
 			offset_B = mu0_mean_stimulus_Hz * (0.5 - 0.5 * coherence_level)
