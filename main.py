@@ -2,9 +2,10 @@ import sys
 from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries
 from src.file_handling import file_handling
+from src.nest.reset.reset import nest_reset
 
 if __name__ == '__main__':
-    
+    nest_reset()
     # CONFIGURATION FILE
     config = file_handling.read_json('data/config/config.json')
 
@@ -43,17 +44,23 @@ if __name__ == '__main__':
     if not spikes or (len(sys.argv) > 2 and sys.argv[2] == 'true'):
 
         # nest: generate spikes
-        from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot
+        from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
         rate = 40.0
         start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
         number_of_neurons = 100
         trial_duration = stop = 1000.0 # trial duration in ms
 
-        spikes = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
+        spike_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
 
         # questo deve essere letto da N spike generators (tanti quanti i parrot neurons), il cui output diventerà l'input della rete
         # ciascuno spike generator avrà la sua lista di spike times 
         # con un nest.setStatus possiamo far generare a ciascuno spike generator gli spikes con i tempi corretti
+        nest_reset()
+        
+        spikes = spike_generator_from_times(spike_times)
+
+        import nest
+        spike_status = nest.GetStatus(spikes)
 
         # spikes = poisson_spikes_generator(rate, start, stop)
         
@@ -65,7 +72,7 @@ if __name__ == '__main__':
         # spikes = (1427, 1428, 1429, 1430, 1431, 1432, 1433, 1434, 1435, 1436, 1437, 1438, 1439, 1440, 1441, 1442, 1443, 1444, 1445, 1446, 1447, 1448, 1449, 1450, 1451, 1452, 1453, 1454, 1455, 1456, 1457, 1458, 1459, 1460, 1461, 1462, 1463, 1464, 1465, 1466, 1467, 1468, 1469, 1470, 1471, 1472, 1473, 1474, 1475, 1476, 1477, 1478, 1479, 1480, 1481, 1482, 1483, 1484, 1485, 1486, 1487, 1488, 1489, 1490, 1491, 1492, 1493, 1494, 1495, 1496, 1497, 1498, 1499, 1500, 1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511)
 
         # file: save spikes in json
-        spikes_file_name = file_handling.save_to_file(spikes, 'spikes/spikes_')
+        spikes_file_name = file_handling.save_to_file(spike_times, 'spikes/spikes_')
 
         # connection
         from src.connection.insert import insert_row
@@ -89,7 +96,9 @@ if __name__ == '__main__':
     # nest: connect spikes to input neurons
 
 
-    print(spike_trains)
+    # print(spike_trains)
+
+    # print(nest.GetStatus(spike_trains))
 
     from src.nest.networks import brian_nest
     # #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
@@ -97,6 +106,7 @@ if __name__ == '__main__':
     # # questo lo facciamo in fase di importazione del json nella rete.
 
     brian_params['imported_stimulus_A'] = spike_trains
+    # brian_params['imported_stimulus_B'] = spike_trains
     print("params", brian_params)
 
     brian_nest.run(brian_params)

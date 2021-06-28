@@ -1,6 +1,6 @@
 {
-    "N_Excit": 341, 
-    "N_Inhib": 85, 
+    "N_Excit": 400,
+    "N_Inhib": 100, 
     "weight_scaling_factor": 6.0, 
     "t_stimulus_start": 0, 
     "t_stimulus_duration": 100.0, 

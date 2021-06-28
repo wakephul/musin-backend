@@ -24,10 +24,10 @@ import time
 import nest.raster_plot
 # from nest import voltage_trace
 
-nest.ResetKernel()
+# nest.ResetKernel()
 dt = 0.10
 dt_rec = 1.
-nest.SetKernelStatus({"resolution": dt, "print_time": True, "overwrite_files": True})
+# nest.SetKernelStatus({"resolution": dt, "print_time": True, "overwrite_files": True})
 t0 = nest.GetKernelStatus('time')
 
 def sim_decision_making_network(data):
@@ -225,7 +225,7 @@ def sim_decision_making_network(data):
 ###############################################################################################	
 	
 	### Definition of connections
-
+	print(nest.GetKernelStatus())
 	nest.CopyModel("static_synapse", "noise2pops", {"delay": delay_AMPA})
 	syn_dict_inhib = {"model": "noise2pops", "weight": w_AMPA_ext2inhib}
 	syn_dict_excit = {"model": "noise2pops", "weight": w_AMPA_ext2excit}
@@ -334,6 +334,11 @@ def sim_decision_making_network(data):
 	nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
 	nest.Connect(poissonStimulus2B, excit_pop_B, 'one_to_one', syn_spec="poissonStimulus")
 
+	print (type(poissonStimulus2A))
+	print (type(poissonStimulus2B))
+
+	a = (nest.GetStatus(poissonStimulus2A))
+	b = (nest.GetStatus(poissonStimulus2B))
 	print("Stimulus created and connected")
 
 	def update_poisson_stimulus(t): # questa non ci servirà perché sappiamo già se lo stimolo è dx o sx
@@ -346,8 +351,9 @@ def sim_decision_making_network(data):
 			rate_B = np.random.normal(offset_B, stimulus_std_Hz)
 			rate_B = (max(0., rate_B)) #no negative rate
 
-			nest.SetStatus(poissonStimulus2A, "rate", rate_A)
-			nest.SetStatus(poissonStimulus2B, "rate", rate_B)
+			# had to comment these out because spike generators don't have rates, while poisson generators do
+			# nest.SetStatus(poissonStimulus2A, "rate", rate_A)
+			# nest.SetStatus(poissonStimulus2B, "rate", rate_B)
 			print("stim on. rate_A={}, rate_B={}".format(rate_A, rate_B))
 
 		else:
@@ -410,10 +416,10 @@ def sim_decision_making_network(data):
 
 	print(sim_steps)
 
-	for i, step in enumerate(sim_steps):
-		print("Step number {} of {}".format(i+1, len(sim_steps)))
-		update_poisson_stimulus(step)
-		nest.Simulate(stimulus_update_interval)
+	# for i, step in enumerate(sim_steps):
+	# 	print("Step number {} of {}".format(i+1, len(sim_steps)))
+	# 	update_poisson_stimulus(step)
+	# 	nest.Simulate(stimulus_update_interval)
 
 	"""if stop_condition_rate is None:
 		nest.Simulate(max_sim_time)

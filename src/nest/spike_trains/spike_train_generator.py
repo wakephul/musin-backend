@@ -1,18 +1,3 @@
-# import numpy
-# from neuronpy.graphics import spikeplot
-
-# spikes = []
-# num_neurons = 100
-# num_spikes_per_neuron = 21
-# frequency = 40
-
-# for i in range(neurons):
-#     isi = numpy.random.poisson(frequency, num_spikes_per_neuron)
-#     spikes.append(numpy.cumsum(isi))
-
-# sp = spikeplot.SpikePlot()
-# sp.plot_spikes(spikes)
-
 import nest
 from collections import defaultdict
 
@@ -28,21 +13,31 @@ def poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_
     nest.Connect(spikes, parrot_neurons, 'all_to_all')
     nest.Connect(parrot_neurons, spike_detector, 'all_to_all')
     nest.Simulate(trial_duration)
-    events = nest.GetStatus(spike_detector ,keys="events")[0]
-    # ritornare i tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
+    events = nest.GetStatus(spike_detector, keys="events")[0]
 
     ordered_events = defaultdict(list)
     for sender, time in zip(events['senders'], events['times']):
         (ordered_events[str(sender)]).append(time)
 
-    return dict(ordered_events)
+    return dict(ordered_events) # tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
 
-def poisson_spikes_generator_brian(size):
-    spikes = nest.Create('poisson_generator', size)
-    return spikes
+def spike_generator_from_times(times_dict):
+    import numpy as np
+    #neuron = nest.Create('iaf_cond_alpha')
+    spikes = []
+    for key, value in times_dict.items():
+        spike_times = np.array(value)
+        neuron_spikes = nest.Create('spike_generator',
+                                    params={'spike_times': spike_times}
+                                    )
 
-#rate = 40.0
-#start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
-#number_of_neurons = 100
-#trial_duration = stop = 1000.0 # trial duration in ms
-#poisson_spikes_generator_connected(rate, start, stop, number_of_neurons, trial_duration)
+        # print(neuron_spikes[0])
+        status = nest.GetStatus(neuron_spikes)
+
+        spikes.append(neuron_spikes[0])
+
+        # should I connect them to a neuron?
+        # connected = nest.Connect(neuron_spikes, neuron) # how to make them excitatory or inhibitory?
+        # spikes.append(connected)
+    spikes = np.asarray(spikes)
+    return tuple(spikes)
