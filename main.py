@@ -40,7 +40,8 @@ if __name__ == '__main__':
             spikes_B_rows = select_rows(connection, select_spikes_B_sql)
             spikes_B = spikes_B_rows[-1][1]
             close_connection(connection)
-            print
+            print (spikes_A)
+            print (spikes_B)
     except:
         print("Error while selecting spikes from db")
 
@@ -80,12 +81,11 @@ if __name__ == '__main__':
         try:
             connection = create_connection(config['app']['database'])
             if connection:
-                save_spikes_A_sql = spikes_queries.insert_new_spikes()
-                values_to_insert = (spikes_A_file_name, 1)
-                insert_row(connection, save_spikes_A_sql, values_to_insert)
-                save_spikes_B_sql = spikes_queries.insert_new_spikes()
-                values_to_insert = (spikes_B_file_name, 1)
-                insert_row(connection, save_spikes_B_sql, values_to_insert)
+                save_spikes_sql = spikes_queries.insert_new_spikes()
+                values_to_insert_A = (spikes_A_file_name, 1, 'A')
+                insert_row(connection, save_spikes_sql, values_to_insert_A)
+                values_to_insert_B = (spikes_B_file_name, 1, 'B')
+                insert_row(connection, save_spikes_sql, values_to_insert_B)
                 close_connection(connection)
                 print("Spikes saved to db")
                 spike_trains_A = spikes_A

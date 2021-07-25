@@ -17,7 +17,7 @@
             "request": "launch",
             "program": "${file}",
             "args": [
-                "false",
+                "true",
                 "true"
             ],
             "console": "integratedTerminal"

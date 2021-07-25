@@ -13,13 +13,13 @@ def select_existing_spikes(type):
     return " \
         SELECT * FROM spikes \
         WHERE updated = 1 \
-        AND type = " + type + " \
+        AND type = '" + type + "' \
         ORDER BY creation ASC \
     "
 
 def insert_new_spikes():
     return " \
-        INSERT INTO spikes(filename, updated) \
-        VALUES(?,?) \
+        INSERT INTO spikes(filename, updated, type) \
+        VALUES(?,?,?) \
         ; \
     "
