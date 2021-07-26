@@ -47,10 +47,11 @@ if __name__ == '__main__':
 
     # if spikes don't exist, generate spikes 
     # (--> nest: generate spikes + file: save them in json + connection: save filename in db)
+    from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
+    
     if (not (spikes_A and spikes_B)) or (len(sys.argv) > 2 and sys.argv[2] == 'true'):
 
         # nest: generate spikes
-        from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
         rate = 40.0
         start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
         number_of_neurons = 100
@@ -98,8 +99,10 @@ if __name__ == '__main__':
         print(spikes_A)
         print(spikes_B)
         # file: open spikes file
-        spike_trains_A = file_handling.file_open(spikes_A)
-        spike_trains_B = file_handling.file_open(spikes_B)
+        spikes_A_times = file_handling.file_open(spikes_A)
+        spikes_B_times = file_handling.file_open(spikes_B)
+        spikes_A = spike_generator_from_times(spikes_A_times)
+        spikes_B = spike_generator_from_times(spikes_B_times)
     # nest: connect spikes to input neurons
 
 
@@ -112,8 +115,8 @@ if __name__ == '__main__':
     # # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
     # # questo lo facciamo in fase di importazione del json nella rete.
 
-    brian_params['imported_stimulus_A'] = spike_trains_A
-    brian_params['imported_stimulus_B'] = spike_trains_B
+    brian_params['imported_stimulus_A'] = spikes_A
+    brian_params['imported_stimulus_B'] = spikes_B
     print("params", brian_params)
 
     brian_nest.run(brian_params)
