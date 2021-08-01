@@ -210,8 +210,10 @@ def sim_decision_making_network(data):
 
 	# We use the same postsyn AMPA and NMDA conductances. Adjust the weights coming from different sources:
 
-	w_AMPA_ext2inhib = 0.1 * (g_AMPA_extern2inhib / g_AMPA_excit2inhib)
-	w_AMPA_ext2excit = 0.1 * (g_AMPA_extern2excit / g_AMPA_excit2excit)
+	# w_AMPA_ext2inhib = 0.1 * (g_AMPA_extern2inhib / g_AMPA_excit2inhib)
+	# w_AMPA_ext2excit = 0.1 * (g_AMPA_extern2excit / g_AMPA_excit2excit)
+	w_AMPA_ext2inhib = 10 * (g_AMPA_extern2inhib / g_AMPA_excit2inhib)
+	w_AMPA_ext2excit = 10000 * (g_AMPA_extern2excit / g_AMPA_excit2excit)
 	w0_inhib = -1.0 #(GABA)	
 	w0_excit = 1.0 #(AMPA/NMDA)
 	w_AMPA_pos = w_pos
@@ -329,10 +331,18 @@ def sim_decision_making_network(data):
 
 	print ("STIMOLO A:", poissonStimulus2A)
 	print ("STIMOLO B:", poissonStimulus2B)
+	stimulus = nest.GetStatus(poissonStimulus2A)
+	poisson_stimulus = nest.GetStatus(nest.Create("poisson_generator", N_group_A))
 
 	nest.CopyModel("static_synapse", "poissonStimulus", {"weight": w_AMPA_ext2excit})
-	nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
-	nest.Connect(poissonStimulus2B, excit_pop_B, 'one_to_one', syn_spec="poissonStimulus")
+	#connessioni one to one potrebbero non essere abbastanza per farli sparare, quindi
+		# o aumento il peso (es. 10/100 per testare)
+		# o connetto all to all, che permette di restare con peso basso ma aumenta il numero di stimoli ricevuti (spareranno tutti nello stesso momento)
+	# nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
+	# nest.Connect(poissonStimulus2B, excit_pop_B, 'one_to_one', syn_spec="poissonStimulus")
+	# nest.Connect(poissonStimulus2A, excit_pop_A, 'all_to_all', syn_spec="poissonStimulus")
+	# nest.Connect(poissonStimulus2B, excit_pop_B, 'all_to_all', syn_spec="poissonStimulus")
+	# TODO: ma fisiologicamente sono one to one oppure all to all ?
 
 	print (type(poissonStimulus2A))
 	print (type(poissonStimulus2B))
@@ -416,10 +426,10 @@ def sim_decision_making_network(data):
 
 	print(sim_steps)
 
-	# for i, step in enumerate(sim_steps):
-	# 	print("Step number {} of {}".format(i+1, len(sim_steps)))
-	# 	update_poisson_stimulus(step)
-	# 	nest.Simulate(stimulus_update_interval)
+	for i, step in enumerate(sim_steps):
+		print("Step number {} of {}".format(i+1, len(sim_steps)))
+		update_poisson_stimulus(step)
+		nest.Simulate(stimulus_update_interval)
 
 	"""if stop_condition_rate is None:
 		nest.Simulate(max_sim_time)

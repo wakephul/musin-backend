@@ -3,6 +3,7 @@ from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries
 from src.file_handling import file_handling
 from src.nest.reset.reset import nest_reset
+import random
 
 if __name__ == '__main__':
     nest_reset()
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     # if spikes don't exist, generate spikes 
     # (--> nest: generate spikes + file: save them in json + connection: save filename in db)
     from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
-    
+
     if (not (spikes_A and spikes_B)) or (len(sys.argv) > 2 and sys.argv[2] == 'true'):
 
         # nest: generate spikes
@@ -58,7 +59,7 @@ if __name__ == '__main__':
         trial_duration = stop = 1000.0 # trial duration in ms
 
         spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-        nest_reset() # necessary to have the network start off with a "clean" nest setup
+        nest_reset(2021) # necessary to have the network start off with a "clean" nest setup
         spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
         nest_reset() # necessary to have the network start off with a "clean" nest setup
 
@@ -103,12 +104,9 @@ if __name__ == '__main__':
         spikes_B_times = file_handling.file_open(spikes_B)
         spikes_A = spike_generator_from_times(spikes_A_times)
         spikes_B = spike_generator_from_times(spikes_B_times)
-    # nest: connect spikes to input neurons
 
-
-    # print(spike_trains)
-
-    # print(nest.GetStatus(spike_trains))
+    
+    # nest: here we need to connect spikes to input neurons
 
     from src.nest.networks import brian_nest
     # #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
