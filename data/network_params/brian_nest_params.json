@@ -1,5 +1,5 @@
 {
-    "N_Excit": 400,
+    "N_Excit": 100,
     "N_Inhib": 100, 
     "weight_scaling_factor": 6.0, 
     "t_stimulus_start": 0, 

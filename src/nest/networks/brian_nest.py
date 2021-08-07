@@ -367,8 +367,8 @@ def sim_decision_making_network(data):
 			print("stim on. rate_A={}, rate_B={}".format(rate_A, rate_B))
 
 		else:
-			nest.SetStatus(poissonStimulus2A, "rate", 0.)
-			nest.SetStatus(poissonStimulus2B, "rate", 0.)
+			# nest.SetStatus(poissonStimulus2A, "rate", 0.)
+			# nest.SetStatus(poissonStimulus2B, "rate", 0.)
 			print("stim off.")
 
 ###############################################################################################
@@ -428,7 +428,7 @@ def sim_decision_making_network(data):
 
 	for i, step in enumerate(sim_steps):
 		print("Step number {} of {}".format(i+1, len(sim_steps)))
-		update_poisson_stimulus(step)
+		# update_poisson_stimulus(step)
 		nest.Simulate(stimulus_update_interval)
 
 	"""if stop_condition_rate is None:
