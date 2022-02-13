@@ -13,8 +13,8 @@ online available.                           REVISAAAAR
 
 
 import nest
-# import pylab
-from random import sample
+import pylab
+from random import sample, randint
 import numpy.random as rnd
 #from neurodynex3.tools import plot_tools
 import numpy as np
@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 # from math import floor
 import time
 import nest.raster_plot
-# from nest import voltage_trace
+from nest import voltage_trace
 
 # nest.ResetKernel()
 dt = 0.10
@@ -36,7 +36,7 @@ def sim_decision_making_network(data):
 	N_Inhib=data.get('N_Inhib', 96) # nr of neurons in the inhibitory populations
 	weight_scaling_factor=data.get('weight_scaling_factor', 5.33) # When increasing the number of neurons by 2, the weights should be scaled down by 1/2
 	t_stimulus_start=data.get('t_stimulus_start', 100) # time when the stimulation starts
-	t_stimulus_duration=data.get('t_stimulus_duration', 9999) # duration of the stimulation
+	t_stimulus_duration=max_sim_time=data.get('t_stimulus_duration', 9999) # duration of the stimulation
 	coherence_level=data.get('coherence_level', 0) # coherence of the stimulus. Difference in mean between the PoissonGroups "left" stimulus and "right" stimulus
 	stimulus_update_interval=data.get('stimulus_update_interval', 30) # the mean of the stimulating PoissonGroups is re-sampled at this interval
 	mu0_mean_stimulus_Hz=data.get('mu0_mean_stimulus_Hz', 160.) # maximum mean firing rate of the stimulus if c=+1 or c=-1. Each neuron in the populations "Left" and "Right" receives an independent poisson input.
@@ -45,7 +45,7 @@ def sim_decision_making_network(data):
 	firing_rate_extern=data.get('firing_rate_extern', 9.8) # firing rate of the stimulus independent poisson background population
 	w_pos=data.get('w_pos', 1.90) # Scaling (strengthening) of the recurrent weights within the subpopulations "Left" and "Right"
 	f_Subpop_size=data.get('f_Subpop_size', 0.25) # fraction of the neurons in the subpopulations "Left" and "Right". #left = #right = int(f_Subpop_size*N_Excit).
-	max_sim_time=data.get('max_sim_time', 1000.) # simulated time.
+	# max_sim_time=data.get('max_sim_time', 1000.) # simulated time.
 	stop_condition_rate=data.get('stop_condition_rate', None) # An optional stopping criteria: If not None, the simulation stops if the firing rate of either subpopulation "Left" or "Right" is above stop_condition_rate.
 	monitored_subset_size=data.get('monitored_subset_size', 512) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
@@ -503,7 +503,7 @@ def getting_started(data):
 	
 	results = sim_decision_making_network(data)
 	
-	"""###plotting with module packages
+	###plotting with module packages
 	nest.raster_plot.from_device(results["spike_monitor_A"], hist=True)
 	plt.title('Population A dynamics')
 
@@ -532,7 +532,8 @@ def getting_started(data):
 	voltage_trace.from_device(results["voltage_monitor_inhib"])
 	plt.title('Voltage trace inhib')	
 
-	plt.show()"""
+	plt.show()
+	plt.savefig('getting_started_'+str(int(time.time())*randint(0,10000))+'.png')
 	
 	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
 	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
@@ -584,6 +585,9 @@ def getting_started(data):
 	ax_voltage.set_title("Voltage traces", fontsize=10)
 	plt.xlabel("t [ms]")
 
+	plt.show()
+	plt.savefig('A_'+str(int(time.time())*randint(0,1000))+'.png')
+
 	#B
 
 	vmB = nest.GetStatus(results["voltage_monitor_B"])[0]
@@ -625,6 +629,7 @@ def getting_started(data):
 	plt.xlabel("t [ms]")
 
 	plt.show()
+	plt.savefig('B_'+str(int(time.time())*randint(0,1000))+'.png')
 
 # if __name__ == "__main__":
 # 	getting_started()

@@ -1,4 +1,3 @@
-import sqlite3
 from sqlite3 import Error
 
 def create_table(conn, create_table_sql):

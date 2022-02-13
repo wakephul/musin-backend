@@ -12,6 +12,12 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Remote - Main",
+            "type": "shell",
+            "request": "launch",
+            "command": "ssh -i ~/.ssh/paolla.pem ubuntu@148.187.149.52 && python ~/sensorycerebellum/main.py"
+        },
+        {
             "name": "Create spikes",
             "type": "python",
             "request": "launch",
