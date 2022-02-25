@@ -1,6 +1,5 @@
-from hashlib import new
 import nest
-from random import getrandbits
+import random
 
 # ok qui quello che devo fare è differenziare i trial dx e sx. come lo faccio?
 # prendo in input gli stimoli, la loro durata (che forse in realtà mi posso calcolare qui) e la durata della simulazione
@@ -10,7 +9,10 @@ from random import getrandbits
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
 def spikes_for_simulation(spikes, durations, simulation_time):
     number_of_stimuli_in_simulation = int(simulation_time/durations)
-    trials = [True if bool(getrandbits(1)) else False for x in range(number_of_stimuli_in_simulation)] # sarà il modo più efficiente per farlo?
+    # trials = [True if bool(random.getrandbits(1)) else False for x in range(number_of_stimuli_in_simulation)] # sarà il modo più efficiente per farlo?
+    # implementazione in cui shufflo semplicemente la lista creata a mano:
+    trials = [True, True, True, True, True, False, False, False, False, False]
+    random.shuffle(trials)
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
     spikes_A_status = nest.GetStatus(spikes_A)

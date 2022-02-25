@@ -136,4 +136,4 @@ if __name__ == '__main__':
         brian_params['trial_notes'] = sys.argv[1] if len(sys.argv) > 1 else ''
         # print("params", brian_params)
 
-        # brian_nest.run(brian_params)
+        brian_nest.run(brian_params)

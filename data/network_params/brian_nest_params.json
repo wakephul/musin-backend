@@ -12,6 +12,6 @@
     "firing_rate_extern": 9.8, 
     "w_pos": 1.90, 
     "f_Subpop_size": 0.25,
-    "max_sim_time": 10000.0,
+    "max_sim_time": 5000.0,
     "monitored_subset_size": 100000
 }
