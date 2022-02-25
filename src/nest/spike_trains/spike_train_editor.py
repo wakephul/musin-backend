@@ -16,7 +16,6 @@ def spikes_for_simulation(spikes, durations, simulation_time):
     spikes_A_status = nest.GetStatus(spikes_A)
     spikes_B = spikes[1]
     spikes_B_status = nest.GetStatus(spikes_B)
-    trials = [True, False, True]
     for neuron_index, neuron in enumerate(spikes_A_status):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist() # @toDiscuss: è normale che ciclandoli io abbia il primo tempo che è sempre successivo a quello del neurone precedente?
