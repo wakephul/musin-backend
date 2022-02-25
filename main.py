@@ -40,9 +40,6 @@ if __name__ == '__main__':
         from src.nest.reset.reset import nest_reset
 
         nest_reset()
-
-        # file: read Brian params from json
-        brian_params = file_handling.read_json(config['networks']['brian_nest_params'])
             
         # connection: check if spikes exist (connection: get spikes)
         from src.connection.select import select_rows
@@ -58,8 +55,6 @@ if __name__ == '__main__':
                 spikes_B_rows = select_rows(connection, select_spikes_B_sql)
                 spikes_B = spikes_B_rows[-1][1]
                 close_connection(connection)
-                print (spikes_A)
-                print (spikes_B)
         except:
             print("Error while selecting spikes from db")
 
@@ -70,6 +65,7 @@ if __name__ == '__main__':
         if (not (spikes_A and spikes_B)) or (len(sys.argv) > 1 and sys.argv[1] == 'generate_spikes'):
 
             # nest: generate spikes
+            # @todo! spostare in file appositi (prevedere di averne più di 1)
             rate = 40.0
             start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
             number_of_neurons = 100
@@ -126,12 +122,18 @@ if __name__ == '__main__':
         # nest: here we need to connect spikes to input neurons
 
         from src.nest.networks import brian_nest
-        # #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
-        # # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
-        # # questo lo facciamo in fase di importazione del json nella rete.
+        from src.nest.spike_trains.spike_train_editor import spikes_for_simulation
+        #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
+        # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
+        # questo lo facciamo in fase di importazione del json nella rete.
+
+        # file: read Brian params from json
+        brian_params = file_handling.read_json(config['networks']['brian_nest_params'])
+        spikes_for_simulation([spikes_A, spikes_B], (float(brian_params['t_stimulus_duration']) - float(brian_params['t_stimulus_start'])), float(brian_params['max_sim_time']))
 
         brian_params['imported_stimulus_A'] = spikes_A
         brian_params['imported_stimulus_B'] = spikes_B
-        print("params", brian_params)
+        brian_params['trial_notes'] = sys.argv[1] if len(sys.argv) > 1 else ''
+        # print("params", brian_params)
 
-        brian_nest.run(brian_params)
+        # brian_nest.run(brian_params)

@@ -5,7 +5,7 @@ import os
 
 current_multimeters = glob.glob('*.dat')
 if (len(current_multimeters)):
-    old_multimeters = glob.glob('./network_output_files/multimeters/*.dat')
+    old_multimeters = glob.glob('./output/multimeters/*.dat')
     for old_multimeter in old_multimeters:
         os.remove(old_multimeter)
 
@@ -14,7 +14,7 @@ if (len(current_multimeters)):
         multimeter_id = multimeter.split("-")[1]
         datfile = open(multimeter, "r")
         dattext = datfile.read()
-        multimeter_filename = "./network_output_files/multimeters/multimeter-"+multimeter_id+".dat"
+        multimeter_filename = "./output/multimeters/multimeter-"+multimeter_id+".dat"
         with open(multimeter_filename, "a+") as multimeter_file:
             multimeter_file.write(dattext)
 
@@ -25,7 +25,7 @@ if (len(current_multimeters)):
 
 current_spike_detectors = glob.glob('*.gdf')
 if(len(current_spike_detectors)):
-    old_spike_detectors = glob.glob('./network_output_files/spike_detectors/*.gdf')
+    old_spike_detectors = glob.glob('./output/spike_detectors/*.gdf')
     for old_spike_detector in old_spike_detectors:
         os.remove(old_spike_detector)
 
@@ -34,7 +34,7 @@ if(len(current_spike_detectors)):
         spike_detector_id = spike_detector.split("-")[1]
         datfile = open(spike_detector, "r")
         dattext = datfile.read()
-        spike_detector_filename = "./network_output_files/spike_detectors/spike_detector-"+spike_detector_id+".gdf"
+        spike_detector_filename = "./output/spike_detectors/spike_detector-"+spike_detector_id+".gdf"
         with open(spike_detector_filename, "a+") as spike_detector_file:
             spike_detector_file.write(dattext)
 

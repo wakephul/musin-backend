@@ -1,0 +1,1 @@
+stimulus duration set to 10

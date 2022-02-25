@@ -36,18 +36,17 @@ def sim_decision_making_network(data):
 	N_Inhib=data.get('N_Inhib', 96) # nr of neurons in the inhibitory populations
 	weight_scaling_factor=data.get('weight_scaling_factor', 5.33) # When increasing the number of neurons by 2, the weights should be scaled down by 1/2
 	t_stimulus_start=data.get('t_stimulus_start', 100) # time when the stimulation starts
-	t_stimulus_duration=max_sim_time=data.get('t_stimulus_duration', 9999) # duration of the stimulation
-	coherence_level=data.get('coherence_level', 0) # coherence of the stimulus. Difference in mean between the PoissonGroups "left" stimulus and "right" stimulus
-	stimulus_update_interval=data.get('stimulus_update_interval', 30) # the mean of the stimulating PoissonGroups is re-sampled at this interval
+	t_stimulus_duration=data.get('t_stimulus_duration', 1000) # duration of the stimulation
+	coherence_level=data.get('coherence_level', 0) # coherence of the stimulus. Difference in mean between the PoissonGroups "left" stimulus and "right" stimulus @todo! prima o poi da rimuovere
+	stimulus_update_interval=data.get('stimulus_update_interval', 30) # the mean of the stimulating PoissonGroups is re-sampled at this interval @todo! prima o poi da rimuovere
 	mu0_mean_stimulus_Hz=data.get('mu0_mean_stimulus_Hz', 160.) # maximum mean firing rate of the stimulus if c=+1 or c=-1. Each neuron in the populations "Left" and "Right" receives an independent poisson input.
 	stimulus_std_Hz=data.get('stimulus_std_Hz', 20.) # std deviation of the stimulating PoissonGroups.
 	N_extern=data.get('N_extern', 1000) # nr of neurons in the stimulus independent poisson background population
 	firing_rate_extern=data.get('firing_rate_extern', 9.8) # firing rate of the stimulus independent poisson background population
 	w_pos=data.get('w_pos', 1.90) # Scaling (strengthening) of the recurrent weights within the subpopulations "Left" and "Right"
 	f_Subpop_size=data.get('f_Subpop_size', 0.25) # fraction of the neurons in the subpopulations "Left" and "Right". #left = #right = int(f_Subpop_size*N_Excit).
-	# max_sim_time=data.get('max_sim_time', 1000.) # simulated time.
-	stop_condition_rate=data.get('stop_condition_rate', None) # An optional stopping criteria: If not None, the simulation stops if the firing rate of either subpopulation "Left" or "Right" is above stop_condition_rate.
-	monitored_subset_size=data.get('monitored_subset_size', 512) # max nr of neurons for which a state monitor is registered.
+	max_sim_time=data.get('max_sim_time', 1000.) # simulated time. -- teniamolo qui per quando eventualmente faremo una lunga simulazione da dividere in più "sotto-simulazioni", in modo da non dover ricostruire la rete per ciascuna
+	monitored_subset_size=data.get('monitored_subset_size', 1000000) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
 	imported_stimulus_B=data.get('imported_stimulus_B', None)
 
@@ -213,7 +212,7 @@ def sim_decision_making_network(data):
 	# w_AMPA_ext2inhib = 0.1 * (g_AMPA_extern2inhib / g_AMPA_excit2inhib)
 	# w_AMPA_ext2excit = 0.1 * (g_AMPA_extern2excit / g_AMPA_excit2excit)
 	w_AMPA_ext2inhib = 10 * (g_AMPA_extern2inhib / g_AMPA_excit2inhib)
-	w_AMPA_ext2excit = 10000 * (g_AMPA_extern2excit / g_AMPA_excit2excit)
+	w_AMPA_ext2excit = 10000 * (g_AMPA_extern2excit / g_AMPA_excit2excit) # @todo! controlla se hai cambiato tu questi valori
 	w0_inhib = -1.0 #(GABA)	
 	w0_excit = 1.0 #(AMPA/NMDA)
 	w_AMPA_pos = w_pos
@@ -250,7 +249,7 @@ def sim_decision_making_network(data):
 
 ###############################################################################################
 
-        # projections FROM EXTERNAL POISSON GROUP (noise):
+	# projections FROM EXTERNAL POISSON GROUP (noise):
 
 	noise = nest.Create("poisson_generator", N_extern)
 	nest.SetStatus(noise, "rate", firing_rate_extern)
@@ -262,7 +261,7 @@ def sim_decision_making_network(data):
 
 ###############################################################################################
 
-        # GABA projections FROM INHIBITORY population:
+	# GABA projections FROM INHIBITORY population:
 
 	nest.Connect(inhib_pop, inhib_pop, syn_spec="inhibitory_GABA")
 	nest.Connect(inhib_pop, excit_pop_A, syn_spec="inhibitory_GABA")
@@ -271,7 +270,7 @@ def sim_decision_making_network(data):
 
 ###############################################################################################
 
-        # AMPA projections FROM EXCITATORY A:
+	# AMPA projections FROM EXCITATORY A:
 
 	nest.Connect(excit_pop_A, inhib_pop, syn_spec="standard_AMPA")
 	nest.Connect(excit_pop_A, excit_pop_A, syn_spec="excit_AMPA")
@@ -326,13 +325,11 @@ def sim_decision_making_network(data):
 
 	poissonStimulus2A = imported_stimulus_A if imported_stimulus_A else nest.Create("poisson_generator", N_group_A)
 	poissonStimulus2B = imported_stimulus_B if imported_stimulus_B else nest.Create("poisson_generator", N_group_B)
-	# nota: queste sono delle classi di nest, non delle semplici liste!
-	# devo fare in modo che gli imported_stimuli siano degli spike generators
 
 	print ("STIMOLO A:", poissonStimulus2A)
 	print ("STIMOLO B:", poissonStimulus2B)
-	stimulus = nest.GetStatus(poissonStimulus2A)
-	poisson_stimulus = nest.GetStatus(nest.Create("poisson_generator", N_group_A))
+	# stimulus = nest.GetStatus(poissonStimulus2A)
+	# poisson_stimulus = nest.GetStatus(nest.Create("poisson_generator", N_group_A))
 
 	nest.CopyModel("static_synapse", "poissonStimulus", {"weight": w_AMPA_ext2excit})
 	#connessioni one to one potrebbero non essere abbastanza per farli sparare, quindi
@@ -340,16 +337,10 @@ def sim_decision_making_network(data):
 		# o connetto all to all, che permette di restare con peso basso ma aumenta il numero di stimoli ricevuti (spareranno tutti nello stesso momento)
 	# nest.Connect(poissonStimulus2A, excit_pop_A, 'one_to_one', syn_spec="poissonStimulus")
 	# nest.Connect(poissonStimulus2B, excit_pop_B, 'one_to_one', syn_spec="poissonStimulus")
-	# nest.Connect(poissonStimulus2A, excit_pop_A, 'all_to_all', syn_spec="poissonStimulus")
-	# nest.Connect(poissonStimulus2B, excit_pop_B, 'all_to_all', syn_spec="poissonStimulus")
-	# TODO: ma fisiologicamente sono one to one oppure all to all ?
+	nest.Connect(poissonStimulus2A, excit_pop_A, 'all_to_all', syn_spec="poissonStimulus")
+	nest.Connect(poissonStimulus2B, excit_pop_B, 'all_to_all', syn_spec="poissonStimulus")
 
-	print (type(poissonStimulus2A))
-	print (type(poissonStimulus2B))
-
-	a = (nest.GetStatus(poissonStimulus2A))
-	b = (nest.GetStatus(poissonStimulus2B))
-	print("Stimulus created and connected")
+	print("Stimulus created and connected to excit pop A and B")
 
 	def update_poisson_stimulus(t): # questa non ci servirà perché sappiamo già se lo stimolo è dx o sx
 		if t >= t_stimulus_start and t < t_stimulus_end:
@@ -497,8 +488,6 @@ def print_version():
 
 def getting_started(data):
 
-	print(data)
-
 	print("stimulus start {}, stimulus end: {}".format(data['t_stimulus_start'], data['t_stimulus_start']+data['t_stimulus_duration']))
 	
 	results = sim_decision_making_network(data)
@@ -533,7 +522,22 @@ def getting_started(data):
 	plt.title('Voltage trace inhib')	
 
 	plt.show()
-	plt.savefig('getting_started_'+str(int(time.time())*randint(0,10000))+'.png')
+
+	#creo una nuova riga nel file di supporto, in cui se esistono inserisco anche le note sul trial
+	#questo mi serve per ottenere l'id del trial corrente ed usarlo per salvare gli output nella cartella corretta
+	from src.file_handling.support_file import new_row
+	current_trial_id = new_row(data['trial_notes'])
+	current_plots_folder = 'output/plots/'+str(current_trial_id)+'/'
+	
+	from src.file_handling.folder_handling import create_folder
+	create_folder(current_plots_folder)
+
+	if(data['trial_notes']):
+		from src.file_handling.file_handling import write_to_file
+		write_to_file(current_plots_folder+"trial_notes.txt", data['trial_notes'])
+		
+		
+	plt.savefig(current_plots_folder+'getting_started_'+str(int(time.time())*randint(0,10000))+'.png')
 	
 	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
 	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
@@ -586,7 +590,7 @@ def getting_started(data):
 	plt.xlabel("t [ms]")
 
 	plt.show()
-	plt.savefig('A_'+str(int(time.time())*randint(0,1000))+'.png')
+	plt.savefig(current_plots_folder+'A_'+str(int(time.time())*randint(0,1000))+'.png')
 
 	#B
 
@@ -629,11 +633,7 @@ def getting_started(data):
 	plt.xlabel("t [ms]")
 
 	plt.show()
-	plt.savefig('B_'+str(int(time.time())*randint(0,1000))+'.png')
-
-# if __name__ == "__main__":
-# 	getting_started()
+	plt.savefig(current_plots_folder+'B_'+str(int(time.time())*randint(0,1000))+'.png')
 
 def run(data):
 	getting_started(data)
-

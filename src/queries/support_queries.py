@@ -6,8 +6,7 @@ def create_support_table():
     "
 def select_last_value(table, column, value):
     return " \
-        SELECT * FROM " + table + " \
-        WHERE " + column + " = '" + value + "' \
+        SELECT * FROM " + table + "." + column + " \
         ORDER BY " + column + " DESC LIMIT 1 ; \
     "
 

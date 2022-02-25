@@ -44,3 +44,7 @@ def file_open(file_path):
         file_contents = pickle.load(fp)
     
     return file_contents
+
+def write_to_file(filename, string):
+    with open(filename, "w+") as file:
+        file.write(string) 

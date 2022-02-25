@@ -31,13 +31,7 @@ def spike_generator_from_times(times_dict):
                                     params={'spike_times': spike_times}
                                     )
 
-        # print(neuron_spikes[0])
-        status = nest.GetStatus(neuron_spikes)
-
         spikes.append(neuron_spikes[0])
 
-        # should I connect them to a neuron?
-        # connected = nest.Connect(neuron_spikes, neuron) # how to make them excitatory or inhibitory?
-        # spikes.append(connected)
     spikes = np.asarray(spikes)
     return tuple(spikes)
