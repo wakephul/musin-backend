@@ -13,12 +13,16 @@ online available.                           REVISAAAAR
 
 
 import nest
+import pylab
 from random import sample, randint
 import numpy.random as rnd
 #from neurodynex3.tools import plot_tools
 import numpy as np
 import matplotlib.pyplot as plt
+# from math import floor
 import time
+import nest.raster_plot
+from nest import voltage_trace
 
 # nest.ResetKernel()
 dt = 0.10
@@ -487,6 +491,47 @@ def getting_started(data):
 	print("stimulus start {}, stimulus end: {}".format(data['t_stimulus_start'], data['t_stimulus_start']+data['t_stimulus_duration']))
 	
 	results = sim_decision_making_network(data)
+	
+	# fig, ((dynA, voltMonA), (dynB, voltMonB), (dynZ, voltMonZ), (dynInhib, voltMonInhib)) = plt.subplots(4, 2)
+	# plt.subplot(3,3,1)
+	fig = plt.figure()
+	nest.raster_plot.from_device(results["spike_monitor_A"], hist=True)
+	plt.show()
+	ax = fig.add_subplot(111)
+	raster_spike_a = nest.raster_plot.from_device(results["spike_monitor_A"], hist=True)
+	plt.title('Population A dynamics')
+	ax.add_line(raster_spike_a)
+
+
+	# plt.subplot(3,3,2)
+	# voltage_trace.from_device(results["voltage_monitor_A"])
+	# plt.title('Voltage trace A')
+	
+	# plt.subplot(3,3,3)
+	# nest.raster_plot.from_device(results["spike_monitor_B"], hist=True)
+	# plt.title('Population B dynamics')
+
+	# plt.subplot(3,3,4)
+	# voltage_trace.from_device(results["voltage_monitor_B"])
+	# plt.title('Voltage trace B')
+
+	# plt.subplot(3,3,5)
+	# nest.raster_plot.from_device(results["spike_monitor_Z"], hist=True)
+	# plt.title('Population Z dynamics')
+
+	# plt.subplot(3,3,6)
+	# voltage_trace.from_device(results["voltage_monitor_Z"])
+	# plt.title('Voltage trace Z')
+
+	# plt.subplot(3,3,7)
+	# nest.raster_plot.from_device(results["spike_monitor_inhib"], hist=True)
+	# plt.title('Population inhib dynamics')
+
+	# plt.subplot(3,3,8)
+	# voltage_trace.from_device(results["voltage_monitor_inhib"])
+	# plt.title('Voltage trace inhib')	
+
+	# plt.show()
 
 	#creo una nuova riga nel file di supporto, in cui se esistono inserisco anche le note sul trial
 	#questo mi serve per ottenere l'id del trial corrente ed usarlo per salvare gli output nella cartella corretta
@@ -496,37 +541,13 @@ def getting_started(data):
 	
 	from src.file_handling.folder_handling import create_folder
 	create_folder(current_plots_folder)
-	create_folder(current_plots_folder+'/merged_plots/')
 
 	if(data['trial_notes']):
 		from src.file_handling.file_handling import write_to_file
 		write_to_file(current_plots_folder+"trial_notes.txt", data['trial_notes'])
-
-	# genero i vari grafici che vado a salvare ciascuno in un file
-
-	from nest import voltage_trace, raster_plot
-	
-	plots_to_create = [
-		['spike_monitor_A', 'raster'],
-		['spike_monitor_B', 'raster'],
-		['spike_monitor_Z', 'raster'],
-		['spike_monitor_inhib', 'raster'],
-		['voltage_monitor_A', 'voltage'],
-		['voltage_monitor_B', 'voltage'],
-		['voltage_monitor_Z', 'voltage'],
-		['voltage_monitor_inhib', 'voltage']
-	]
-	for plot in plots_to_create:
-		if plot[1] == 'raster':
-			raster_plot.from_device(results[plot[0]], False, title=plot[0], hist=False)
-		elif plot[1] == 'voltage':
-			voltage_trace.from_device(results[plot[0]], None, title=plot[0])
-		plt.savefig(current_plots_folder+'merged_plots/'+plot[0]+'.png')
-
-	#faccio un bel merge dei vari file per semplicità di lettura
-	from src.file_handling.merge_images import merge_images
-	filenames = [current_plots_folder+'merged_plots/'+plot[0]+'.png' for plot in plots_to_create]
-	merge_images(filenames, [500, 500], current_plots_folder+'voltage_and_dynamics.jpg', 3)
+		
+		
+	plt.savefig(current_plots_folder+'getting_started_'+str(int(time.time())*randint(0,10000))+'.png')
 	
 	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
 	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
