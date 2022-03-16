@@ -65,11 +65,13 @@ if __name__ == '__main__':
         if (not (spikes_A and spikes_B)) or (len(sys.argv) > 1 and sys.argv[1] == 'generate_spikes'):
 
             # nest: generate spikes
-            # @todo! spostare in file appositi (prevedere di averne più di 1)
-            rate = 40.0
-            start = 50.0 # latency of first spike in ms, represents the beginning of the simulation relative to trial start
-            number_of_neurons = 100
-            trial_duration = stop = 1000.0 # trial duration in ms
+            # ? @todo prevedere di averne più di 1 file di configurazione ?
+            
+            spikes_params = file_handling.read_json(config['input']['spikes_params'])
+            rate = spikes_params['rate']
+            start = spikes_params['first_spike_latency'] # latency of first spike in ms, represents the beginning of the simulation relative to trial start
+            number_of_neurons = spikes_params['number_of_neurons']
+            trial_duration = stop = spikes_params['trial_duration'] # trial duration in ms
 
             spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
             nest_reset(2021) # necessary to have the network start off with a "clean" nest setup
