@@ -225,7 +225,7 @@ def _from_memory(detec):
 
 
 def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
-               grayscale=False, title=None, xlabel=None):
+               grayscale=False, title=None, xlabel=None, xlim=None):
     """Generic plotting routine.
 
     Constructs a raster plot along with an optional histogram (common part in
@@ -273,7 +273,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         plotid = pylab.plot(ts1, gids, color_marker)
         pylab.ylabel(ylabel)
         pylab.xticks([])
-        xlim = pylab.xlim()
+        xlim = xlim if xlim else pylab.xlim()
 
         pylab.axes([0.1, 0.1, 0.85, 0.17])
         t_bins = numpy.arange(
@@ -295,7 +295,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         pylab.xlim(xlim)
         pylab.axes(ax1)
     else:
-        plotid = pylab.plot(ts1, gids, color_marker)
+        plotid = pylab.plot(ts1, gids, color_marker, ms=1)
         pylab.xlabel(xlabel)
         pylab.ylabel(ylabel)
 

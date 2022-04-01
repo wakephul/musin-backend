@@ -17,7 +17,6 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
     else:
         width = single_size[0] * len(images)*margin + margin
         height = single_size[1]+margin
-    print(width, height)
     new_image = Image.new('RGB', (width, height), color)
 
     column_index = 0
@@ -29,20 +28,15 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
         image = Image.open(img)
         image = image.resize(single_size)
         if(column_index == col_number):
-            print('NEW LINE')
             column_index = 0
             row_index += 1
             x_position = margin
             y_position = (single_size[1]*row_index)+(margin*(row_index+1))
         else:
-            print(f'column index: {column_index}')
             x_position = (single_size[0]*column_index)+(margin*(column_index+1))
             y_position = (single_size[1]*row_index)+(margin*(row_index+1))
         column_index += 1
         new_position = (x_position, y_position)
-        print(img)
-        print(new_position)
         new_image.paste(image, new_position)
 
-    # display(new_image)
     new_image.save(filename ,"JPEG")

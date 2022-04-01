@@ -125,17 +125,30 @@ if __name__ == '__main__':
 
         from src.nest.networks import brian_nest
         from src.nest.spike_trains.spike_train_editor import spikes_for_simulation
-        #stabilire quanti trial voglio fare (ad esempio 100), in maniera tale da creare tutti gli spike anche nella loro "versione shiftata di 1 secondo"
-        # quindi se abbiamo uno spike a 250ms dovremo averlo anche a 1250ms
-        # questo lo facciamo in fase di importazione del json nella rete.
+
+        #creo una nuova riga nel file di supporto, in cui se esistono inserisco anche le note sul trial
+        #questo mi serve per ottenere l'id del trial corrente ed usarlo per salvare gli output nella cartella corretta
+        from src.file_handling.support_file import new_row
+        from src.file_handling.folder_handling import create_folder
+        from src.file_handling.file_handling import write_to_file
+
+        trial_notes = sys.argv[1] if len(sys.argv) > 1 else ''
+        current_trial_id = new_row(trial_notes)
+        current_output_folder = 'output/trials/'+str(current_trial_id)+'/'
+
+        create_folder(current_output_folder)
+        create_folder(current_output_folder+'merged_plots/')
+        create_folder(current_output_folder+'values/')
+
+        write_to_file(current_output_folder+"trial_notes.txt", trial_notes)
 
         # file: read Brian params from json
         brian_params = file_handling.read_json(config['networks']['brian_nest_params'])
-        spikes_for_simulation([spikes_A, spikes_B], (float(brian_params['t_stimulus_duration']) - float(brian_params['t_stimulus_start'])), float(brian_params['max_sim_time']))
+        spikes_for_simulation([spikes_A, spikes_B], (float(brian_params['t_stimulus_duration']) - float(brian_params['t_stimulus_start'])), float(brian_params['max_sim_time']), current_output_folder)
 
         brian_params['imported_stimulus_A'] = spikes_A
         brian_params['imported_stimulus_B'] = spikes_B
-        brian_params['trial_notes'] = sys.argv[1] if len(sys.argv) > 1 else ''
+        brian_params['current_output_folder'] = current_output_folder
         # print("params", brian_params)
 
         brian_nest.run(brian_params)
