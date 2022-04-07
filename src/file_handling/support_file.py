@@ -2,16 +2,19 @@ import src.file_handling.csv_handling as csv_handling
 import calendar
 import time
 
-def get_last():
-    row = csv_handling.get_last_row('data/db/support.csv')
+def get_last(file_path):
+    row = csv_handling.get_last_row(file_path)
     return row
 
-def get_last_id():
-    row = get_last()
+def get_last_id(file_path):
+    row = get_last(file_path)
     return row[0] if len(row) else None
 
-def new_row(notes=''):
-    last_id = get_last_id()
+def new_row(notes='', file_path='data/db/support.csv', data=None):
+    last_id = get_last_id(file_path)
     new_incremental_id = (last_id+1) if last_id else 1
-    csv_handling.write_new_row('data/db/support.csv', [new_incremental_id, notes, calendar.timegm(time.gmtime())])
+    if not data:
+        csv_handling.write_new_row(file_path, [new_incremental_id, notes, calendar.timegm(time.gmtime())])
+    else:
+        csv_handling.write_new_row(file_path, [new_incremental_id]+data)
     return new_incremental_id

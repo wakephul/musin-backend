@@ -616,7 +616,14 @@ def getting_started(data):
 	print("Population A rate   : %.2f Hz" % rate_A)
 	print("Population B rate   : %.2f Hz" % rate_B)
 
-	append_to_file(current_output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
+	if data['single_execution_information']:
+		data['single_execution_information'].append(rate_A)
+		data['single_execution_information'].append(rate_B)
+		from src.file_handling.support_file import new_row
+
+		new_row('', 'output/multiple_trials/support.csv', data['single_execution_information'])
+	else:
+		append_to_file(current_output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
 	
 	### plotting without module packages
 
