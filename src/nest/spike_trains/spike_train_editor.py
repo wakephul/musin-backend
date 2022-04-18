@@ -17,6 +17,7 @@ def spikes_for_simulation(spikes, durations, simulation_time, current_output_fol
     append_to_file(current_output_folder+'trial_notes.txt', trials_to_string)
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
+    print('spikes', spikes_A)
     spikes_A_status = nest.GetStatus(spikes_A)
     spikes_B = spikes[1]
     spikes_B_status = nest.GetStatus(spikes_B)

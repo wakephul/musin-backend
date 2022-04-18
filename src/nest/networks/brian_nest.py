@@ -530,6 +530,11 @@ def getting_started(data):
 			# write to csv
 			senders = [x for _, x in sorted(zip(results_dict_complete['events']['times'], results_dict_complete['events']['senders']))]
 			times = sorted (results_dict_complete['events']['times'])
+
+			from src.file_handling.folder_handling import create_folder
+			create_folder(current_output_folder+'/values')
+			create_folder(current_output_folder+'/merged_plots')
+
 			with open(current_output_folder+'values/'+plot[0]+'.csv', 'w+') as file:
 				file.write(','.join(['sender', 'time'])+'\n')
 				for index in range(len(senders)):
@@ -616,12 +621,12 @@ def getting_started(data):
 	print("Population A rate   : %.2f Hz" % rate_A)
 	print("Population B rate   : %.2f Hz" % rate_B)
 
-	if data['single_execution_information']:
-		data['single_execution_information'].append(rate_A)
-		data['single_execution_information'].append(rate_B)
+	if data['execution']:
+		data['execution'].append(rate_A)
+		data['execution'].append(rate_B)
 		from src.file_handling.support_file import new_row
-
-		new_row('', 'output/multiple_trials/support.csv', data['single_execution_information'])
+		print("DATA EXECUTION!!!", data['execution'])
+		new_row('', 'output/multiple_trials/support.csv', data['execution'])
 	else:
 		append_to_file(current_output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
 	
