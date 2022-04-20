@@ -1,7 +1,12 @@
+import nest
+nest.set_verbosity('M_ERROR') #lo metto qui per evitare tutte le print
 import sys
 from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries, support_queries
 from src.file_handling import file_handling
+
+from src.nest.plots.generate import generate_plots
+from src.nest.plots.save import save_plots
         
 if __name__ == '__main__':
     # CONFIGURATION FILE
@@ -15,9 +20,7 @@ if __name__ == '__main__':
             connection = create_connection(config['app']['database'])
             if connection:
                 spikes_table_sql = spikes_queries.create_spikes_table()
-                print(spikes_table_sql)
                 create_table(connection, spikes_table_sql)
-                print(config['app']['database'])
                 close_connection(connection)
                 print("Spikes table created")
                 exit = True
@@ -41,7 +44,7 @@ if __name__ == '__main__':
 
         nest_reset()
 
-        executions = [] # it's a single execution, the information is already saved elsewhere
+        executions = [] # if it's a single execution, the information is already saved elsewhere
             
         # connection: check if spikes exist (connection: get spikes)
         from src.connection.select import select_rows
@@ -60,20 +63,23 @@ if __name__ == '__main__':
         except:
             print("Error while selecting spikes from db")
 
-        # if spikes don't exist, generate spikes 
-        # (--> nest: generate spikes + file: save them in json + connection: save filename in db)
+        from importlib import import_module
+        from src.nest.spike_trains.spike_train_editor import spikes_for_simulation
         from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
+        from src.file_handling.folder_handling import create_folder
+        from src.file_handling.file_handling import write_to_file
+
+        network_name = config['network']['name']
+        network_module = import_module('src.nest.networks.'+network_name)
 
         if (not (spikes_A and spikes_B)) or (len(sys.argv) > 1 and (sys.argv[1] == 'generate_spikes' or sys.argv[1] == 'multiple_simulations')):
 
             if (sys.argv[1] == 'multiple_simulations'):
                 multiple_simulations_params = file_handling.read_json('data/config/multiple_simulations_config.json')
-                print('multiple_simulations_params', multiple_simulations_params)
                 if 'spikes' in multiple_simulations_params:
                     spikes_params = multiple_simulations_params['spikes']
                     if 'rate' in spikes_params:
                         spikes_rate = spikes_params['rate']
-                        print('spikes_rate', spikes_rate)
                         for rate in range(spikes_rate['first_value'], spikes_rate['last_value']+spikes_rate['increment'], spikes_rate['increment']):
 
                             rate = float(rate)
@@ -86,30 +92,19 @@ if __name__ == '__main__':
                             nest_reset(2021) # necessary to have the network start off with a "clean" nest setup
                             spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
                             nest_reset() # necessary to have the network start off with a "clean" nest setup
-
-                            # questo deve essere letto da N spike generators (tanti quanti i parrot neurons), il cui output diventerà l'input della rete
-                            # ciascuno spike generator avrà la sua lista di spike times 
-                            # con un nest.setStatus possiamo far generare a ciascuno spike generator gli spikes con i tempi corretti
                             
                             spikes_A = spike_generator_from_times(spikes_A_times)
                             spikes_B = spike_generator_from_times(spikes_B_times)
 
-                            import nest
-                            spikes_A_status = nest.GetStatus(spikes_A)
-                            spikes_B_status = nest.GetStatus(spikes_B)
-
-                            # file: save spikes in json
-                            spikes_A_file_name = file_handling.save_to_file(spikes_A_times, 'multiple_trials_spikes/spikes_A_'+str(int(rate))+'_')
-                            spikes_B_file_name = file_handling.save_to_file(spikes_B_times, 'multiple_trials_spikes/spikes_B_'+str(int(rate))+'_')
-
-                            from src.file_handling.folder_handling import create_folder
-                            from src.file_handling.file_handling import write_to_file
-                            from src.file_handling.support_file import get_last_id
-
-                            current_output_folder = 'output/multiple_trials/'+str(get_last_id('output/multiple_trials/support.csv'))+'/'
-                            print("output folder:", current_output_folder)
+                            new_simulation_id = new_row(file_path='multiple_trials/support.csv', data=[network_name])
+                            current_output_folder = 'multiple_trials/'+str(new_simulation_id)+'/'
 
                             create_folder(current_output_folder)
+
+                            spikes_A_file_name = file_handling.save_to_file(spikes_A_times, current_output_folder+'/spikes/spikes_A')
+                            spikes_B_file_name = file_handling.save_to_file(spikes_B_times, current_output_folder+'/spikes/spikes_B')
+
+                            new_row(file_path=current_output_folder+'support.csv', heading='id,spikes_A_file_name,spikes_B_file_name,spikes_rate,firing_rate_extern,rate_A,rate_B')
 
                             single_execution_information = [spikes_A_file_name, spikes_B_file_name, str(int(rate))]
                             executions.append(single_execution_information)
@@ -125,17 +120,9 @@ if __name__ == '__main__':
                 nest_reset(2021) # necessary to have the network start off with a "clean" nest setup
                 spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
                 nest_reset() # necessary to have the network start off with a "clean" nest setup
-
-                # questo deve essere letto da N spike generators (tanti quanti i parrot neurons), il cui output diventerà l'input della rete
-                # ciascuno spike generator avrà la sua lista di spike times 
-                # con un nest.setStatus possiamo far generare a ciascuno spike generator gli spikes con i tempi corretti
                 
                 spikes_A = spike_generator_from_times(spikes_A_times)
                 spikes_B = spike_generator_from_times(spikes_B_times)
-
-                import nest
-                spikes_A_status = nest.GetStatus(spikes_A)
-                spikes_B_status = nest.GetStatus(spikes_B)
 
                 # file: save spikes in json
                 spikes_A_file_name = file_handling.save_to_file(spikes_A_times, 'spikes/spikes_A_')
@@ -159,26 +146,17 @@ if __name__ == '__main__':
                     print("Error while saving spikes to db")
 
         else:
-            print('Spikes already exist:')
             # file: open spikes file
             spikes_A_times = file_handling.file_open(spikes_A)
             spikes_B_times = file_handling.file_open(spikes_B)
             spikes_A = spike_generator_from_times(spikes_A_times)
             spikes_B = spike_generator_from_times(spikes_B_times)
 
-        
-        # nest: here we need to connect spikes to input neurons
-
-        from src.nest.networks import brian_nest
-        from src.nest.spike_trains.spike_train_editor import spikes_for_simulation
-
-        # file: read Brian params from json
-        network_params = file_handling.read_json(config['networks']['brian_nest_params'])
+        # file: read network params from json
+        network_params = file_handling.read_json('data/network_params/'+config['network']['params']+'.json')
         network_params['imported_stimulus_A'] = spikes_A
         network_params['imported_stimulus_B'] = spikes_B
 
-        #creo una nuova riga nel file di supporto, in cui se esistono inserisco anche le note sul trial
-        #questo mi serve per ottenere l'id del trial corrente ed usarlo per salvare gli output nella cartella corretta
         if not executions:
             from src.file_handling.support_file import new_row
             from src.file_handling.folder_handling import create_folder
@@ -199,21 +177,21 @@ if __name__ == '__main__':
             spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']), current_output_folder)
 
             network_params['execution'] = None
-
-            brian_nest.run(network_params)
+            network_module.run(network_params)
 
         else:
-            spikes_A_new = nest.GetStatus(spikes_A)
-            spikes_B_new = nest.GetStatus(spikes_B)
-            for exec in executions:
-                network_params['current_output_folder'] = 'output/multiple_trials/'+exec[2]+'/'
+            spikes_A_status = nest.GetStatus(spikes_A)
+            spikes_B_status = nest.GetStatus(spikes_B)
+            for index, exec in enumerate(executions):
+                network_params['current_output_folder'] = 'output/multiple_trials/'+str(index)+'/'
                 spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']), network_params['current_output_folder'])
                 if (sys.argv[1] == 'multiple_simulations'):
                     # TODO: gestire in automatico i diversi parametri
                     firing_rate_extern = multiple_simulations_params['network']['firing_rate_extern']
                     for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
                         network_params['firing_rate_extern'] = fre/1000
-                        network_params['execution'] = exec.append(str(fre/1000))
+                        exec.append(str(fre/1000))
+                        network_params['execution'] = exec
                         
                         nest.ResetKernel()
                         from scripts.network_output_clean import network_output_clean
@@ -222,12 +200,25 @@ if __name__ == '__main__':
                         #recreate spikes
                         spikes_A = []
                         spikes_B = []
-                        for i, el in enumerate(spikes_A_new):
+                        for i, el in enumerate(spikes_A_status):
                             spikes_A.append((nest.Create('spike_generator', params={'spike_times': el['spike_times'], 'start': el['start'], 'stop': el['stop']})[0]))
-                        for i, el in enumerate(spikes_B_new):
+                        for i, el in enumerate(spikes_B_status):
                             spikes_B.append((nest.Create('spike_generator', params={'spike_times': el['spike_times'], 'start': el['start'], 'stop': el['stop']})[0]))
 
                         network_params['imported_stimulus_A'] = spikes_A
                         network_params['imported_stimulus_B'] = spikes_B
-                        print('PARAMETRI:', network_params)
-                        brian_nest.run(network_params)
+
+                        simulation_result = network_module.run(network_params)
+
+                        plots_to_create = [
+                            ['spike_monitor_A', 'raster'],
+                            ['spike_monitor_B', 'raster'],
+                            ['spike_monitor_Z', 'raster'],
+                            ['spike_monitor_inhib', 'raster'],
+                            ['voltage_monitor_A', 'voltage'],
+                            ['voltage_monitor_B', 'voltage'],
+                            ['voltage_monitor_Z', 'voltage'],
+                            ['voltage_monitor_inhib', 'voltage']
+                        ]
+
+                        generate_plots(plots_to_create, simulation_result['current_output_folder'])

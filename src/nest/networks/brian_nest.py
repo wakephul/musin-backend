@@ -17,10 +17,7 @@ from random import sample, randint
 import numpy.random as rnd
 #from neurodynex3.tools import plot_tools
 import numpy as np
-import matplotlib.pyplot as plt
 import time
-
-from src.file_handling.file_handling import *
 
 # nest.ResetKernel()
 dt = 0.10
@@ -47,6 +44,7 @@ def sim_decision_making_network(data):
 	monitored_subset_size=data.get('monitored_subset_size', 1000000) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
 	imported_stimulus_B=data.get('imported_stimulus_B', None)
+	execution=data.get('execution', None)
 
 	"""
 	Returns:
@@ -344,25 +342,25 @@ def sim_decision_making_network(data):
 
 	print("Stimulus created and connected to excit pop A and B")
 
-	def update_poisson_stimulus(t): # questa non ci servirà perché sappiamo già se lo stimolo è dx o sx
-		if t >= t_stimulus_start and t < t_stimulus_end:
-			offset_A = mu0_mean_stimulus_Hz * (0.5 + 0.5 * coherence_level)
-			offset_B = mu0_mean_stimulus_Hz * (0.5 - 0.5 * coherence_level)
+	# def update_poisson_stimulus(t): # questa non ci servirà perché sappiamo già se lo stimolo è dx o sx
+	# 	if t >= t_stimulus_start and t < t_stimulus_end:
+	# 		offset_A = mu0_mean_stimulus_Hz * (0.5 + 0.5 * coherence_level)
+	# 		offset_B = mu0_mean_stimulus_Hz * (0.5 - 0.5 * coherence_level)
 	
-			rate_A = np.random.normal(offset_A, stimulus_std_Hz)
-			rate_A = (max(0., rate_A)) #no negative rate
-			rate_B = np.random.normal(offset_B, stimulus_std_Hz)
-			rate_B = (max(0., rate_B)) #no negative rate
+	# 		rate_A = np.random.normal(offset_A, stimulus_std_Hz)
+	# 		rate_A = (max(0., rate_A)) #no negative rate
+	# 		rate_B = np.random.normal(offset_B, stimulus_std_Hz)
+	# 		rate_B = (max(0., rate_B)) #no negative rate
 
-			# had to comment these out because spike generators don't have rates, while poisson generators do
-			# nest.SetStatus(poissonStimulus2A, "rate", rate_A)
-			# nest.SetStatus(poissonStimulus2B, "rate", rate_B)
-			print("stim on. rate_A={}, rate_B={}".format(rate_A, rate_B))
+	# 		# had to comment these out because spike generators don't have rates, while poisson generators do
+	# 		# nest.SetStatus(poissonStimulus2A, "rate", rate_A)
+	# 		# nest.SetStatus(poissonStimulus2B, "rate", rate_B)
+	# 		print("stim on. rate_A={}, rate_B={}".format(rate_A, rate_B))
 
-		else:
-			# nest.SetStatus(poissonStimulus2A, "rate", 0.)
-			# nest.SetStatus(poissonStimulus2B, "rate", 0.)
-			print("stim off.")
+	# 	else:
+	# 		# nest.SetStatus(poissonStimulus2A, "rate", 0.)
+	# 		# nest.SetStatus(poissonStimulus2B, "rate", 0.)
+	# 		print("stim off.")
 
 ###############################################################################################
 
@@ -467,6 +465,8 @@ def sim_decision_making_network(data):
 
 	ret_vals["weights"] = (w_AMPA_ext2inhib, w_AMPA_ext2excit, w0_inhib, w0_excit, w_AMPA_pos, w_AMPA_neg, w_NMDA_pos, w_NMDA_neg)
 	ret_vals["delays"] = (delay_AMPA, delay_GABA, delay_NMDA)
+
+	ret_vals["execution"] = execution
 	
 	build_time = endbuild - startbuild
 	sim_time = endsimulate - endbuild
@@ -491,232 +491,9 @@ def print_version():
 def getting_started(data):
 
 	print("stimulus start {}, stimulus end: {}".format(data['t_stimulus_start'], data['t_stimulus_start']+data['t_stimulus_duration']))
-	
 	results = sim_decision_making_network(data)
 
-	current_output_folder = data['current_output_folder']
-
-	# genero i vari grafici che vado a salvare ciascuno in un file
-
-	from src.file_handling import plot_voltage_trace, plot_raster_plot
-	
-	plots_to_create = [
-		['spike_monitor_A', 'raster'],
-		['spike_monitor_B', 'raster'],
-		['spike_monitor_Z', 'raster'],
-		['spike_monitor_inhib', 'raster'],
-		['voltage_monitor_A', 'voltage'],
-		['voltage_monitor_B', 'voltage'],
-		['voltage_monitor_Z', 'voltage'],
-		['voltage_monitor_inhib', 'voltage']
-	]
-
-	# print(results['idx_monitored_neurons_A'])
-	# print(results['idx_monitored_neurons_B'])
-
-	for plot in plots_to_create:
-		plt.figure()
-		if plot[1] == 'raster':
-			try:
-				plot_raster_plot.from_device(results[plot[0]], False, title=plot[0], hist=False, xlim =(0, data['max_sim_time']))
-			except:
-				print('error while generating raster: ', plot[0])
-
-			results_dict_complete = nest.GetStatus(results[plot[0]])[0]	
-			
-			# results_dict = {'senders': results_dict_complete['events']['senders'], 'times': results_dict_complete['events']['times']}
-			# dict_to_json(results_dict, current_output_folder+'values/'+plot[0])
-
-			# write to csv
-			senders = [x for _, x in sorted(zip(results_dict_complete['events']['times'], results_dict_complete['events']['senders']))]
-			times = sorted (results_dict_complete['events']['times'])
-
-			from src.file_handling.folder_handling import create_folder
-			create_folder(current_output_folder+'/values')
-			create_folder(current_output_folder+'/merged_plots')
-
-			with open(current_output_folder+'values/'+plot[0]+'.csv', 'w+') as file:
-				file.write(','.join(['sender', 'time'])+'\n')
-				for index in range(len(senders)):
-					file.write(','.join([str(senders[index]), str(5 * round(times[index]/5))])+'\n')
-
-		elif plot[1] == 'voltage':
-			try:
-				plot_voltage_trace.from_device(results[plot[0]], None, title=plot[0])
-			except:
-				print('error while generating voltage trace: ', plot[0])
-			
-			results_dict_complete = nest.GetStatus(results[plot[0]])[0]
-			# print(results_dict_complete)
-
-			# write to csv
-			with open(current_output_folder+'values/'+plot[0]+'.csv', 'w+') as file:
-				file.write(','.join(['sender', 'voltage', 'time'])+'\n')
-				for index in range(len(results_dict_complete['events']['senders'])):
-					file.write(','.join([str(results_dict_complete['events']['senders'][index]), str(results_dict_complete['events']['V_m'][index]), str(results_dict_complete['events']['times'][index])])+'\n')
-
-		plt.savefig(current_output_folder+'merged_plots/'+plot[0]+'.png')
-		plt.show()
-
-	#faccio un bel merge dei vari file per semplicità di lettura
-	from src.file_handling.merge_images import merge_images
-	filenames = [current_output_folder+'merged_plots/'+plot[0]+'.png' for plot in plots_to_create]
-	merge_images(filenames, [500, 500], current_output_folder+'voltage_and_dynamics.jpg', 3)
-	
-	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
-	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
-	# print('results', results)
-	# print('spike_monitor_a', results["spike_monitor_A"])
-
-	senders_spike_monitor_A = nest.GetStatus(results["spike_monitor_A"], 'events')[0]['senders']
-	times_spike_monitor_A = nest.GetStatus(results["spike_monitor_A"], 'events')[0]['times']
-	# print('senders', senders_spike_monitor_A)
-	# print('times', times_spike_monitor_A)
-	
-	# * in questa implementazione quello che faccio è assegnare a ciascun id i propri tempi di sparo
-	# monitored_spikes_A = {}
-	# for index, sender in enumerate(senders_spike_monitor_A):
-	# 	if sender in monitored_spikes_A:
-	# 		monitored_spikes_A[sender].append(times_spike_monitor_A[index])
-	# 	else:
-	# 		monitored_spikes_A[sender] = [times_spike_monitor_A[index]]
-	# for id in monitored_spikes_A:
-	# 	monitored_spikes_A[id].sort()
-	# print('monitored_spikes_A', monitored_spikes_A)
-
-	# * penso che dovrebbe funzionare al contrario, ovvero dovrei assegnare l'elenco degli id a ciascun tempo
-	# * in questo modo potrei dividerli già sulla base dei bin (forse), oppure calcolare e poi proseguire con il calcolo
-	bin_size = 5 # value in ms
-	max_time = int(data['max_sim_time'])
-	bins = list(range(bin_size, max_time+1, bin_size))
-	monitored_times_A = {}
-	for index, time in enumerate(times_spike_monitor_A):
-		bin_index = np.digitize(time, bins, right=True)
-		if bin_index < len(bins):
-			bin_time = np.take(bins, bin_index)
-			if bin_time in monitored_times_A:
-				monitored_times_A[bin_time].append(senders_spike_monitor_A[index])
-			else:
-				monitored_times_A[bin_time] = [senders_spike_monitor_A[index]]
-	for id in monitored_times_A:
-		monitored_times_A[id].sort()
-	# print('monitored_times_A', monitored_times_A)
-	# * qui fondamentalmente ho un elenco di tutti gli spari che si vedono in ciascun bin
-	# * il problema è che ci sono un sacco di duplicati in ciascun bin, cioè mi pare che la frequenza sia un po' alta se ogni neurone spara 2 o 3 volte ogni 5ms
-	bin_rates = {}
-	for bin_time, spikes_list in monitored_times_A.items():
-		bin_rate = len(spikes_list) * 1000 / (bin_size * len(results["idx_monitored_neurons_A"]))
-		bin_rates[bin_time] = bin_rate
-		# print(f'rate nel bin {bin_time}: {bin_rate} Hz')
-	
-	print('bin_rates', bin_rates)
-
-	# import h5py
-	# with h5py.File(current_output_folder+'test.hdf5', 'w') as f:
-	# 	dset = f.create_dataset("default", data = bin_rates)
-
-	rate_A = events_A / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_A"])
-	rate_B = events_B / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
-
-	print("Population A rate   : %.2f Hz" % rate_A)
-	print("Population B rate   : %.2f Hz" % rate_B)
-
-	if data['execution']:
-		data['execution'].append(rate_A)
-		data['execution'].append(rate_B)
-		from src.file_handling.support_file import new_row
-		print("DATA EXECUTION!!!", data['execution'])
-		new_row('', 'output/multiple_trials/support.csv', data['execution'])
-	else:
-		append_to_file(current_output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
-	
-	### plotting without module packages
-
-	#A
-
-	# vmA = nest.GetStatus(results["voltage_monitor_A"])[0]
-	# smA = nest.GetStatus(results["spike_monitor_A"])[0]
-	# rmA = nest.GetStatus(results["rate_monitor_A"])[0]	
-
-	# fig = None
-	# ax_raster = None
-	# ax_rate = None
-	# ax_voltage = None
-	# fig, (ax_raster, ax_rate, ax_voltage) = plt.subplots(3, 1, sharex=True, figsize=(10,5))
-	
-	# plt.suptitle("Left (population A)")
-
-	# evsA = smA["events"]["senders"]
-	# tsA = smA["events"]["times"]
-	# ax_raster.plot(tsA, evsA, ".")
-	# ax_raster.set_ylabel("neuron #")
-	# ax_raster.set_title("Raster Plot", fontsize=10)
-	
-	# t = np.arange(0., data['max_sim_time'], dt_rec)
-	# A_N = np.ones((t.size, 1)) * np.nan
-	# trmA = rmA["events"]["times"]
-	# trmA = trmA * dt - t0
-	# bins = np.concatenate((t, np.array([t[-1] + dt_rec])))
-	# A_N = np.histogram(trmA, bins=bins)[0] / len(results["idx_monitored_neurons_A"]) / dt_rec
-	# ax_rate.plot(t, A_N * 1000)
-	# ax_rate.set_ylabel("A(t) [Hz]")
-	# ax_rate.set_title("Activity", fontsize=10)
-
-	# for i in results["idx_monitored_neurons_A"]:
-	# 	per=len(results["idx_monitored_neurons_A"])
-	# 	#print("Neuron nº: {}".format(i))
-	# 	VmsA = vmA["events"]["V_m"][i::per]
-	# 	tsA = vmA["events"]["times"][i::per]
-	# 	ax_voltage.plot(tsA, VmsA)
-	# ax_voltage.set_ylabel("V(t) [mV]")
-	# ax_voltage.set_title("Voltage traces", fontsize=10)
-	# plt.xlabel("t [ms]")
-
-	# plt.show()
-	# plt.savefig(current_output_folder+'A_'+str(int(time.time())*randint(0,1000))+'.png')
-
-	# #B
-
-	# vmB = nest.GetStatus(results["voltage_monitor_B"])[0]
-	# smB = nest.GetStatus(results["spike_monitor_B"])[0]
-	# rmB = nest.GetStatus(results["rate_monitor_B"])[0]
-
-	# fig = None
-	# ax_raster = None
-	# ax_rate = None
-	# ax_voltage = None
-	# fig, (ax_raster, ax_rate, ax_voltage) = plt.subplots(3, 1, sharex=True, figsize=(10,5))
-	
-	# plt.suptitle("Right (population B)")
-
-	# evsB = smB["events"]["senders"]
-	# tsB = smB["events"]["times"]
-	# ax_raster.plot(tsB, evsB, ".")
-	# ax_raster.set_ylabel("neuron #")
-	# ax_raster.set_title("Raster Plot", fontsize=10)
-
-	# t = np.arange(0., data['max_sim_time'], dt_rec)
-	# A_N = np.ones((t.size, 1)) * np.nan
-	# trmB = rmB["events"]["times"]
-	# trmB = trmB * dt - t0
-	# bins = np.concatenate((t, np.array([t[-1] + dt_rec])))
-	# A_N = np.histogram(trmB, bins=bins)[0] / len(results["idx_monitored_neurons_B"]) / dt_rec
-	# ax_rate.plot(t, A_N * 1000)
-	# ax_rate.set_ylabel("A(t) [Hz]")
-	# ax_rate.set_title("Activity", fontsize=10)
-
-	# for i in results["idx_monitored_neurons_B"]:
-	# 	per=len(results["idx_monitored_neurons_B"])
-	# 	#print("Neuron nº: {}".format(i))
-	# 	VmsB = vmB["events"]["V_m"][i::per]
-	# 	tsB = vmB["events"]["times"][i::per]
-	# 	ax_voltage.plot(tsB, VmsB)
-	# ax_voltage.set_ylabel("V(t) [mV]")
-	# ax_voltage.set_title("Voltage traces", fontsize=10)
-	# plt.xlabel("t [ms]")
-
-	# plt.show()
-	# plt.savefig(current_output_folder+'B_'+str(int(time.time())*randint(0,1000))+'.png')
+	return results
 
 def run(data):
 	getting_started(data)

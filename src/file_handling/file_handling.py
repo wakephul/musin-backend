@@ -33,7 +33,7 @@ def read_json(file_path):
         return json.load(f)
 
 def save_to_file(object, file_name):
-    file_path = 'data/' + file_name + '{}.p'.format(int(time.time()))
+    file_path = file_name + '_{}.p'.format(int(time.time()))
 
     with open(file_path, 'wb+') as fp:
         pickle.dump(object, fp, protocol=pickle.HIGHEST_PROTOCOL)

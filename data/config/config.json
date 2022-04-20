@@ -5,7 +5,8 @@
     "input": {
         "spikes_params": "data/network_params/spikes_params.json"
     },
-    "networks": {
-        "brian_nest_params": "data/network_params/brian_nest_params.json"
+    "network": {
+        "name": "brian_nest",
+        "params": "brian_nest_params"
     }
 }
