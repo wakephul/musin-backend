@@ -479,21 +479,13 @@ def sim_decision_making_network(data):
 
 ###############################################################################################
 
-# def run_multiple_simulations
-
-###############################################################################################
-
 def print_version():
 	print("Version: 17 March 2022")
 
 ###############################################################################################
 
-def getting_started(data):
+def run(data):
 
 	print("stimulus start {}, stimulus end: {}".format(data['t_stimulus_start'], data['t_stimulus_start']+data['t_stimulus_duration']))
-	results = sim_decision_making_network(data)
-
-	return results
-
-def run(data):
-	getting_started(data)
+	
+	return sim_decision_making_network(data)

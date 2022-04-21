@@ -64,8 +64,8 @@ if __name__ == '__main__':
             print("Error while selecting spikes from db")
 
         from importlib import import_module
-        from src.nest.spike_trains.spike_train_editor import spikes_for_simulation
-        from src.nest.spike_trains.spike_train_generator import poisson_spikes_generator_parrot, spike_generator_from_times
+        from src.nest.spike_trains.edit import spikes_for_simulation
+        from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
         from src.file_handling.folder_handling import create_folder
         from src.file_handling.file_handling import write_to_file
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
                         network_params['imported_stimulus_A'] = spikes_A
                         network_params['imported_stimulus_B'] = spikes_B
 
-                        simulation_result = network_module.run(network_params)
+                        simulation_results = network_module.run(network_params)
 
                         plots_to_create = [
                             ['spike_monitor_A', 'raster'],
@@ -221,4 +221,62 @@ if __name__ == '__main__':
                             ['voltage_monitor_inhib', 'voltage']
                         ]
 
-                        generate_plots(plots_to_create, simulation_result['current_output_folder'])
+                        generate_plots(plots_to_create, simulation_results['current_output_folder'])
+
+                        events_A = nest.GetStatus(simulation_results["spike_monitor_A"], "n_events")[0]
+                        events_B = nest.GetStatus(simulation_results["spike_monitor_B"], "n_events")[0]
+
+                        senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
+                        times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
+
+                        # * in questa implementazione quello che faccio è assegnare a ciascun id i propri tempi di sparo
+                        # monitored_spikes_A = {}
+                        # for index, sender in enumerate(senders_spike_monitor_A):
+                        # 	if sender in monitored_spikes_A:
+                        # 		monitored_spikes_A[sender].append(times_spike_monitor_A[index])
+                        # 	else:
+                        # 		monitored_spikes_A[sender] = [times_spike_monitor_A[index]]
+                        # for id in monitored_spikes_A:
+                        # 	monitored_spikes_A[id].sort()
+                        # print('monitored_spikes_A', monitored_spikes_A)
+
+                        # * penso che dovrebbe funzionare al contrario, ovvero dovrei assegnare l'elenco degli id a ciascun tempo
+                        # * in questo modo potrei dividerli già sulla base dei bin (forse), oppure calcolare e poi proseguire con il calcolo
+                        bin_size = 5 # value in ms
+                        max_time = int(data['max_sim_time'])
+                        bins = list(range(bin_size, max_time+1, bin_size))
+                        monitored_times_A = {}
+                        for index, time in enumerate(times_spike_monitor_A):
+                            bin_index = np.digitize(time, bins, right=True)
+                            if bin_index < len(bins):
+                                bin_time = np.take(bins, bin_index)
+                                if bin_time in monitored_times_A:
+                                    monitored_times_A[bin_time].append(senders_spike_monitor_A[index])
+                                else:
+                                    monitored_times_A[bin_time] = [senders_spike_monitor_A[index]]
+                        for id in monitored_times_A:
+                            monitored_times_A[id].sort()
+                        # print('monitored_times_A', monitored_times_A)
+                        # * qui fondamentalmente ho un elenco di tutti gli spari che si vedono in ciascun bin
+                        # * il problema è che ci sono un sacco di duplicati in ciascun bin, cioè mi pare che la frequenza sia un po' alta se ogni neurone spara 2 o 3 volte ogni 5ms
+                        bin_rates = {}
+                        for bin_time, spikes_list in monitored_times_A.items():
+                            bin_rate = len(spikes_list) * 1000 / (bin_size * len(simulation_results["idx_monitored_neurons_A"]))
+                            bin_rates[bin_time] = bin_rate
+                            print(f'rate nel bin {bin_time}: {bin_rate} Hz')
+
+                        print('bin_rates', bin_rates)
+
+                        rate_A = events_A / data['max_sim_time'] * 1000.0 / len(simulation_results["idx_monitored_neurons_A"])
+                        rate_B = events_B / data['max_sim_time'] * 1000.0 / len(simulation_results["idx_monitored_neurons_B"])
+
+                        print("Population A rate   : %.2f Hz" % rate_A)
+                        print("Population B rate   : %.2f Hz" % rate_B)
+
+                        if data['execution']:
+                            data['execution'].append(rate_A)
+                            data['execution'].append(rate_B)
+                            data['execution'].pop(0)
+                            new_row('', 'output/multiple_trials/support.csv', data['execution'])
+                        else:
+                            append_to_file(output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
