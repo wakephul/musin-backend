@@ -40,3 +40,10 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
         new_image.paste(image, new_position)
 
     new_image.save(filename ,"JPEG")
+
+def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_title'):
+
+    if (not output_folder or not plots_to_merge): return
+    
+    filenames = [output_folder+'merged_plots/'+plot[0]+'.png' for plot in plots_to_merge]
+    merge_images(filenames, [500, 500], output_folder+merge_title+'.jpg', 3)

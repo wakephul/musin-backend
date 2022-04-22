@@ -44,7 +44,6 @@ def sim_decision_making_network(data):
 	monitored_subset_size=data.get('monitored_subset_size', 1000000) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
 	imported_stimulus_B=data.get('imported_stimulus_B', None)
-	execution=data.get('execution', None)
 
 	"""
 	Returns:
@@ -465,8 +464,6 @@ def sim_decision_making_network(data):
 
 	ret_vals["weights"] = (w_AMPA_ext2inhib, w_AMPA_ext2excit, w0_inhib, w0_excit, w_AMPA_pos, w_AMPA_neg, w_NMDA_pos, w_NMDA_neg)
 	ret_vals["delays"] = (delay_AMPA, delay_GABA, delay_NMDA)
-
-	ret_vals["execution"] = execution
 	
 	build_time = endbuild - startbuild
 	sim_time = endsimulate - endbuild

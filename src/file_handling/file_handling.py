@@ -26,7 +26,7 @@ def dict_to_json(dictionary, file_name):
 
 def dump_to_json(obj, file_path):
     with open(file_path, 'w+') as fp:
-        json.dump({k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in obj.items()}, fp, sort_keys=True, indent=4)
+        json.dump({str(k): (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in obj.items()}, fp, sort_keys=True, indent=4)
 
 def read_json(file_path):
     with open(file_path, 'r') as f:

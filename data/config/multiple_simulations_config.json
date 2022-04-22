@@ -2,7 +2,7 @@
     "spikes": {
         "rate": {
             "first_value": 0,
-            "last_value": 1,
+            "last_value": 15,
             "increment": 1
         },
         "first_spike_latency": 50.0,
@@ -12,8 +12,8 @@
     "network": {
         "firing_rate_extern": {
             "first_value": 0.0,
-            "last_value": 0.1,
-            "increment": 0.1
+            "last_value": 1.0,
+            "increment": 0.05
         }
     }
 }

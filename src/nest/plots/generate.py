@@ -1,14 +1,14 @@
 import matplotlib.pyplot as plt
-from src.file_handling import plot_voltage_trace, plot_raster_plot
-from src.file_handling.file_handling import *
-from src.file_handling.support_file import new_row
 from src.file_handling.folder_handling import create_folder
+import src.file_handling.images.plot_raster_plot as plot_raster_plot
+import src.file_handling.images.plot_voltage_trace as plot_voltage_trace
 from src.nest.plots.save import save_raster_results, save_voltage_results
-from src.nest.plots.edit import merge_plots
+from src.file_handling.images.edit import merge_plots
 
-def generate_plots(plots_to_create = [], output_folder = '', simulation_results = []):
+def generate_plots(plots_to_create = [], output_folder = '', simulation_results = {}):
     
     if (not plots_to_create or not output_folder or not simulation_results): return
+
 
     create_folder(output_folder+'/values')
     create_folder(output_folder+'/merged_plots')

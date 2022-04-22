@@ -8,16 +8,15 @@ from src.file_handling.file_handling import append_to_file
 # uso questi booleani per definire se un trial è dx o sx
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
-def spikes_for_simulation(spikes, durations, simulation_time, current_output_folder):
+def spikes_for_simulation(spikes, durations, simulation_time):
     number_of_stimuli_in_simulation = int(simulation_time/durations)
     trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
     random.shuffle(trials)
     print('TRIALS', trials)
     trials_to_string = "\n".join([f"Trial {index}: Right " if trial else f"Trial {index}: Left " for index, trial in enumerate(trials)])+"\n"
-    append_to_file(current_output_folder+'trial_notes.txt', trials_to_string)
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
-    print('spikes', spikes_A)
+    # print('spikes', spikes_A)
     spikes_A_status = nest.GetStatus(spikes_A)
     spikes_B = spikes[1]
     spikes_B_status = nest.GetStatus(spikes_B)
@@ -42,4 +41,4 @@ def spikes_for_simulation(spikes, durations, simulation_time, current_output_fol
     spikes_B_status = nest.GetStatus(spikes_B)
     # print(spikes_B_status[0])
 
-    return 
+    return trials_to_string

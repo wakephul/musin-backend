@@ -1,3 +1,4 @@
+import numpy
 import src.file_handling.csv_handling as csv_handling
 import calendar
 import time
@@ -8,9 +9,10 @@ def get_last(file_path):
 
 def get_last_id(file_path):
     row = get_last(file_path)
-    return row[0] if len(row) else None
+    return row[0] if isinstance(row, numpy.ndarray) else None
 
 def new_row(notes='', file_path='data/db/support.csv', data=None, heading=None):
+    new_incremental_id = 1
     if not heading:
         last_id = get_last_id(file_path)
         new_incremental_id = (last_id+1) if last_id else 1
