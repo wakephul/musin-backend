@@ -105,7 +105,7 @@ if __name__ == '__main__':
                             spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
                             nest_reset() # necessary to have the network start off with a "clean" nest setup
 
-                            single_execution_information = [rate]
+                            single_execution_information = [spikes_A_times, spikes_B_times, rate]
                             executions.append(single_execution_information)
                
             else:
@@ -199,7 +199,7 @@ if __name__ == '__main__':
             # print("Population B rate   : %.2f Hz" % rate_B)
 
             spikes_params = file_handling.read_json(config['input']['spikes_params'])
-            
+
             file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nSpikes rate: {str(spikes_params['rate'])} Hz")
             file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nFiring rate extern: {str(network_params['firing_rate_extern'])} Hz")
 
@@ -208,6 +208,9 @@ if __name__ == '__main__':
 
         else:
             for exec in executions:
+                spikes_A_times = exec.pop(0)
+                spikes_B_times = exec.pop(0)
+
                 # TODO: gestire in automatico i diversi parametri
                 firing_rate_extern = multiple_simulations_params['network']['firing_rate_extern']
                 for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
