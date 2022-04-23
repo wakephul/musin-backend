@@ -90,9 +90,11 @@ if __name__ == '__main__':
                     spikes_params = multiple_simulations_params['spikes']
                     if 'rate' in spikes_params:
                         spikes_rate = spikes_params['rate']
-                        for rate in range(spikes_rate['first_value'], spikes_rate['last_value']+spikes_rate['increment'], spikes_rate['increment']):
+                        for r in range(int(spikes_rate['first_value']*1000), int(spikes_rate['last_value']*1000+spikes_rate['increment']*1000), int(spikes_rate['increment']*1000)):
 
-                            rate = float(rate)
+                            print('RATE', r/1000)
+
+                            rate = float(r/1000)
 
                             start = spikes_params['first_spike_latency'] # latency of first spike in ms, represents the beginning of the simulation relative to trial start
                             number_of_neurons = spikes_params['number_of_neurons']
@@ -169,7 +171,7 @@ if __name__ == '__main__':
 
             write_to_file(output_folder+"trial_notes.txt", trial_notes)
 
-            spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']), output_folder)
+            spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
 
             simulation_results = network_module.run(network_params)
 
@@ -184,15 +186,25 @@ if __name__ == '__main__':
                 ['voltage_monitor_inhib', 'voltage']
             ]
 
-            generate_plots(plots_to_create, output_folder)
+            max_time = int(network_params['max_sim_time'])
 
-            bin_rates = calculate_bins(simulation_results)
+            generate_plots(plots_to_create, output_folder, simulation_results, max_time)
             
-            rate_A, rate_B = calculate_average_rate(simulation_results)
-            print("Population A rate   : %.2f Hz" % rate_A)
-            print("Population B rate   : %.2f Hz" % rate_B)
-                
-            file_handling.append_to_file(output_folder+'trial_notes.txt', f"\n\nPopulation A rate: {rate_A:.2f} Hz\nPopulation B rate: {rate_B:.2f} Hz")
+            bin_rates = calculate_bins(simulation_results, max_time)
+            print(bin_rates)
+            file_handling.dict_to_json(bin_rates, output_folder+'bin_rates')
+            rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
+
+            # print("Population A rate   : %.2f Hz" % rate_A)
+            # print("Population B rate   : %.2f Hz" % rate_B)
+
+            spikes_params = file_handling.read_json(config['input']['spikes_params'])
+            
+            file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nSpikes rate: {str(spikes_params['rate'])} Hz")
+            file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nFiring rate extern: {str(network_params['firing_rate_extern'])} Hz")
+
+            file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nPopulation A rate: {rate_A} Hz")
+            file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nPopulation B rate: {rate_B} Hz")
 
         else:
             for exec in executions:
@@ -223,20 +235,14 @@ if __name__ == '__main__':
                     network_params['firing_rate_extern'] = fre/1000
                     current_execution.append(str(fre/1000))
 
-                    #recreate spikes
-                    # spikes_A = []
-                    # spikes_B = []
-                    # for i, el in enumerate(spikes_A_status):
-                    #     spikes_A.append((nest.Create('spike_generator', params={'spike_times': el['spike_times'], 'start': el['start'], 'stop': el['stop']})[0]))
-                    # for i, el in enumerate(spikes_B_status):
-                    #     spikes_B.append((nest.Create('spike_generator', params={'spike_times': el['spike_times'], 'start': el['start'], 'stop': el['stop']})[0]))
-                    # ! qui sopra ho commentato tutto perché spostando la generazione degli spikes direttamente a questo punto del codice, non ho più bisogno di ricrearli
-
                     network_params['imported_stimulus_A'] = spikes_A
                     network_params['imported_stimulus_B'] = spikes_B
                     
                     simulation_results = network_module.run(network_params)
+                    print("RESULTS", simulation_results)
 
+                    # ! TODO: eguagliare i vari assi dei grafici per poterli comparare
+                    
                     plots_to_create = [
                         ['spike_monitor_A', 'raster'],
                         ['spike_monitor_B', 'raster'],
@@ -248,9 +254,10 @@ if __name__ == '__main__':
                         ['voltage_monitor_inhib', 'voltage']
                     ]
 
-                    generate_plots(plots_to_create, output_folder, simulation_results)
-                    
                     max_time = int(network_params['max_sim_time'])
+
+                    generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                    
                     bin_rates = calculate_bins(simulation_results, max_time)
                     print(bin_rates)
                     file_handling.dict_to_json(bin_rates, output_folder+'bin_rates')
