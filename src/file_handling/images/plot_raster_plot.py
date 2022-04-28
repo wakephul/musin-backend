@@ -273,7 +273,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         plotid = pylab.plot(ts1, gids, color_marker)
         pylab.ylabel(ylabel)
         pylab.xticks([])
-        xlim = xlim if xlim else pylab.xlim()
+        xlim = pylab.xlim(xlim) if xlim else pylab.xlim()
 
         pylab.axes([0.1, 0.1, 0.85, 0.17])
         t_bins = numpy.arange(
@@ -291,8 +291,6 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
             numpy.linspace(0.0, int(max(heights) * 1.1) + 5, 4)
         ])
         pylab.ylabel("Rate (Hz)")
-        pylab.xlabel(xlabel)
-        pylab.xlim(xlim)
         pylab.axes(ax1)
     else:
         plotid = pylab.plot(ts1, gids, color_marker, ms=1)
@@ -304,6 +302,9 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
     else:
         pylab.title(title)
 
+    pylab.xlabel(xlabel)
+    if xlim:
+        pylab.xlim(xlim)
     pylab.draw()
 
     return plotid

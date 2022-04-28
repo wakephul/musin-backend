@@ -156,7 +156,7 @@ if __name__ == '__main__':
         network_params['imported_stimulus_A'] = spikes_A
         network_params['imported_stimulus_B'] = spikes_B
 
-        if not executions: # ! forse questo caso potrei farlo semplicemente rientrare nell'altro, come caso base. Da considerare la possibilità
+        if not executions: # ! questo caso potrei farlo semplicemente rientrare nell'altro, come caso base. Da considerare la possibilità
             from src.file_handling.support_file import new_row
             from src.file_handling.folder_handling import create_folder
             from src.file_handling.file_handling import write_to_file
@@ -215,7 +215,8 @@ if __name__ == '__main__':
                 firing_rate_extern = multiple_simulations_params['network']['firing_rate_extern']
                 for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
 
-                    nest.ResetKernel()
+                    # nest.ResetKernel()
+                    nest_reset()
                     from scripts.network_output_clean import network_output_clean
                     network_output_clean()
 
@@ -233,9 +234,9 @@ if __name__ == '__main__':
                     trials_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
                     file_handling.append_to_file(output_folder+'trial_notes.txt', trials_to_string)
 
-                    current_execution = [spikes_A_file_name, spikes_B_file_name]+[str(int(exec[0]))]
+                    current_execution = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
 
-                    network_params['firing_rate_extern'] = fre/1000
+                    network_params['firing_rate_extern'] = float(fre/1000)
                     current_execution.append(str(fre/1000))
 
                     network_params['imported_stimulus_A'] = spikes_A
@@ -261,16 +262,21 @@ if __name__ == '__main__':
 
                     generate_plots(plots_to_create, output_folder, simulation_results, max_time)
                     
-                    bin_rates = calculate_bins(simulation_results, max_time)
-                    print(bin_rates)
-                    file_handling.dict_to_json(bin_rates, output_folder+'bin_rates')
+                    senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
+                    times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
+                    senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
+                    times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
+                    
+                    bin_rates_A = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), 5, max_time)
+                    bin_rates_B = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), 5, max_time)
+
+                    file_handling.dict_to_json(bin_rates_A, output_folder+'bin_rates_A')
+                    file_handling.dict_to_json(bin_rates_B, output_folder+'bin_rates_B')
+
                     rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
 
-                    # print("Population A rate   : %.2f Hz" % rate_A)
-                    # print("Population B rate   : %.2f Hz" % rate_B)
-
                     file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nSpikes rate: {str(exec[0])} Hz")
-                    file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nFiring rate extern: {str(fre)} Hz")
+                    file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nFiring rate extern: {str(float(fre/1000))} Hz")
 
                     file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nPopulation A rate: {rate_A} Hz")
                     file_handling.append_to_file(output_folder+'trial_notes.txt', f"\nPopulation B rate: {rate_B} Hz")

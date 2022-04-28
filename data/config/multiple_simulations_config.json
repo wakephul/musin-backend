@@ -1,9 +1,9 @@
 {
     "spikes": {
         "rate": {
-            "first_value": 0.0,
-            "last_value": 10.0,
-            "increment": 1.0
+            "first_value": 1.05,
+            "last_value": 1.05,
+            "increment": 0.05
         },
         "first_spike_latency": 50.0,
         "number_of_neurons": 100,
@@ -11,9 +11,9 @@
     },
     "network": {
         "firing_rate_extern": {
-            "first_value": 0.0,
-            "last_value": 1.0,
-            "increment": 0.05
+            "first_value": 0.09,
+            "last_value": 0.11,
+            "increment": 0.01
         }
     }
 }

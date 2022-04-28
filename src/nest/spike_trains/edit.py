@@ -11,6 +11,7 @@ from src.file_handling.file_handling import append_to_file
 def spikes_for_simulation(spikes, durations, simulation_time):
     number_of_stimuli_in_simulation = int(simulation_time/durations)
     trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
+    random.seed(1111)
     random.shuffle(trials)
     print('TRIALS', trials)
     trials_to_string = "\n".join([f"Trial {index}: Right " if trial else f"Trial {index}: Left " for index, trial in enumerate(trials)])+"\n"

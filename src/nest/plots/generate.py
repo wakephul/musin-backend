@@ -17,11 +17,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
         plt.figure()
         if plot[1] == 'raster':
             try:
-                print('plot[0]',plot[0])
-                print('detector',simulation_results[plot[0]])
-                print('plot title',plot[0])
-                print('max_sim_time',max_time)
-                plot_raster_plot.from_device(simulation_results[plot[0]], False, title=plot[0], hist=False, xlim =(0, max_time))
+                plot_raster_plot.from_device(simulation_results[plot[0]], False, title=plot[0], hist=True, xlim =(0, max_time))
             except:
                 print('error while generating raster: ', plot[0])
 
@@ -29,7 +25,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
 
         elif plot[1] == 'voltage':
             try:
-                plot_voltage_trace.from_device(simulation_results[plot[0]], None, title=plot[0])
+                plot_voltage_trace.from_device(simulation_results[plot[0]], None, title=plot[0], xlim=(0, max_time))
             except:
                 print('error while generating voltage trace: ', plot[0])
             

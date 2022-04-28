@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 
-def from_file(fname, title=None, grayscale=False):
+def from_file(fname, title=None, grayscale=False, xlim=None, ylim=None):
     """Plot voltage trace from file.
 
     Parameters
@@ -120,13 +120,17 @@ def from_file(fname, title=None, grayscale=False):
 
     pylab.title(title)
     pylab.ylabel("Membrane potential (mV)")
+    if xlim:
+        pylab.xlim(xlim)
+    if ylim:
+        pylab.ylim(ylim)
     pylab.draw()
 
     return plotid
 
 
 def from_device(detec, neurons=None, title=None, grayscale=False,
-                timeunit="ms"):
+                timeunit="ms", xlim=None, ylim=None):
     """Plot the membrane potential of a set of neurons recorded by
     the given Voltmeter or Multimeter.
 
@@ -174,7 +178,7 @@ def from_device(detec, neurons=None, title=None, grayscale=False,
             else:
                 timeunit = "ms"
 
-        times, voltages = _from_memory(detec)
+        times, voltages = _from_memory(detec, xlim)
         # print(f'times-voltages for detec {detec}', voltages.keys())
 
         if not len(times):
@@ -220,13 +224,13 @@ def from_device(detec, neurons=None, title=None, grayscale=False,
 
     elif nest.GetStatus(detec, "to_file")[0]:
         fname = nest.GetStatus(detec, "filenames")[0]
-        return from_file(fname, title, grayscale)
+        return from_file(fname, title, grayscale, xlim, ylim)
     else:
         raise nest.kernel.NESTError("Provided devices neither records to \
             file, nor to memory.")
 
 
-def _from_memory(detec):
+def _from_memory(detec, xlim=None):
     """Get voltage traces from memory.
     ----------
     detec : list
