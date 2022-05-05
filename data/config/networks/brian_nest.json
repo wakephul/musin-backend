@@ -9,9 +9,9 @@
     "mu0_mean_stimulus_Hz": 160.0, 
     "stimulus_std_Hz": 20.0,
     "N_extern": 1000,
-    "firing_rate_extern": 0.0, 
+    "firing_rate_extern": 0.0,
     "w_pos": 1.90, 
     "f_Subpop_size": 0.25,
-    "max_sim_time": 10000.0,
+    "max_sim_time": 1000.0,
     "monitored_subset_size": 100000
 }

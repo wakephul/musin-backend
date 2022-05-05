@@ -1,6 +1,0 @@
-{
-    "rate": 0.0,
-    "first_spike_latency": 50.0,
-    "number_of_neurons": 100,
-    "trial_duration": 1000.0
-}

@@ -2,11 +2,62 @@
     "app": {
         "database": "data/db/database.db"
     },
-    "input": {
-        "spikes_params": "data/network_params/spikes_params.json"
-    },
-    "network": {
-        "name": "brian_nest",
-        "params": "brian_nest_params"
+    "executions": [
+        {
+            "name": "audiovisual",
+            "types": [
+                "visual",
+                "auditory"
+            ],
+            "merge_stimuli": true,
+            "primary_networks": [
+                "brian_nest"
+            ],
+            "secondary_networks": [
+
+            ]
+        }
+    ],
+    "execution_types": {
+        "visual": {
+            "use_existent_spikes": false,
+            "spikes": {
+                "rate": {
+                    "single_value": false,
+                    "first_value": 1.05,
+                    "last_value": 1.1,
+                    "increment": 0.05
+                },
+                "first_spike_latency": {
+                    "value": 80.0
+                },
+                "number_of_neurons": {
+                    "value": 1
+                },
+                "trial_duration": {
+                    "value": 1000.0
+                }
+            }
+        },
+        "auditory": {
+            "use_existent_spikes": false,
+            "spikes": {
+                "rate": {
+                    "single_value": false,
+                    "first_value": 1.00,
+                    "last_value": 1.00,
+                    "increment": 0.05
+                },
+                "first_spike_latency": {
+                    "value": 10.0
+                },
+                "number_of_neurons": {
+                    "value": 1
+                },
+                "trial_duration": {
+                    "value": 1000.0
+                }
+            }
+        }
     }
 }

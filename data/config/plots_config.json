@@ -1,0 +1,12 @@
+{
+    "brian_nest": [
+        ["spike_monitor_A", "raster"],
+        ["spike_monitor_B", "raster"],
+        ["spike_monitor_Z", "raster"],
+        ["spike_monitor_inhib", "raster"],
+        ["voltage_monitor_A", "voltage"],
+        ["voltage_monitor_B", "voltage"],
+        ["voltage_monitor_Z", "voltage"],
+        ["voltage_monitor_inhib", "voltage"]
+    ]
+}
