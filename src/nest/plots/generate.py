@@ -11,7 +11,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
 
 
     create_folder(output_folder+'/values')
-    create_folder(output_folder+'/merged_plots')
+    create_folder(output_folder+'/plots')
 
     for plot in plots_to_create:
         plt.figure()

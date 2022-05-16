@@ -1,3 +1,5 @@
+import pdb
+
 import nest
 nest.set_verbosity('M_ERROR') #lo metto qui per evitare tutte le print
 import sys
@@ -10,12 +12,21 @@ from src.nest.output.rates import calculate_average_rate, calculate_bins
 from src.file_handling.support_file import new_row
 
 from src.utils.dictionaries import merge_sort_dicts_of_lists
-        
+from src.utils.combinations import combinations_generator
+from scripts.network_output_clean import network_output_clean
+
+from src.nest.reset.reset import nest_reset
+from importlib import import_module
+from src.nest.spike_trains.edit import spikes_for_simulation
+from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
+from src.file_handling.folder_handling import create_folder
+
 if __name__ == '__main__':
     # CONFIGURATION FILE
     config = file_handling.read_json('data/config/config.json')
     plots_config = file_handling.read_json('data/config/plots_config.json')
     network_config = file_handling.read_json('data/config/network_config.json')
+    execution_types = file_handling.read_json('data/config/execution_types.json')
     exit = False
 
     # connection: connect to database to create table if needed
@@ -45,46 +56,32 @@ if __name__ == '__main__':
             print("Error while connecting to db or creating table")
 
     if not exit:
-        from src.nest.reset.reset import nest_reset
-        from importlib import import_module
-        from src.nest.spike_trains.edit import spikes_for_simulation
-        from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
-        from src.file_handling.folder_handling import create_folder
 
-        # executions_information = []
         executions = config['executions']
-        execution_types = config['execution_types']
 
-        for execution in executions:
-            new_simulation_id = new_row(file_path='output/executions/executions.csv', data=[execution['name'], '/'.join(execution['types']), '/'.join(execution['primary_networks']), '/'.join(execution['secondary_networks'])])
+        for execution_index, execution in enumerate(executions):
+            merge_stimuli = True if ((not 'merge_stimuli' in execution) or ('merge_stimuli' in execution and execution['merge_stimuli'])) else False
+            primary_networks_for_csv = '/'.join([n + '_DUPL' for n in execution['primary_networks']]) if not merge_stimuli else '/'.join(execution['primary_networks'])
+            new_simulation_id = new_row(file_path='output/executions/executions.csv', data=[execution['name'], '/'.join(execution['types']), primary_networks_for_csv, '/'.join(execution['secondary_networks'])])
             current_simulations_folder = 'output/executions/'+str(new_simulation_id)+'/'
             create_folder(current_simulations_folder)
-            # ! TODO: qui l'heading non dovrebbe essere esattamente così, nel senso che i file name li potrei togliere
-            # ! e bisognerebbe salvare solo i parametri che effettivamente variano durante la simulazione
-            new_row(file_path=current_simulations_folder+'simulations.csv', heading=['id','spikes_A_file_name','spikes_B_file_name','spikes_rate','firing_rate_extern','rate_A','rate_B'])
-            current_simulation_folder = current_simulations_folder+'simulations/'
-            create_folder(current_simulation_folder)
-            current_simulation_id = 1 # parto da 1 così è allineato con l'ID nel CSV
-            nest_reset()
             
-            execution_stimuli = []
-            for execution_index, execution_type in enumerate(execution['types']):
+            execution_stimuli = {}
+
+            for execution_type in execution['types']:
                 execution_params = execution_types[execution_type]
-                execution_stimuli.append([])
+                execution_stimuli[execution_type] = []
                 if 'use_existent_spikes' in execution_params and not execution_params['use_existent_spikes']:
                     spikes_params = execution_params['spikes']
                     spikes_values = {}
-                    has_multiple_values = []
-                    for spike_params_key, spikes_params_info in spikes_params.items():
+                    for spikes_params_key, spikes_params_info in spikes_params.items():
                         if 'single_value' in spikes_params_info and not spikes_params_info['single_value']:
                             print('spikes_params_info', spikes_params_info)
-                            spikes_values[spike_params_key] = []
-                            has_multiple_values.append(spike_params_key)
+                            spikes_values[spikes_params_key] = []
                             for value in range(int(spikes_params_info['first_value']*1000), int(spikes_params_info['last_value']*1000+spikes_params_info['increment']*1000), int(spikes_params_info['increment']*1000)):
-
-                                spikes_values[spike_params_key].append(float(value/1000))
+                                spikes_values[spikes_params_key].append(float(value/1000))
                         else:
-                            spikes_values[spike_params_key] = spikes_params_info['value']
+                            spikes_values[spikes_params_key] = [spikes_params_info['value']]
                     
                 # else: qui andrà effettivamente il codice per usare un file di spikes già esistente (passato in input)
                     # spikes_A_times = file_handling.file_open(spikes_A)
@@ -92,58 +89,79 @@ if __name__ == '__main__':
                     # spikes_A = spike_generator_from_times(spikes_A_times)
                     # spikes_B = spike_generator_from_times(spikes_B_times)
 
-                start = spikes_values['first_spike_latency'] # latency of first spike in ms, represents the beginning of the simulation relative to trial start
-                number_of_neurons = spikes_values['number_of_neurons']
-                trial_duration = stop = spikes_values['trial_duration'] # trial duration in ms
-                if not isinstance(spikes_values['rate'], list):
-                    spikes_values['rate'] = [spikes_values['rate']]
-                for r in spikes_values['rate']:
-                    rate = r
+                spikes_combinations = combinations_generator(spikes_values)
+                # pdb.set_trace()
+
+                for combination in spikes_combinations:
+                    print('combination: ', combination)
+                    rate = combination['rate']
+                    start = combination['first_spike_latency']
+                    number_of_neurons = combination['number_of_neurons']
+                    trial_duration = stop = combination['trial_duration']
+                    print(rate, start, stop, number_of_neurons, trial_duration)
                     spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-                    nest_reset()
+                    nest_reset(3232) # altrimenti l'rng genera tempi uguali
                     spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-                    nest_reset()
+                    nest_reset(1214)
+                    execution_stimuli[execution_type].append({'info': 'rate='+str(rate)+'&start='+str(start)+'&number_of_neurons='+str(number_of_neurons)+'&trial_duration='+str(trial_duration), 'A': spikes_A_times, 'B': spikes_B_times})
 
-                    execution_stimuli[execution_index].append([spikes_A_times, spikes_B_times])
-
-            print('stimuli:', len(execution_stimuli))
+            print('stimuli:', execution_stimuli)
             duplicate_primary_network = False
-            input_stimuli = []
-            for execution_index in range(len(execution['types'])):
-                stimuli_to_edit = execution_stimuli[execution_index]
-                # TODO: credo che qui sotto manchi la gestione degli stimoli generati con rate diversi.
-                # ! dovrei aver fatto, da testare!
-                for stimuli_to_merge in stimuli_to_edit:
-                    if(len(execution['types']) > 1): #se visual o auditory allora faccio un solo ciclo, altrimenti li faccio entrambi e mergio (se merge_types è a true)
-                        # TODO: gestire anche qui i casi in cui ho più di due popolazioni / più di due stimoli alla volta (?)
-                        if ('merge_stimuli' in execution and execution['merge_stimuli']):
-                            print('Stimuli are being merged:', stimuli_to_merge[0][0], stimuli_to_merge[1][0])
-                            spikes_A_times_merged = merge_sort_dicts_of_lists(stimuli_to_merge[0][0], stimuli_to_merge[1][0])
-                            spikes_B_times_merged = merge_sort_dicts_of_lists(stimuli_to_merge[0][1], stimuli_to_merge[1][1])
-                            input_stimuli = [[spikes_A_times_merged, spikes_B_times_merged]]
+            input_stimuli_A = {'cortex_1': {'info': [], 'stimuli': []}, 'cortex_2': {'info': [], 'stimuli': []}}
+            input_stimuli_B = {'cortex_1': {'info': [], 'stimuli': []}, 'cortex_2': {'info': [], 'stimuli': []}}
+
+            if(len(execution['types']) > 1):
+                for ex_type_1 in execution_stimuli[execution['types'][0]]:
+                    for ex_type_2 in execution_stimuli[execution['types'][1]]:
+                        if merge_stimuli:
+                            spikes_A_times_merged = merge_sort_dicts_of_lists(ex_type_1['A'], ex_type_2['A'])
+                            input_stimuli_A['cortex_1']['info'].append(execution['types'][0]+'_'+ex_type_1['info']+'+'+execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_A['cortex_1']['stimuli'].append(spikes_A_times_merged)
+                            
+                            spikes_B_times_merged = merge_sort_dicts_of_lists(ex_type_1['B'], ex_type_2['B'])
+                            input_stimuli_B['cortex_1']['info'].append(execution['types'][0]+'_'+ex_type_1['info']+'+'+execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_B['cortex_1']['stimuli'].append(spikes_B_times_merged)
                         else:
                             print('Multiple stimuli, won\'t be merged: another cortex will be added')
-                            input_stimuli = stimuli_to_merge
+                            input_stimuli_A['cortex_1']['info'].append(execution['types'][0]+'_'+ex_type_1['info'])
+                            input_stimuli_A['cortex_1']['stimuli'].append(ex_type_1['A'])
+                            input_stimuli_A['cortex_2']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_A['cortex_2']['stimuli'].append(ex_type_2['A'])
+
+                            input_stimuli_B['cortex_1']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_B['cortex_1']['stimuli'].append(ex_type_1['B'])
+                            input_stimuli_B['cortex_2']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_B['cortex_2']['stimuli'].append(ex_type_2['B'])
                             duplicate_primary_network = True
-                            
-                    else:
-                        print('There is only one execution to perform')
+            else:
+                for x in execution_stimuli[execution['types'][0]]:
+                    input_stimuli_A['cortex_1']['info'].append(x['info'])
+                    input_stimuli_A['cortex_1']['stimuli'].append(x['A'])
+                    input_stimuli_B['cortex_1']['info'].append(x['info'])
+                    input_stimuli_B['cortex_1']['stimuli'].append(x['B'])
             
-                for primary_network in execution['primary_networks']:
-                    primary_networks = [primary_network for x in range(len(execution['types']))] if duplicate_primary_network else [primary_network]
-                    print('reti primarie:', primary_networks)
-                    for stimulus, network in zip(input_stimuli, primary_networks):
-                        network_module = import_module('src.nest.networks.'+network)
-                        network_params = file_handling.read_json('data/config/networks/'+network+'.json')
-                        network_config_params = network_config[network]
+            # pdb.set_trace()
+            new_row(file_path=current_simulations_folder+'simulations.csv', heading=['id','spikes_info','firing_rate_extern','rate_A','rate_B'])
+            current_simulation_folder = current_simulations_folder+'simulations/'
+            create_folder(current_simulation_folder)
+            current_simulation_id = 1 # parto da 1 così è allineato con l'ID nel CSV
+            nest_reset()
 
-                        # TODO: gestire in automatico i diversi parametri
-                        firing_rate_extern = network_config['firing_rate_extern']
-                        for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
-                            network_params['firing_rate_extern'] = float(fre/1000)
 
-                            nest_reset()
-                            from scripts.network_output_clean import network_output_clean
+            for network in execution['primary_networks']:
+                print('network:', network)
+                network_module = import_module('src.nest.networks.'+network)
+                network_params = file_handling.read_json('data/config/networks/'+network+'.json')
+                network_config_params = network_config[network]
+
+                # TODO: gestire in automatico i diversi parametri
+                firing_rate_extern = network_config_params['firing_rate_extern']
+                for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
+                    network_params['firing_rate_extern'] = float(fre/1000)
+                    if ((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1: # in questo caso usiamo una sola corteccia
+                        for stim, stim_info in zip(list(zip(input_stimuli_A['cortex_1']['stimuli'], input_stimuli_B['cortex_1']['stimuli'])), input_stimuli_A['cortex_1']['info']):
+
+                            nest_reset(1111)
                             network_output_clean()
 
                             output_folder = current_simulation_folder+str(current_simulation_id)+'/'
@@ -151,19 +169,20 @@ if __name__ == '__main__':
                             create_folder(output_folder+'spikes')
                             current_simulation_id += 1
 
-                            spikes_A = spike_generator_from_times(spikes_A_times)
-                            spikes_B = spike_generator_from_times(spikes_B_times)
+                            spikes_A = spike_generator_from_times(stim[0])
+                            spikes_B = spike_generator_from_times(stim[1])
 
-                            spikes_A_file_name = file_handling.save_to_file(spikes_A_times, output_folder+'spikes/spikes_A')
-                            spikes_B_file_name = file_handling.save_to_file(spikes_B_times, output_folder+'spikes/spikes_B')
+                            spikes_A_file_name = file_handling.save_to_file(stim[0], output_folder+'spikes/spikes_A')
+                            spikes_B_file_name = file_handling.save_to_file(stim[1], output_folder+'spikes/spikes_B')
                             
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
-                            file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types']))
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
                             trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
-                            current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
+                            # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
+                            current_simulation = [stim_info]
 
                             current_simulation.append(str(fre/1000))
 
@@ -194,7 +213,7 @@ if __name__ == '__main__':
 
                             rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
 
-                            file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nSpikes rate: {str(exec[0])} Hz")
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nSpikes rate: {str(stim_info)} Hz")
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nFiring rate extern: {str(float(fre/1000))} Hz")
 
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nPopulation A rate: {rate_A} Hz")
@@ -203,3 +222,6 @@ if __name__ == '__main__':
                             current_simulation.append(rate_A)
                             current_simulation.append(rate_B)
                             new_row('', current_simulations_folder+'simulations.csv', current_simulation)
+                        
+                    else: # qui abbiamo doppia corteccia, devo duplicare l'esecuzione
+                        pass

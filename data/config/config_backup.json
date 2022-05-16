@@ -4,10 +4,12 @@
     },
     "executions": [
         {
-            "name": "visual",
+            "name": "audiovisual",
             "types": [
-                "visual"
+                "visual",
+                "auditory"
             ],
+            "merge_stimuli": true,
             "primary_networks": [
                 "brian_nest"
             ],
