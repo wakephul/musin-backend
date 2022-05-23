@@ -1,6 +1,5 @@
 import nest
 import random
-from src.file_handling.file_handling import append_to_file
 
 # ok qui quello che devo fare è differenziare i trial dx e sx. come lo faccio?
 # prendo in input gli stimoli, la loro durata (che forse in realtà mi posso calcolare qui) e la durata della simulazione
@@ -9,6 +8,8 @@ from src.file_handling.file_handling import append_to_file
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
 def spikes_for_simulation(spikes, durations, simulation_time):
+    # import pdb
+    # pdb.set_trace()
     number_of_stimuli_in_simulation = int(simulation_time/durations)
     trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
     random.seed(1111)
@@ -28,6 +29,7 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         for trial_index, trial in enumerate(trials):
             if trial:
                 new_spike_times.extend(list(map(lambda x:(x+(trial_index*durations)), spike_times)))
+        new_spike_times.sort()
         nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
     spikes_A_status = nest.GetStatus(spikes_A)
     # print(spikes_A_status[0])
@@ -38,8 +40,9 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         for trial_index, trial in enumerate(trials):
             if not trial:
                 new_spike_times.extend(list(map(lambda x:(x+(trial_index*durations)), spike_times)))
+        new_spike_times.sort()
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)
     # print(spikes_B_status[0])
-
+    
     return trials_to_string

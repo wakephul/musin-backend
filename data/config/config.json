@@ -6,10 +6,10 @@
         {
             "name": "visual",
             "types": [
-                "visual"
+                "visual_new_multiple"
             ],
             "primary_networks": [
-                "brian_nest"
+                "decision_making_nrp"
             ],
             "secondary_networks": [
 

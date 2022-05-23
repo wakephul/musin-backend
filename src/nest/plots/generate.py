@@ -21,7 +21,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             except:
                 print('error while generating raster: ', plot[0])
 
-            save_raster_results(simulation_results, plot)
+            # save_raster_results(simulation_results, plot)
 
         elif plot[1] == 'voltage':
             try:
@@ -29,7 +29,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             except:
                 print('error while generating voltage trace: ', plot[0])
             
-            save_voltage_results(simulation_results, plot, output_folder)
+            # save_voltage_results(simulation_results, plot, output_folder)
 
         plt.savefig(output_folder+'plots/'+plot[0]+'.png')
         plt.show()

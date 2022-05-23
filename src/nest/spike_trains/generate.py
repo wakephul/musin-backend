@@ -32,6 +32,5 @@ def spike_generator_from_times(times_dict):
                                     )
 
         spikes.append(neuron_spikes[0])
-
     spikes = np.asarray(spikes)
     return tuple(spikes)
