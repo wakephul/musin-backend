@@ -293,6 +293,9 @@ if __name__ == '__main__':
                             response_times_A = calculate_response_times(ma_rates_A, 3, trial_time, bin_size)
                             response_times_B = calculate_response_times(ma_rates_B, 3, trial_time, bin_size)
 
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A: ".join(response_times_A))
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B: ".join(response_times_B))
+
                             # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
                             # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
 
