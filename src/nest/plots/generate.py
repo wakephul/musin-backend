@@ -1,3 +1,4 @@
+import json
 import matplotlib.pyplot as plt
 from src.file_handling.folder_handling import create_folder
 import src.file_handling.images.plot_raster_plot as plot_raster_plot
@@ -32,7 +33,35 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             # save_voltage_results(simulation_results, plot, output_folder)
 
         plt.savefig(output_folder+'plots/'+plot[0]+'.png')
-        plt.show()
+        # plt.show()
 
     #faccio un merge dei vari file per semplicità di visualizzazione
     merge_plots(output_folder, plots_to_create, 'plots')
+
+def moving_average_plot(plot_data, output_folder, plot_name):
+
+    times = list(map(int, list(plot_data.keys())))
+    values = list(plot_data.values())
+    values = [x for _, x in sorted(zip(times, values))]
+    times = sorted(times)
+
+    window_size = int(len(values)/10)
+    i = 0
+    ma = []
+    
+    while i < len(values) - window_size + 1:
+        
+        window = values[i : i + window_size]
+        window_average = round(sum(window) / window_size, 2)
+        
+        ma.append(window_average)
+        
+        i += 1
+
+    ma = ma + [ma[-1] for x in (range(window_size-1))]
+    
+    plt.figure()
+    plt.plot(times, ma)
+    plt.savefig(output_folder+plot_name+'.png')
+
+    return ma

@@ -1,5 +1,6 @@
 import nest
 import random
+import pdb
 
 # ok qui quello che devo fare è differenziare i trial dx e sx. come lo faccio?
 # prendo in input gli stimoli, la loro durata (che forse in realtà mi posso calcolare qui) e la durata della simulazione
@@ -12,7 +13,7 @@ def spikes_for_simulation(spikes, durations, simulation_time):
     # pdb.set_trace()
     number_of_stimuli_in_simulation = int(simulation_time/durations)
     trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
-    random.seed(1111)
+    random.seed(1234)
     random.shuffle(trials)
     print('TRIALS', trials)
     trials_to_string = "\n".join([f"Trial {index}: Right " if trial else f"Trial {index}: Left " for index, trial in enumerate(trials)])+"\n"
@@ -26,9 +27,11 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
         # print(spike_times)
+        i=0
         for trial_index, trial in enumerate(trials):
             if trial:
-                new_spike_times.extend(list(map(lambda x:(x+(trial_index*durations)), spike_times)))
+                new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+            i+=2
         new_spike_times.sort()
         nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
     spikes_A_status = nest.GetStatus(spikes_A)
@@ -37,9 +40,11 @@ def spikes_for_simulation(spikes, durations, simulation_time):
     for neuron_index, neuron in enumerate(spikes_B_status):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
+        i=0
         for trial_index, trial in enumerate(trials):
             if not trial:
-                new_spike_times.extend(list(map(lambda x:(x+(trial_index*durations)), spike_times)))
+                new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+            i+=2
         new_spike_times.sort()
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)

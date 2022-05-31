@@ -7,8 +7,8 @@ from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries, support_queries
 from src.file_handling import file_handling
 
-from src.nest.plots.generate import generate_plots, moving_average_plot
-from src.nest.output.rates import calculate_average_rate, calculate_bins, calculate_response_times
+from src.nest.plots.generate import generate_plots
+from src.nest.output.rates import calculate_average_rate, calculate_bins
 from src.file_handling.support_file import new_row
 
 from src.utils.dictionaries import merge_sort_dicts_of_lists
@@ -255,9 +255,8 @@ if __name__ == '__main__':
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
-                            
                             trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
-                            # pdb.set_trace()
+                            pdb.set_trace()
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
                             # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
@@ -267,11 +266,13 @@ if __name__ == '__main__':
 
                             network_params['imported_stimulus_A'] = spikes_A
                             network_params['imported_stimulus_B'] = spikes_B
-                            max_sim_time_old = network_params['max_sim_time']
-                            network_params['max_sim_time'] = max_time = int(network_params['max_sim_time'])*3
-
+                            # pdb.set_trace()
                             simulation_results = network_module.run(network_params)
+                            # print("RESULTS", simulation_results)
+
+                            # ! TODO: eguagliare i vari assi dei grafici per poterli comparare
                             
+                            max_time = int(network_params['max_sim_time'])
                             plots_to_create = plots_config[network] if (network in plots_config) else None
                             if plots_to_create:
                                 generate_plots(plots_to_create, output_folder, simulation_results, max_time)
@@ -280,24 +281,15 @@ if __name__ == '__main__':
                             times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
                             senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
                             times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
-
-                            bin_size = 5
                             
-                            bin_rates_A_complete = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), bin_size, max_time, 100)
-                            bin_rates_B_complete = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), bin_size, max_time, 100)
+                            bin_rates_A_complete, times_over_threshold_A = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), 5, max_time, 100)
+                            bin_rates_B_complete, times_over_threshold_B = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), 5, max_time, 100)
 
-                            ma_rates_A = moving_average_plot(bin_rates_A_complete, output_folder+'plots/', 'ma_rates_A')
-                            ma_rates_B = moving_average_plot(bin_rates_B_complete, output_folder+'plots/', 'ma_rates_B')
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
 
-                            trial_time = float(network_params['t_stimulus_duration'])*3
-                            response_times_A = calculate_response_times(ma_rates_A, 3, trial_time, bin_size)
-                            response_times_B = calculate_response_times(ma_rates_B, 3, trial_time, bin_size)
-
-                            # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
-                            # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
-
-                            # file_handling.dict_to_json(ma_rates_A, output_folder+'ma_rates_A')
-                            # file_handling.dict_to_json(ma_rates_B, output_folder+'ma_rates_B')
+                            file_handling.dict_to_json(bin_rates_A_complete, output_folder+'bin_rates_A')
+                            file_handling.dict_to_json(bin_rates_B_complete, output_folder+'bin_rates_B')
 
                             rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
 
@@ -310,4 +302,3 @@ if __name__ == '__main__':
                             current_simulation.append(rate_A)
                             current_simulation.append(rate_B)
                             new_row('', current_simulations_folder+'simulations.csv', current_simulation)
-                            network_params['max_sim_time'] = max_sim_time_old

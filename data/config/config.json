@@ -6,7 +6,7 @@
         {
             "name": "visual",
             "types": [
-                "visual_new_multiple"
+                "visual"
             ],
             "primary_networks": [
                 "decision_making_nrp"

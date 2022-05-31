@@ -4,21 +4,21 @@
         "spikes": {
             "rate": {
                 "single_value": false,
-                "first_value": 0.0,
-                "last_value": 20.0,
-                "increment": 5.0
+                "first_value": 10.0,
+                "last_value": 50.0,
+                "increment": 10.0
             },
             "first_spike_latency": {
                 "value": 80.0
             },
             "number_of_neurons": {
                 "single_value": false,
-                "first_value": 10,
-                "last_value": 50,
+                "first_value": 70,
+                "last_value": 120,
                 "increment": 10
             },
             "trial_duration": {
-                "value": 1000.0
+                "value": 600.00
             }
         }
     },
@@ -26,50 +26,16 @@
         "use_existent_spikes": false,
         "spikes": {
             "rate": {
-                "value": 10.00
-            },
-            "first_spike_latency": {
-                "value": 50.0
-            },
-            "number_of_neurons": {
-                "value": 100
-            },
-            "trial_duration": {
-                "value": 1000.0
-            }
-        }
-    },
-    "visual_new": {
-        "use_existent_spikes": false,
-        "spikes": {
-            "rate": {
-                "value": 50.0
-            },
-            "first_spike_latency": {
-                "value": 80.0
-            },
-            "number_of_neurons": {
-                "value": 100
-            },
-            "trial_duration": {
-                "value": 800.00
-            }
-        }
-    },
-    "auditory_new": {
-        "use_existent_spikes": false,
-        "spikes": {
-            "rate": {
-                "value": 100.0
+                "value": 10.0
             },
             "first_spike_latency": {
                 "value": 30.0
             },
             "number_of_neurons": {
-                "value": 100
+                "value": 10
             },
             "trial_duration": {
-                "value": 700.0
+                "value": 600.00
             }
         }
     },
