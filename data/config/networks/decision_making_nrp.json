@@ -1,7 +1,7 @@
 {
     "order":                    400.00,
     "rec_pop":                    1.00,
-    "simtime":                 10000.00,
+    "simtime":                 6000.00,
     "start_stim":               0.00,
     "end_stim":                1000.00,
     "end_stim_rev":            100.00,
@@ -41,7 +41,7 @@
     "delay_AMPA":                 0.50,
     "delay_GABA":                 0.50,
     "delay_NMDA":                 2.50,
-    "max_sim_time":            10000.00,
+    "max_sim_time":            6000.00,
     "t_stimulus_start":         0.00,
     "t_stimulus_end":          1000.00,
     "t_stimulus_duration":     1000.00

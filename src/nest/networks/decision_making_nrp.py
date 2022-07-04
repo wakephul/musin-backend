@@ -187,7 +187,7 @@ def simulate_network(coherence, par):
         nest.SetDefaults('static_synapse', {'weight': 1., 'delay': dt})
         nest.Connect(idx_monitored_neurons, rate_monitor)
 
-        spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": False})
+        spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": True})
         nest.Connect(idx_monitored_neurons, spike_monitor)
 
         voltage_monitor = nest.Create("multimeter")

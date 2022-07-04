@@ -1,4 +1,5 @@
 import json
+import pdb
 import matplotlib.pyplot as plt
 from src.file_handling.folder_handling import create_folder
 import src.file_handling.images.plot_raster_plot as plot_raster_plot
@@ -45,23 +46,23 @@ def moving_average_plot(plot_data, output_folder, plot_name):
     values = [x for _, x in sorted(zip(times, values))]
     times = sorted(times)
 
-    window_size = int(len(values)/10)
-    i = 0
+    window_size = 10
+    i = window_size//2
     ma = []
-    
-    while i < len(values) - window_size + 1:
+
+    values = [0 for x in range(window_size//2)] + values + [0 for x in range(window_size//2)]
+
+    while i < (len(values) - window_size//2):
         
-        window = values[i : i + window_size]
+        window = values[(i - window_size//2) : (i + window_size//2)]
         window_average = round(sum(window) / window_size, 2)
         
         ma.append(window_average)
         
         i += 1
-
-    ma = ma + [ma[-1] for x in (range(window_size-1))]
     
-    plt.figure()
-    plt.plot(times, ma)
-    plt.savefig(output_folder+plot_name+'.png')
+    # plt.figure()
+    # plt.plot(times, ma)
+    # plt.savefig(output_folder+plot_name+'.png')
 
     return ma

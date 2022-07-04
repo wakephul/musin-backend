@@ -1,5 +1,5 @@
 start:
-	python scripts/network_output_clean.py && python3 main.py "$(notes)" && python scripts/network_output_merge.py
+	python scripts/network_output_clean.py && python3 main.py "$(notes)"
 start-multiple-simulations:
 	python scripts/network_output_clean.py && python3 main.py multiple_simulations && python scripts/network_output_merge.py
 # start-generate-spikes:

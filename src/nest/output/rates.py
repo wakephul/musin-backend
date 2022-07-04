@@ -48,12 +48,10 @@ def calculate_response_times(values, threshold, trial_time, bin_size):
     elements_for_trial = trial_time/bin_size
     values_into_trials = divide_into_trials(values, elements_for_trial)
     response_times = []
-    print(values_into_trials)
     for values_index, trial_values in enumerate(values_into_trials):
         time_ids = [time_id for time_id, value in enumerate(trial_values) if value >= threshold]
         if len(time_ids):
             first_time_id = time_ids[0]
-            print(first_time_id)
             actual_time = (values_index*trial_time)+(first_time_id*bin_size)
             response_times.append(actual_time)
     return response_times

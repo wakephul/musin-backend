@@ -21,6 +21,8 @@ from src.nest.spike_trains.edit import spikes_for_simulation
 from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
 from src.file_handling.folder_handling import create_folder
 
+from src.nest.output.device_manager import multimeters_merge, spike_detectors_merge
+
 if __name__ == '__main__':
     # CONFIGURATION FILE
     config = file_handling.read_json('data/config/config.json')
@@ -272,9 +274,9 @@ if __name__ == '__main__':
 
                             simulation_results = network_module.run(network_params)
                             
-                            plots_to_create = plots_config[network] if (network in plots_config) else None
-                            if plots_to_create:
-                                generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                            # plots_to_create = plots_config[network] if (network in plots_config) else None
+                            # if plots_to_create:
+                            #     generate_plots(plots_to_create, output_folder, simulation_results, max_time)
                             
                             senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
                             times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
@@ -286,21 +288,51 @@ if __name__ == '__main__':
                             bin_rates_A_complete = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), bin_size, max_time, 100)
                             bin_rates_B_complete = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), bin_size, max_time, 100)
 
+                            file_handling.dict_to_json(bin_rates_A_complete, output_folder+'bin_rates_A_complete')
+                            file_handling.dict_to_json(bin_rates_B_complete, output_folder+'bin_rates_B_complete')
+
                             ma_rates_A = moving_average_plot(bin_rates_A_complete, output_folder+'plots/', 'ma_rates_A')
                             ma_rates_B = moving_average_plot(bin_rates_B_complete, output_folder+'plots/', 'ma_rates_B')
 
                             trial_time = float(network_params['t_stimulus_duration'])*3
-                            response_times_A = calculate_response_times(ma_rates_A, 3, trial_time, bin_size)
-                            response_times_B = calculate_response_times(ma_rates_B, 3, trial_time, bin_size)
 
-                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A: ".join(response_times_A))
-                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B: ".join(response_times_B))
+                            # for th in range(1, int(max(ma_rates_A))//2):
+                            #     response_times_A = calculate_response_times(ma_rates_A, th, trial_time, bin_size)
+                            #     file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A "+"th "+str(th)+": "+",".join(map(str, response_times_A)))
+                            #     for rt in response_times_A:
+                            #         file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\n{str(rt%1000)}")
+                            
+                            # for th in range(1, int(max(ma_rates_B))//2):
+                            #     response_times_B = calculate_response_times(ma_rates_B, th, trial_time, bin_size)
+                            #     file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B "+"th "+str(th)+": "+",".join(map(str, response_times_B)))
+                            #     for rt in response_times_B:
+                            #         file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\n{str(rt%1000)}")
+
+                            th = 15
+                            response_times = []
+                            response_times_A = calculate_response_times(ma_rates_A, th, trial_time, bin_size)
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A "+"th "+str(th)+": "+",".join(map(str, response_times_A)))
+                            for rt in response_times_A:
+                                response_times.append(rt%1000)
+                            
+                            response_times_B = calculate_response_times(ma_rates_B, th, trial_time, bin_size)
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B "+"th "+str(th)+": "+",".join(map(str, response_times_B)))
+                            for rt in response_times_B:
+                                response_times.append(rt%1000)
+
+                            response_times_dict = {'response_times': response_times}
+                            file_handling.dict_to_json(response_times_dict, output_folder+'response_times')
 
                             # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
                             # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
 
                             # file_handling.dict_to_json(ma_rates_A, output_folder+'ma_rates_A')
                             # file_handling.dict_to_json(ma_rates_B, output_folder+'ma_rates_B')
+
+                            create_folder(output_folder+'multimeters')
+                            create_folder(output_folder+'spike_detectors')
+                            multimeters_merge(output_folder+'multimeters')
+                            spike_detectors_merge(output_folder+'spike_detectors')
 
                             rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
 
