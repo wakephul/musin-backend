@@ -30,7 +30,7 @@ def simulate_network(coherence, par, col):
     t0 = nest.GetKernelStatus('time')
 
     startbuild = time.time()
-    simtime = par[col]['simtime']
+    sim_time = par[col]['sim_time']
     order = int(par[col]['order'])
     NB = 2 * order  # number of excitatory neurons in pop B
     NA = 2 * order   # number of excitatory neurons in pop A
@@ -277,13 +277,13 @@ def simulate_network(coherence, par, col):
 
     endbuild = time.time()
     
-    sim_steps = np.arange(0,simtime, dt_update)
+    sim_steps = np.arange(0,sim_time, dt_update)
 
-    stimulus_A = np.zeros((int(simtime)))
-    stimulus_B = np.zeros((int(simtime)))
+    stimulus_A = np.zeros((int(sim_time)))
+    stimulus_B = np.zeros((int(sim_time)))
 
-    noise_A = np.zeros((int(simtime)))
-    noise_B = np.zeros((int(simtime)))
+    noise_A = np.zeros((int(sim_time)))
+    noise_B = np.zeros((int(sim_time)))
 
 
     for i, step in enumerate(sim_steps):
@@ -322,7 +322,7 @@ def simulate_network(coherence, par, col):
 
     evsA = smA["events"]["senders"]
     tsA = smA["events"]["times"]
-    t = np.arange(0., simtime, dt_rec)
+    t = np.arange(0., sim_time, dt_rec)
     A_N_A = np.ones((t.size, 1)) * np.nan
     trmA = rmA["events"]["times"]
     trmA = trmA * dt - t0

@@ -23,7 +23,7 @@
                 "value": 30.0
             },
             "first_spike_latency": {
-                "value": 80.0
+                "value": 150.0
             },
             "number_of_neurons": {
                 "value": 80

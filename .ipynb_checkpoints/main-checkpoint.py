@@ -179,7 +179,7 @@ if __name__ == '__main__':
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
-                                trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
+                                trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
                                 # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
@@ -197,7 +197,7 @@ if __name__ == '__main__':
                                 
                                 plots_to_create = plots_config[network]
 
-                                max_time = int(network_params['max_sim_time'])
+                                max_time = int(network_params['sim_time'])
 
                                 generate_plots(plots_to_create, output_folder, simulation_results, max_time)
                                 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
-                            trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['max_sim_time']))
+                            trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
                             pdb.set_trace()
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
                             # ! TODO: eguagliare i vari assi dei grafici per poterli comparare
                             
-                            max_time = int(network_params['max_sim_time'])
+                            max_time = int(network_params['sim_time'])
                             plots_to_create = plots_config[network] if (network in plots_config) else None
                             if plots_to_create:
                                 generate_plots(plots_to_create, output_folder, simulation_results, max_time)

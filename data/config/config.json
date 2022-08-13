@@ -4,15 +4,17 @@
     },
     "executions": [
         {
-            "name": "visual",
+            "name": "audiovisual",
             "types": [
-                "visual"
+                "visual",
+                "auditory"
             ],
+            "merge_stimuli": false,
             "primary_networks": [
                 "decision_making_nrp"
             ],
             "secondary_networks": [
-
+                "cerebellum_simple"
             ]
         }
     ]

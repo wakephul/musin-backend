@@ -16,5 +16,11 @@
         ["voltage_monitor_A", "voltage"],
         ["voltage_monitor_B", "voltage"],
         ["voltage_monitor_inh", "voltage"]
+    ],
+    "cerebellum_simple": [
+        ["spike_monitor_GR", "raster"],
+        ["spike_monitor_PC", "raster"],
+        ["spike_monitor_IO", "raster"],
+        ["spike_monitor_DCN", "raster"]
     ]
 }

@@ -45,7 +45,7 @@ def sim_decision_making_network(data):
 	firing_rate_extern=data.get('firing_rate_extern', 9.8) # firing rate of the stimulus independent poisson background population
 	w_pos=data.get('w_pos', 1.90) # Scaling (strengthening) of the recurrent weights within the subpopulations "Left" and "Right"
 	f_Subpop_size=data.get('f_Subpop_size', 0.25) # fraction of the neurons in the subpopulations "Left" and "Right". #left = #right = int(f_Subpop_size*N_Excit).
-	max_sim_time=data.get('max_sim_time', 1000.) # simulated time. -- teniamolo qui per quando eventualmente faremo una lunga simulazione da dividere in più "sotto-simulazioni", in modo da non dover ricostruire la rete per ciascuna
+	sim_time=data.get('sim_time', 1000.) # simulated time. -- teniamolo qui per quando eventualmente faremo una lunga simulazione da dividere in più "sotto-simulazioni", in modo da non dover ricostruire la rete per ciascuna
 	monitored_subset_size=data.get('monitored_subset_size', 1000000) # max nr of neurons for which a state monitor is registered.
 	imported_stimulus_A=data.get('imported_stimulus_A', None)
 	imported_stimulus_B=data.get('imported_stimulus_B', None)
@@ -413,7 +413,7 @@ def sim_decision_making_network(data):
 
 	endbuild = time.time()
 
-	sim_steps = np.arange(0, max_sim_time, stimulus_update_interval)
+	sim_steps = np.arange(0, sim_time, stimulus_update_interval)
 
 	print(sim_steps)
 
@@ -423,13 +423,13 @@ def sim_decision_making_network(data):
 		nest.Simulate(stimulus_update_interval)
 
 	"""if stop_condition_rate is None:
-		nest.Simulate(max_sim_time)
+		nest.Simulate(sim_time)
 	else:
 		sim_sum = 0
 		sim_batch = 100.
 		samples_in_batch = int(floor(sim_batch / dt))
 		avg_rate_in_batch = 0
-		while (sim_sum < max_sim_time) and (avg_rate_in_batch < stop_condition_rate):
+		while (sim_sum < sim_time) and (avg_rate_in_batch < stop_condition_rate):
 			nest.Simulate(sim_batch)
 			### en NEST se accede distinto a la rate del monitor
 			avg_A = numpy.mean(rate_monitor_A.rate[-samples_in_batch:])
@@ -551,8 +551,8 @@ def getting_started(data):
 	
 	events_A = nest.GetStatus(results["spike_monitor_A"], "n_events")[0]
 	events_B = nest.GetStatus(results["spike_monitor_B"], "n_events")[0]
-	rate_A = events_A / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
-	rate_B = events_B / data['max_sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
+	rate_A = events_A / data['sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
+	rate_B = events_B / data['sim_time'] * 1000.0 / len(results["idx_monitored_neurons_B"])
 
 	print("Population A rate   : %.2f Hz" % rate_A)
 	print("Population B rate   : %.2f Hz" % rate_B)
@@ -579,7 +579,7 @@ def getting_started(data):
 	ax_raster.set_ylabel("neuron #")
 	ax_raster.set_title("Raster Plot", fontsize=10)
 	
-	t = np.arange(0., data['max_sim_time'], dt_rec)
+	t = np.arange(0., data['sim_time'], dt_rec)
 	A_N = np.ones((t.size, 1)) * np.nan
 	trmA = rmA["events"]["times"]
 	trmA = trmA * dt - t0
@@ -622,7 +622,7 @@ def getting_started(data):
 	ax_raster.set_ylabel("neuron #")
 	ax_raster.set_title("Raster Plot", fontsize=10)
 
-	t = np.arange(0., data['max_sim_time'], dt_rec)
+	t = np.arange(0., data['sim_time'], dt_rec)
 	A_N = np.ones((t.size, 1)) * np.nan
 	trmB = rmB["events"]["times"]
 	trmB = trmB * dt - t0

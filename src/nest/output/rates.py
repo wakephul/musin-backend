@@ -32,17 +32,15 @@ def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, max_t
 
     return bin_rates_complete
 
-def calculate_average_rate(simulation_results = [], max_time = 1000):
+def calculate_average_rate(simulation_results = [], max_time = 1000, monitors = [], monitored_populations = []):
 
     if (not simulation_results): return None, None
 
-    events_A = nest.GetStatus(simulation_results["spike_monitor_A"], "n_events")[0]
-    events_B = nest.GetStatus(simulation_results["spike_monitor_B"], "n_events")[0]
+    events = [nest.GetStatus(simulation_results[monitor], "n_events")[0] for monitor in monitors]
 
-    rate_A = events_A / max_time * 1000.0 / len(simulation_results["idx_monitored_neurons_A"])
-    rate_B = events_B / max_time * 1000.0 / len(simulation_results["idx_monitored_neurons_B"])
+    rates = [events[i] / max_time * 1000.0 / len(simulation_results[monitored_populations[i]]) for i in range(len(monitors))]
 
-    return rate_A, rate_B
+    return rates
 
 def calculate_response_times(values, threshold, trial_time, bin_size):
     elements_for_trial = trial_time/bin_size
