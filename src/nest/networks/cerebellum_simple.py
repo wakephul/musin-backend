@@ -85,7 +85,8 @@ def simulate_network(par):
     GR_num = MF_num*20
     PC_num = par["PC_num"]
     IO_num = PC_num
-    DCN_num = PC_num//2
+    # DCN_num = PC_num//2
+    DCN_num = PC_num
 
 
     # MF = nest.Create("parrot_neuron", MF_num)
@@ -163,7 +164,16 @@ def simulate_network(par):
                         PFPC_conn_param)
             A = nest.GetConnections(GR, [PCi])
             nest.SetStatus(A, {'vt_num': i})
+        
             
+        nest.Connect(PC, IO, {'rule': 'one_to_one'},
+                            {"model": "static_synapse",
+                            "weight": 1.0, "delay": 1.0})
+
+        nest.Connect(PC, DCN, {'rule': 'all_to_all'},
+                            {"model": "static_synapse",
+                            "weight": 1.0, "delay": 1.0})
+
         nest.Connect(IO, vt, {'rule': 'one_to_one'},
                             {"model": "static_synapse",
                             "weight": 1.0, "delay": 1.0})
@@ -195,16 +205,24 @@ def simulate_network(par):
     #     MFDCN_conn_param = {"model": 'stdp_synapse_cosexp',
     #                         "weight": Init_MFDCN,
     #                         "delay": 10.0}
+    #     # for i, DCNi in enumerate(DCN):
+    #     #     nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
+    #     #     A = nest.GetConnections(MF, [DCNi])
+    #     #     # nest.SetStatus(A, {'vt_num': float(i)})
+    #     #     nest.SetStatus(A, {'vt_num': i})
     #     for i, DCNi in enumerate(DCN):
-    #         nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
-    #         A = nest.GetConnections(MF, [DCNi])
+    #         # nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
+    #         # A = nest.GetConnections(MF, [DCNi])
+    #         nest.Connect(array_pre, [DCNi], {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)
+    #         A = nest.GetConnections(array_pre, [DCNi])
     #         # nest.SetStatus(A, {'vt_num': float(i)})
     #         nest.SetStatus(A, {'vt_num': i})
     # else:
     #     MFDCN_conn_param = {"model":  "static_synapse",
     #                         "weight": Init_MFDCN,
     #                         "delay":  10.0}
-    #     nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param)                        
+    #     # nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param)
+    #     nest.Connect(array_pre, DCN, {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)                        
 
     # # PC-DCN inhibitory plastic connections
     # # each DCN receives 2 connections from 2 contiguous PC
@@ -248,7 +266,7 @@ def simulate_network(par):
 
 
     # conn1 = nest.GetConnections(source=GR, target=PC)
-    # conn2 = nest.GetConnections(source=MF, target=DCN)
+    # conn2 = nest.GetConnections(source=array_pre, target=DCN)
     # conn3 = nest.GetConnections(source=PC, target=DCN)
 
     nest.Simulate(par['sim_time'])

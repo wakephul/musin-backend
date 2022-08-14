@@ -18,7 +18,7 @@
     "MF_num": 100,
     "PC_num": 72,
 
-    "sim_time": 1000.00,
+    "sim_time": 20000.00,
     "t_stimulus_start": 0.00,
     "t_stimulus_end": 1000.00,
     "t_stimulus_duration": 1000.00

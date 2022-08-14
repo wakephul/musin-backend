@@ -12,7 +12,8 @@ def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, max_t
         if bin_index < len(bins):
             bin_time = np.take(bins, bin_index)
             if bin_time in monitored_times:
-                monitored_times[bin_time].append(senders[index])
+                if index in senders:
+                    monitored_times[bin_time].append(senders[index])
             else:
                 monitored_times[bin_time] = [senders[index]]
     for id in monitored_times:

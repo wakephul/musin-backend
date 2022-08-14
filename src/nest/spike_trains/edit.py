@@ -19,14 +19,12 @@ def spikes_for_simulation(spikes, durations, simulation_time):
     trials_to_string = "\n".join([f"Trial {index}: Right " if trial else f"Trial {index}: Left " for index, trial in enumerate(trials)])+"\n"
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
-    # print('spikes', spikes_A)
     spikes_A_status = nest.GetStatus(spikes_A)
     spikes_B = spikes[1]
     spikes_B_status = nest.GetStatus(spikes_B)
     for neuron_index, neuron in enumerate(spikes_A_status):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
-        # print(spike_times)
         i=0
         for trial_index, trial in enumerate(trials):
             if trial:
@@ -35,7 +33,6 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         new_spike_times.sort()
         nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
     spikes_A_status = nest.GetStatus(spikes_A)
-    # print(spikes_A_status[0])
 
     for neuron_index, neuron in enumerate(spikes_B_status):
         new_spike_times = []
@@ -48,6 +45,5 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         new_spike_times.sort()
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)
-    # print(spikes_B_status[0])
     
     return trials_to_string

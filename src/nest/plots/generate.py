@@ -61,8 +61,32 @@ def moving_average_plot(plot_data, output_folder, plot_name):
         
         i += 1
     
-    # plt.figure()
-    # plt.plot(times, ma)
-    # plt.savefig(output_folder+plot_name+'.png')
+    plt.figure()
+    plt.plot(times, ma)
+    plt.savefig(output_folder+plot_name+'.png')
+
+    return ma
+
+def moving_average_plot_no_save(plot_data):
+
+    times = list(map(int, list(plot_data.keys())))
+    values = list(plot_data.values())
+    values = [x for _, x in sorted(zip(times, values))]
+    times = sorted(times)
+
+    window_size = 10
+    i = window_size//2
+    ma = []
+
+    values = [0 for x in range(window_size//2)] + values + [0 for x in range(window_size//2)]
+
+    while i < (len(values) - window_size//2):
+        
+        window = values[(i - window_size//2) : (i + window_size//2)]
+        window_average = round(sum(window) / window_size, 2)
+        
+        ma.append(window_average)
+        
+        i += 1
 
     return ma
