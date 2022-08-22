@@ -16,7 +16,7 @@
     "PLAST3": false,
 
     "MF_num": 100,
-    "PC_num": 72,
+    "PC_num": 200,
 
     "sim_time": 20000.00,
     "t_stimulus_start": 0.00,

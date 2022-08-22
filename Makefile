@@ -9,5 +9,5 @@ start-create-spikes-table:
 start-create-support-table:
 	python3 main.py create_support_table
 
-start-webapp:
-	flask --app webapp --debug run
+start-api:
+	flask --app api --debug run

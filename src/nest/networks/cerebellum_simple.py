@@ -85,8 +85,8 @@ def simulate_network(par):
     GR_num = MF_num*20
     PC_num = par["PC_num"]
     IO_num = PC_num
-    # DCN_num = PC_num//2
-    DCN_num = PC_num
+    DCN_num = PC_num//2
+    # DCN_num = PC_num
 
 
     # MF = nest.Create("parrot_neuron", MF_num)
@@ -164,16 +164,7 @@ def simulate_network(par):
                         PFPC_conn_param)
             A = nest.GetConnections(GR, [PCi])
             nest.SetStatus(A, {'vt_num': i})
-        
             
-        nest.Connect(PC, IO, {'rule': 'one_to_one'},
-                            {"model": "static_synapse",
-                            "weight": 1.0, "delay": 1.0})
-
-        nest.Connect(PC, DCN, {'rule': 'all_to_all'},
-                            {"model": "static_synapse",
-                            "weight": 1.0, "delay": 1.0})
-
         nest.Connect(IO, vt, {'rule': 'one_to_one'},
                             {"model": "static_synapse",
                             "weight": 1.0, "delay": 1.0})
@@ -188,69 +179,75 @@ def simulate_network(par):
                                     "multapses": False},
                                     PFPC_conn_param)
             
-    # # MF-DCN excitatory connections
-    # if PLAST2:
-    #     vt2 = nest.Create("volume_transmitter_alberto", DCN_num)
-    #     for n, vti in enumerate(vt2):
-    #         nest.SetStatus([vti], {"vt_num": n})
-    # if PLAST2:
-    #     # MF-DCN excitatory plastic connections
-    #     # every MF is connected with every DCN
-    #     nest.SetDefaults('stdp_synapse_cosexp',
-    #                             {"A_minus":   LTD2,
-    #                             "A_plus":    LTP2,
-    #                             "Wmin":      0.0,
-    #                             "Wmax":      0.25,
-    #                             "vt":        vt2[0]})
-    #     MFDCN_conn_param = {"model": 'stdp_synapse_cosexp',
-    #                         "weight": Init_MFDCN,
-    #                         "delay": 10.0}
-    #     # for i, DCNi in enumerate(DCN):
-    #     #     nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
-    #     #     A = nest.GetConnections(MF, [DCNi])
-    #     #     # nest.SetStatus(A, {'vt_num': float(i)})
-    #     #     nest.SetStatus(A, {'vt_num': i})
+    # MF-DCN excitatory connections
+    if PLAST2:
+        vt2 = nest.Create("volume_transmitter_alberto", DCN_num)
+        for n, vti in enumerate(vt2):
+            nest.SetStatus([vti], {"vt_num": n})
+    if PLAST2:
+        # MF-DCN excitatory plastic connections
+        # every MF is connected with every DCN
+        nest.SetDefaults('stdp_synapse_cosexp',
+                                {"A_minus":   LTD2,
+                                "A_plus":    LTP2,
+                                "Wmin":      0.0,
+                                "Wmax":      0.25,
+                                "vt":        vt2[0]})
+        MFDCN_conn_param = {"model": 'stdp_synapse_cosexp',
+                            "weight": Init_MFDCN,
+                            "delay": 10.0}
+    
+    # RICORDA! qui è stato cambiato perché non abbiamo più le MF, ma l'array_pre direttamente sulle GR
+
     #     for i, DCNi in enumerate(DCN):
-    #         # nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
-    #         # A = nest.GetConnections(MF, [DCNi])
-    #         nest.Connect(array_pre, [DCNi], {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)
-    #         A = nest.GetConnections(array_pre, [DCNi])
+    #         nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
+    #         A = nest.GetConnections(MF, [DCNi])
     #         # nest.SetStatus(A, {'vt_num': float(i)})
     #         nest.SetStatus(A, {'vt_num': i})
     # else:
     #     MFDCN_conn_param = {"model":  "static_synapse",
     #                         "weight": Init_MFDCN,
     #                         "delay":  10.0}
-    #     # nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param)
-    #     nest.Connect(array_pre, DCN, {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)                        
+    #     nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param) 
+    # 
+        for i, DCNi in enumerate(DCN):
+            nest.Connect(array_pre, [DCNi], {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)
+            A = nest.GetConnections(array_pre, [DCNi])
+            nest.SetStatus(A, {'vt_num': i})
+    else:
+        MFDCN_conn_param = {"model":  "static_synapse",
+                            "weight": Init_MFDCN,
+                            "delay":  10.0}
+        # nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param)
+        nest.Connect(array_pre, DCN, {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)                       
 
-    # # PC-DCN inhibitory plastic connections
-    # # each DCN receives 2 connections from 2 contiguous PC
-    # if PLAST3:
-    #     nest.SetDefaults('stdp_synapse', {"tau_plus": 30.0,
-    #                                             "lambda": LTP3,
-    #                                             "alpha": LTD3/LTP3,
-    #                                             "mu_plus": 0.0,   # Additive STDP
-    #                                             "mu_minus": 0.0,  # Additive STDP
-    #                                             "Wmax": -1.0,
-    #                                             "weight": Init_PCDCN,
-    #                                             "delay": 1.0})
-    #     PCDCN_conn_param = {"model": "stdp_synapse"} 
-    # else:
-    #     PCDCN_conn_param = {"model": "static_synapse",
-    #                         "weight": Init_PCDCN,
-    #                         "delay": 1.0}
-    # count_DCN = 0
-    # for P in range(PC_num):
-    #     nest.Connect([PC[P]], [DCN[count_DCN]],
-    #                         'one_to_one', PCDCN_conn_param)
-    #     if PLAST2:
-    #         nest.Connect([PC[P]], [vt2[count_DCN]], 'one_to_one',
-    #                             {"model":  "static_synapse",
-    #                             "weight": 1.0,
-    #                             "delay":  1.0})
-    #     if P % 2 == 1:
-    #         count_DCN += 1
+    # PC-DCN inhibitory plastic connections
+    # each DCN receives 2 connections from 2 contiguous PC
+    if PLAST3:
+        nest.SetDefaults('stdp_synapse', {"tau_plus": 30.0,
+                                                "lambda": LTP3,
+                                                "alpha": LTD3/LTP3,
+                                                "mu_plus": 0.0,   # Additive STDP
+                                                "mu_minus": 0.0,  # Additive STDP
+                                                "Wmax": -1.0,
+                                                "weight": Init_PCDCN,
+                                                "delay": 1.0})
+        PCDCN_conn_param = {"model": "stdp_synapse"} 
+    else:
+        PCDCN_conn_param = {"model": "static_synapse",
+                            "weight": Init_PCDCN,
+                            "delay": 1.0}
+    count_DCN = 0
+    for P in range(PC_num):
+        nest.Connect([PC[P]], [DCN[count_DCN]],
+                            'one_to_one', PCDCN_conn_param)
+        if PLAST2:
+            nest.Connect([PC[P]], [vt2[count_DCN]], 'one_to_one',
+                                {"model":  "static_synapse",
+                                "weight": 1.0,
+                                "delay":  1.0})
+        if P % 2 == 1:
+            count_DCN += 1
             
             
     # Input_generation = nest.Create("spike_generator", MF_num)

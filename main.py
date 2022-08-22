@@ -150,204 +150,193 @@ if __name__ == '__main__':
             nest_reset()
 
 
-            # for network in execution['primary_networks']:
-            #     # print('network:', network)
-            #     network_module = import_module('src.nest.networks.'+network)
-            #     network_params = file_handling.read_json('data/config/networks/primary/'+network+'.json')
-            #     network_config_params = network_config[network] if (network in network_config) else None
-            #     # pdb.set_trace()
-            #     if network_config_params:
-            #         # TODO: gestire in automatico i diversi parametri
-            #         firing_rate_extern = network_config_params['firing_rate_extern']
-            #         for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
-            #             network_params['firing_rate_extern'] = float(fre/1000)
-            #             if ((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1: # in questo caso usiamo una sola corteccia
-            #                 for stim, stim_info in zip(list(zip(input_stimuli_A['cortex_1']['stimuli'], input_stimuli_B['cortex_1']['stimuli'])), input_stimuli_A['cortex_1']['info']):
+            if len(execution['primary_networks']):
+                for network in execution['primary_networks']:
+                    # print('network:', network)
+                    network_module = import_module('src.nest.networks.'+network)
+                    network_params = file_handling.read_json('data/config/networks/primary/'+network+'.json')
+                    network_config_params = network_config[network] if (network in network_config) else None
+                    # pdb.set_trace()
+                    if network_config_params:
+                        # TODO: gestire in automatico i diversi parametri
+                        firing_rate_extern = network_config_params['firing_rate_extern']
+                        for fre in range(int(firing_rate_extern['first_value']*1000), int(firing_rate_extern['last_value']*1000+firing_rate_extern['increment']*1000), int(firing_rate_extern['increment']*1000)):
+                            network_params['firing_rate_extern'] = float(fre/1000)
+                            if ((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1: # in questo caso usiamo una sola corteccia
+                                for stim, stim_info in zip(list(zip(input_stimuli_A['cortex_1']['stimuli'], input_stimuli_B['cortex_1']['stimuli'])), input_stimuli_A['cortex_1']['info']):
 
-            #                     nest_reset(1111)
-            #                     network_output_clean()
+                                    nest_reset(1111)
+                                    network_output_clean()
 
-            #                     output_folder = current_simulation_folder+str(current_simulation_id)+'/'
-            #                     create_folder(output_folder)
-            #                     create_folder(output_folder+'spikes')
-            #                     current_simulation_id += 1
+                                    output_folder = current_simulation_folder+str(current_simulation_id)+'/'
+                                    create_folder(output_folder)
+                                    create_folder(output_folder+'spikes')
+                                    current_simulation_id += 1
 
-            #                     spikes_A = spike_generator_from_times(stim[0])
-            #                     spikes_B = spike_generator_from_times(stim[1])
+                                    spikes_A = spike_generator_from_times(stim[0])
+                                    spikes_B = spike_generator_from_times(stim[1])
 
-            #                     spikes_A_file_name = file_handling.save_to_file(stim[0], output_folder+'spikes/spikes_A')
-            #                     spikes_B_file_name = file_handling.save_to_file(stim[1], output_folder+'spikes/spikes_B')
+                                    spikes_A_file_name = file_handling.save_to_file(stim[0], output_folder+'spikes/spikes_A')
+                                    spikes_B_file_name = file_handling.save_to_file(stim[1], output_folder+'spikes/spikes_B')
+                                    
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
+
+                                    trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
+
+                                    # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
+                                    current_simulation = [stim_info]
+
+                                    current_simulation.append(str(fre/1000))
+
+                                    network_params['imported_stimulus_A'] = spikes_A
+                                    network_params['imported_stimulus_B'] = spikes_B
+                                    
+                                    simulation_results = network_module.run(network_params)
+                                    # print("RESULTS", simulation_results)
+
+                                    # ! TODO: eguagliare i vari assi dei grafici per poterli comparare
+                                    
+                                    plots_to_create = plots_config[network]
+
+                                    max_time = int(network_params['sim_time'])
+
+                                    generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                                    
+                                    senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
+                                    times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
+                                    senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
+                                    times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
+                                    
+                                    bin_rates_A = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), 5, max_time)
+                                    bin_rates_B = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), 5, max_time)
+
+                                    file_handling.dict_to_json(bin_rates_A, output_folder+'bin_rates_A')
+                                    file_handling.dict_to_json(bin_rates_B, output_folder+'bin_rates_B')
+
+                                    rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
+
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nSpikes rate: {str(stim_info)} Hz")
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nFiring rate extern: {str(float(fre/1000))} Hz")
+
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nPopulation A rate: {rate_A} Hz")
+                                    file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nPopulation B rate: {rate_B} Hz")
+
+                                    current_simulation.append(rate_A)
+                                    current_simulation.append(rate_B)
+                                    new_row('', current_simulations_folder+'simulations.csv', current_simulation)
                                 
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
+                            else: # qui abbiamo doppia corteccia, devo duplicare l'esecuzione
+                                pass
+                    
+                    else:
+                        number_of_cortex = 1 if (((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1) else 2
+                        for cortex_id in range(1, (number_of_cortex+1)):
+                            current_cortex_value = 'cortex_'+str(cortex_id)
+                            print('CORTEX ID: ', current_cortex_value)
+                            current_cortex_folder = current_simulation_folder+current_cortex_value+'/'
+                            create_folder(current_cortex_folder)
+                            for stim, stim_info in zip(list(zip(input_stimuli_A[current_cortex_value]['stimuli'], input_stimuli_B[current_cortex_value]['stimuli'])), input_stimuli_A[current_cortex_value]['info']):
 
-            #                     trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
+                                nest_reset(12345)
+                                network_output_clean()
 
-            #                     # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
-            #                     current_simulation = [stim_info]
+                                output_folder = current_cortex_folder+str(current_simulation_id)+'/'
+                                create_folder(output_folder)
+                                create_folder(output_folder+'spikes')
+                                current_simulation_id += 1
 
-            #                     current_simulation.append(str(fre/1000))
+                                spikes_A = spike_generator_from_times(stim[0])
+                                spikes_B = spike_generator_from_times(stim[1])
 
-            #                     network_params['imported_stimulus_A'] = spikes_A
-            #                     network_params['imported_stimulus_B'] = spikes_B
+                                spikes_A_file_name = file_handling.save_to_file(stim[0], output_folder+'spikes/spikes_A')
+                                spikes_B_file_name = file_handling.save_to_file(stim[1], output_folder+'spikes/spikes_B')
                                 
-            #                     simulation_results = network_module.run(network_params)
-            #                     # print("RESULTS", simulation_results)
+                                file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
+                                file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
-            #                     # ! TODO: eguagliare i vari assi dei grafici per poterli comparare
                                 
-            #                     plots_to_create = plots_config[network]
+                                trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                                file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
-            #                     max_time = int(network_params['sim_time'])
+                                # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
+                                current_simulation = [stim_info]
 
-            #                     generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                                current_simulation.append('NONE')
+
+                                network_params['imported_stimulus_A'] = spikes_A
+                                network_params['imported_stimulus_B'] = spikes_B
+                                sim_time_old = network_params['sim_time']
+                                network_params['sim_time'] = max_time = int(network_params['sim_time'])*3
+
+                                simulation_results = network_module.run(network_params)
                                 
-            #                     senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
-            #                     times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
-            #                     senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
-            #                     times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
+                                plots_to_create = plots_config[network] if (network in plots_config) else None
+                                if plots_to_create:
+                                    generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                                # create_folder(output_folder+'/plots')
                                 
-            #                     bin_rates_A = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), 5, max_time)
-            #                     bin_rates_B = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), 5, max_time)
+                                senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
+                                times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
+                                senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
+                                times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
 
-            #                     file_handling.dict_to_json(bin_rates_A, output_folder+'bin_rates_A')
-            #                     file_handling.dict_to_json(bin_rates_B, output_folder+'bin_rates_B')
+                                bin_size = 5
+                                
+                                bin_rates_A_complete = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), bin_size, max_time, 100)
+                                bin_rates_B_complete = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), bin_size, max_time, 100)
 
-            #                     rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
+                                file_handling.dict_to_json(bin_rates_A_complete, output_folder+'bin_rates_A_complete')
+                                file_handling.dict_to_json(bin_rates_B_complete, output_folder+'bin_rates_B_complete')
 
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nSpikes rate: {str(stim_info)} Hz")
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nFiring rate extern: {str(float(fre/1000))} Hz")
+                                ma_rates_A = moving_average_plot(bin_rates_A_complete, output_folder+'plots/', 'ma_rates_A')
+                                ma_rates_B = moving_average_plot(bin_rates_B_complete, output_folder+'plots/', 'ma_rates_B')
 
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nPopulation A rate: {rate_A} Hz")
-            #                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nPopulation B rate: {rate_B} Hz")
+                                trial_time = float(network_params['t_stimulus_duration'])*3
 
-            #                     current_simulation.append(rate_A)
-            #                     current_simulation.append(rate_B)
-            #                     new_row('', current_simulations_folder+'simulations.csv', current_simulation)
-                            
-            #             else: # qui abbiamo doppia corteccia, devo duplicare l'esecuzione
-            #                 pass
-                
-            #     else:
-            #         number_of_cortex = 1 if (((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1) else 2
-            #         for cortex_id in range(1, (number_of_cortex+1)):
-            #             current_cortex_value = 'cortex_'+str(cortex_id)
-            #             print('CORTEX ID: ', current_cortex_value)
-            #             current_cortex_folder = current_simulation_folder+current_cortex_value+'/'
-            #             create_folder(current_cortex_folder)
-            #             for stim, stim_info in zip(list(zip(input_stimuli_A[current_cortex_value]['stimuli'], input_stimuli_B[current_cortex_value]['stimuli'])), input_stimuli_A[current_cortex_value]['info']):
+                                # th = 15
+                                # response_times = []
+                                # response_times_A = calculate_response_times(ma_rates_A, th, trial_time, bin_size)
+                                # file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A "+"th "+str(th)+": "+",".join(map(str, response_times_A)))
+                                # for rt in response_times_A:
+                                #     response_times.append(rt%1000)
+                                
+                                # response_times_B = calculate_response_times(ma_rates_B, th, trial_time, bin_size)
+                                # file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B "+"th "+str(th)+": "+",".join(map(str, response_times_B)))
+                                # for rt in response_times_B:
+                                #     response_times.append(rt%1000)
 
-            #                 nest_reset(12345)
-            #                 network_output_clean()
+                                # response_times_dict = {'response_times': response_times}
+                                # file_handling.dict_to_json(response_times_dict, output_folder+'response_times')
 
-            #                 output_folder = current_cortex_folder+str(current_simulation_id)+'/'
-            #                 create_folder(output_folder)
-            #                 create_folder(output_folder+'spikes')
-            #                 current_simulation_id += 1
+                                # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
+                                # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
 
-            #                 spikes_A = spike_generator_from_times(stim[0])
-            #                 spikes_B = spike_generator_from_times(stim[1])
+                                # file_handling.dict_to_json(ma_rates_A, output_folder+'ma_rates_A')
+                                # file_handling.dict_to_json(ma_rates_B, output_folder+'ma_rates_B')
 
-            #                 spikes_A_file_name = file_handling.save_to_file(stim[0], output_folder+'spikes/spikes_A')
-            #                 spikes_B_file_name = file_handling.save_to_file(stim[1], output_folder+'spikes/spikes_B')
-                            
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
+                                # create_folder(output_folder+'multimeters')
+                                # create_folder(output_folder+'spike_detectors')
+                                # multimeters_merge(output_folder+'multimeters/')
+                                # spike_detectors_merge(output_folder+'spike_detectors/')
 
-                            
-            #                 trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
-
-            #                 # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
-            #                 current_simulation = [stim_info]
-
-            #                 current_simulation.append('NONE')
-
-            #                 network_params['imported_stimulus_A'] = spikes_A
-            #                 network_params['imported_stimulus_B'] = spikes_B
-            #                 sim_time_old = network_params['sim_time']
-            #                 network_params['sim_time'] = max_time = int(network_params['sim_time'])*3
-
-            #                 simulation_results = network_module.run(network_params)
-                            
-            #                 # plots_to_create = plots_config[network] if (network in plots_config) else None
-            #                 # if plots_to_create:
-            #                 #     generate_plots(plots_to_create, output_folder, simulation_results, max_time)
-                            
-            #                 senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
-            #                 times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
-            #                 senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
-            #                 times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
-
-            #                 bin_size = 5
-                            
-            #                 bin_rates_A_complete = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), bin_size, max_time, 100)
-            #                 bin_rates_B_complete = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), bin_size, max_time, 100)
-
-            #                 file_handling.dict_to_json(bin_rates_A_complete, output_folder+'bin_rates_A_complete')
-            #                 file_handling.dict_to_json(bin_rates_B_complete, output_folder+'bin_rates_B_complete')
-
-            #                 ma_rates_A = moving_average_plot(bin_rates_A_complete, output_folder+'plots/', 'ma_rates_A')
-            #                 ma_rates_B = moving_average_plot(bin_rates_B_complete, output_folder+'plots/', 'ma_rates_B')
-
-            #                 trial_time = float(network_params['t_stimulus_duration'])*3
-
-            #                 # for th in range(1, int(max(ma_rates_A))//2):
-            #                 #     response_times_A = calculate_response_times(ma_rates_A, th, trial_time, bin_size)
-            #                 #     file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A "+"th "+str(th)+": "+",".join(map(str, response_times_A)))
-            #                 #     for rt in response_times_A:
-            #                 #         file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\n{str(rt%1000)}")
-                            
-            #                 # for th in range(1, int(max(ma_rates_B))//2):
-            #                 #     response_times_B = calculate_response_times(ma_rates_B, th, trial_time, bin_size)
-            #                 #     file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B "+"th "+str(th)+": "+",".join(map(str, response_times_B)))
-            #                 #     for rt in response_times_B:
-            #                 #         file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\n{str(rt%1000)}")
-
-            #                 th = 15
-            #                 response_times = []
-            #                 response_times_A = calculate_response_times(ma_rates_A, th, trial_time, bin_size)
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times A "+"th "+str(th)+": "+",".join(map(str, response_times_A)))
-            #                 for rt in response_times_A:
-            #                     response_times.append(rt%1000)
-                            
-            #                 response_times_B = calculate_response_times(ma_rates_B, th, trial_time, bin_size)
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', "\nResponse times B "+"th "+str(th)+": "+",".join(map(str, response_times_B)))
-            #                 for rt in response_times_B:
-            #                     response_times.append(rt%1000)
-
-            #                 response_times_dict = {'response_times': response_times}
-            #                 file_handling.dict_to_json(response_times_dict, output_folder+'response_times')
-
-            #                 # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold A: {','.join(map(str, times_over_threshold_A))}")
-            #                 # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nTimes over threshold B: {','.join(map(str, times_over_threshold_B))}")
-
-            #                 # file_handling.dict_to_json(ma_rates_A, output_folder+'ma_rates_A')
-            #                 # file_handling.dict_to_json(ma_rates_B, output_folder+'ma_rates_B')
-
-            #                 # create_folder(output_folder+'multimeters')
-            #                 # create_folder(output_folder+'spike_detectors')
-            #                 # multimeters_merge(output_folder+'multimeters/')
-            #                 # spike_detectors_merge(output_folder+'spike_detectors/')
-
-            #                 rate_A, rate_B = calculate_average_rate(simulation_results, max_time)
-            #                 monitors = ['spike_monitor_A', 'spike_monitor_B']
-            #                 monitored_populations = ['idx_monitored_neurons_A', 'idx_monitored_neurons_B']
-            #                 rates = calculate_average_rate(simulation_results, max_time, monitors, monitored_populations)
+                                # monitors = ['spike_monitor_A', 'spike_monitor_B']
+                                # monitored_populations = ['idx_monitored_neurons_A', 'idx_monitored_neurons_B']
+                                # rates = calculate_average_rate(simulation_results, max_time, monitors, monitored_populations)
 
 
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nStimulus info: {str(stim_info)} Hz")
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nFiring rate extern: not in this case")
+                                file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nStimulus info: {str(stim_info)} Hz")
+                                file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nFiring rate extern: not in this case")
 
-            #                 file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
+                                # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
 
-            #                 current_simulation.append(rate_A)
-            #                 current_simulation.append(rate_B)
-            #                 new_row('', current_simulations_folder+'simulations.csv', current_simulation)
-            #                 network_params['sim_time'] = sim_time_old
+                                # current_simulation.append(rates[0])
+                                # current_simulation.append(rates[1])
+                                new_row('', current_simulations_folder+'simulations.csv', current_simulation)
+                                network_params['sim_time'] = sim_time_old
             
-            if (len(execution['types']) > 1):
+            if (len(execution['types']) > 1) and len(execution['secondary_networks']):
                 for network in execution['secondary_networks']:
                     print('secondary network:', network)
                     network_module = import_module('src.nest.networks.'+network)

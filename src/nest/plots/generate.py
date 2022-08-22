@@ -34,6 +34,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             # save_voltage_results(simulation_results, plot, output_folder)
 
         plt.savefig(output_folder+'plots/'+plot[0]+'.png')
+        plt.close()
         # plt.show()
 
     #faccio un merge dei vari file per semplicità di visualizzazione

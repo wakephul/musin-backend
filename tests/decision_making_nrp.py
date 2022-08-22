@@ -136,7 +136,7 @@ def simulate_network(coherence, par, col):
         nest.SetStatus(PG_noise_to_B, "rate", rate_noise_B)
         nest.SetStatus(PG_noise_to_inh, "rate", rate_noise_inh)
 
-        if t >= par[col]['start_stim']  and t < par[col]['end_stim']:
+        if t >= par[col]['start_stim']  and t < par[col]['t_stimulus_end']:
             offset_A = mean_p_rate_stimulus * (0.5 - (0.5 * coherence))
             offset_B = mean_p_rate_stimulus * (0.5 + (0.5 * coherence))
 
@@ -145,7 +145,7 @@ def simulate_network(coherence, par, col):
             rate_A = np.random.normal(offset_A, std_p_rate_stimulus)
             rate_A = (max(0., rate_A)) #no negative rate 
 
-        elif t >= par[col]['end_stim']  and t < par[col]['end_stim_rev']:
+        elif t >= par[col]['t_stimulus_end']  and t < par[col]['t_stimulus_end_rev']:
             offset_A = mean_p_rate_stimulus * (0.5 - (0.5 * par[col]['coh_rev']))
             offset_B = mean_p_rate_stimulus * (0.5 + (0.5 * par[col]['coh_rev']))
 

@@ -6,12 +6,11 @@
         {
             "name": "audiovisual",
             "types": [
-                "visual",
-                "auditory"
+                "auditory",
+                "visual"
             ],
             "merge_stimuli": false,
             "primary_networks": [
-                "decision_making_nrp"
             ],
             "secondary_networks": [
                 "cerebellum_simple"
