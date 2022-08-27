@@ -1,0 +1,9 @@
+{
+    "brian_nest": {
+        "firing_rate_extern": {
+            "first_value": 0.0,
+            "last_value": 10.0,
+            "increment": 5.0
+        }
+    }
+}

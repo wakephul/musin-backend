@@ -21,11 +21,7 @@ def get_monitors(pop, monitored_subset_size):
     spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": True})
     nest.Connect(idx_monitored_neurons, spike_monitor)
 
-    voltage_monitor = nest.Create("multimeter")
-    # nest.SetStatus(voltage_monitor, {"withtime": True, "record_from":["V_m"], "to_file": True})
-    # nest.Connect(voltage_monitor, idx_monitored_neurons)
-
-    return rate_monitor, voltage_monitor, spike_monitor, idx_monitored_neurons
+    return spike_monitor, idx_monitored_neurons
 
 def simulate_network(par):
     # CEREBELLUM
@@ -80,9 +76,11 @@ def simulate_network(par):
                                         'tau_syn_ex': 0.5,
                                         'tau_syn_in': 10.0})
 
+
+    imported_stimulus_A = par['imported_stimulus_A']
+    imported_stimulus_B = par['imported_stimulus_B']
     # Cell numbers
-    MF_num = par["MF_num"]
-    GR_num = MF_num*20
+    GR_num = par['GR_num']
     PC_num = par["PC_num"]
     IO_num = PC_num
     DCN_num = PC_num//2
@@ -105,10 +103,11 @@ def simulate_network(par):
     print('DCN: ' + str(min(DCN)) + " " + str(max(DCN)))
     print('vt: ' + str(min(vt)) + " " + str(max(vt)))
 
-    rate_monitor_GR, voltage_monitor_GR, spike_monitor_GR,  idx_monitored_neurons_GR = get_monitors(GR, int(len(GR)))
-    rate_monitor_PC, voltage_monitor_PC, spike_monitor_PC,  idx_monitored_neurons_PC = get_monitors(PC, int(len(PC)))
-    rate_monitor_IO, voltage_monitor_IO, spike_monitor_IO,  idx_monitored_neurons_IO = get_monitors(IO, int(len(IO)))
-    rate_monitor_DCN, voltage_monitor_DCN, spike_monitor_DCN,  idx_monitored_neurons_DCN = get_monitors(DCN, int(len(DCN)))
+    #per PC, IO e DCN crea 2 monitor per le due metà (una + e una -)
+    spike_monitor_GR,  idx_monitored_neurons_GR = get_monitors(GR, int(len(GR)))
+    spike_monitor_PC,  idx_monitored_neurons_PC = get_monitors(PC, int(len(PC)))
+    spike_monitor_IO,  idx_monitored_neurons_IO = get_monitors(IO, int(len(IO)))
+    spike_monitor_DCN,  idx_monitored_neurons_DCN = get_monitors(DCN, int(len(DCN)))
 
     # Connectivity
 
@@ -121,172 +120,109 @@ def simulate_network(par):
     #pesco A o B a caso
     #a seconda di quello che ho pescato, prendo due GID visivi e due GID uditivi di quel lato (a o b)
     #creo matrice pre e post (pre con gli id dei neuroni in input e post con gli id delle gr)
-    imported_stimulus_A = par['imported_stimulus_A']
-    imported_stimulus_B = par['imported_stimulus_B']
+
+    #TODO: prima di eseguire il test, dovremmo avere un periodo di training in cui passiamo solo a1/b1 oppure solo a2/b2,
+    #quindi una sola tipologia di stimolo per volta
 
     input_dendrites_gr = 4
-    num_stimuli = len(imported_stimulus_A['type_1'])
-    num_stimuli_tot = num_stimuli*input_dendrites_gr
     
     array_pre = []
     array_post = [ item for item in GR for _ in range(input_dendrites_gr) ] 
 
-    max_stim = num_stimuli-1
-    for n in range(num_stimuli_tot):
+    max_pos = len(imported_stimulus_A)-1
+    for n in range(len(GR)):
         random_side = bool(getrandbits(1))
         stimulus = imported_stimulus_A if random_side else imported_stimulus_B
-        a_1_1 = stimulus['type_1'][randint(0, max_stim)]
-        a_1_2 = stimulus['type_1'][randint(0, max_stim)]
-        a_2_1 = stimulus['type_2'][randint(0, max_stim)]
-        a_2_2 = stimulus['type_2'][randint(0, max_stim)]
-        array_pre.extend([a_1_1, a_1_2, a_2_1, a_2_2])
+        stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
+        stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
+        stim_2_1 = stimulus['type_2'][randint(0, max_pos)]
+        stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
+        array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
-    nest.Connect(array_pre, array_post, {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFGR_conn_param)
-    #valutare frequenza GR (accettabile tra 2 e 10 Hz)
+    input_a_1 = imported_stimulus_A['type_1']
+    input_b_1 = imported_stimulus_B['type_1']
+    input_a_2 = imported_stimulus_A['type_2']
+    input_b_2 = imported_stimulus_B['type_2']
 
-    if PLAST1:
-        # PF-PC excitatory plastic connections
-        # each PC receives the random 80% of the GR
-        nest.SetDefaults('stdp_synapse_sinexp',
-                        {"A_minus":   LTD1,
-                        "A_plus":    LTP1,
-                        "Wmin":      0.0,
-                        "Wmax":      4.0,
-                        "vt":        vt[0]})
+    nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)
+
+    # PF-PC excitatory plastic connections
+    # each PC receives the random 80% of the GR
+    nest.SetDefaults('stdp_synapse_sinexp',
+                    {"A_minus":   LTD1,
+                    "A_plus":    LTP1,
+                    "Wmin":      0.0,
+                    "Wmax":      4.0,
+                    "vt":        vt[0]})
+    
+    PFPC_conn_param = {"model":  'stdp_synapse_sinexp',
+                    "weight": Init_PFPC,
+                    "delay":  1.0}
+    for i, PCi in enumerate(PC):
+        nest.Connect(GR, [PCi], {'rule': 'fixed_indegree',
+                                'indegree': int(0.8*GR_num),
+                                "multapses": False},
+                    PFPC_conn_param)
+        A = nest.GetConnections(GR, [PCi])
+        nest.SetStatus(A, {'vt_num': i})
         
-        PFPC_conn_param = {"model":  'stdp_synapse_sinexp',
-                        "weight": Init_PFPC,
-                        "delay":  1.0}
-        for i, PCi in enumerate(PC):
-            nest.Connect(GR, [PCi], {'rule': 'fixed_indegree',
-                                    'indegree': int(0.8*GR_num),
-                                    "multapses": False},
-                        PFPC_conn_param)
-            A = nest.GetConnections(GR, [PCi])
-            nest.SetStatus(A, {'vt_num': i})
-            
-        nest.Connect(IO, vt, {'rule': 'one_to_one'},
-                            {"model": "static_synapse",
-                            "weight": 1.0, "delay": 1.0})
-    else:
-        PFPC_conn_param = {"model":  'static_synapse',
-                            "weight": Init_PFPC,
-                            "delay":  1.0}
-
-        for i, PCi in enumerate(PC):
-            nest.Connect(GR, [PCi], {'rule': 'fixed_indegree',
-                                    'indegree': int(0.8*GR_num),
-                                    "multapses": False},
-                                    PFPC_conn_param)
+    nest.Connect(IO, vt, {'rule': 'one_to_one'},
+                        {"model": "static_synapse",
+                        "weight": 1.0, "delay": 1.0})
             
     # MF-DCN excitatory connections
-    if PLAST2:
-        vt2 = nest.Create("volume_transmitter_alberto", DCN_num)
-        for n, vti in enumerate(vt2):
-            nest.SetStatus([vti], {"vt_num": n})
-    if PLAST2:
-        # MF-DCN excitatory plastic connections
-        # every MF is connected with every DCN
-        nest.SetDefaults('stdp_synapse_cosexp',
-                                {"A_minus":   LTD2,
-                                "A_plus":    LTP2,
-                                "Wmin":      0.0,
-                                "Wmax":      0.25,
-                                "vt":        vt2[0]})
-        MFDCN_conn_param = {"model": 'stdp_synapse_cosexp',
-                            "weight": Init_MFDCN,
-                            "delay": 10.0}
-    
-    # RICORDA! qui è stato cambiato perché non abbiamo più le MF, ma l'array_pre direttamente sulle GR
+    MFDCN_conn_param = {"model":  "static_synapse",
+                        "weight": Init_MFDCN,
+                        "delay":  10.0}
 
-    #     for i, DCNi in enumerate(DCN):
-    #         nest.Connect(MF, [DCNi], 'all_to_all', MFDCN_conn_param)
-    #         A = nest.GetConnections(MF, [DCNi])
-    #         # nest.SetStatus(A, {'vt_num': float(i)})
-    #         nest.SetStatus(A, {'vt_num': i})
-    # else:
-    #     MFDCN_conn_param = {"model":  "static_synapse",
-    #                         "weight": Init_MFDCN,
-    #                         "delay":  10.0}
-    #     nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param) 
-    # 
-        for i, DCNi in enumerate(DCN):
-            nest.Connect(array_pre, [DCNi], {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)
-            A = nest.GetConnections(array_pre, [DCNi])
-            nest.SetStatus(A, {'vt_num': i})
-    else:
-        MFDCN_conn_param = {"model":  "static_synapse",
-                            "weight": Init_MFDCN,
-                            "delay":  10.0}
-        # nest.Connect(MF, DCN, 'all_to_all', MFDCN_conn_param)
-        nest.Connect(array_pre, DCN, {'rule': 'fixed_indegree', 'indegree': 4, "multapses": False}, MFDCN_conn_param)                       
+    nest.Connect(input_a_1, DCN, "all_to_all", MFDCN_conn_param)
+    nest.Connect(input_b_1, DCN, "all_to_all", MFDCN_conn_param)
+    # nest.Connect(input_a_2, DCN, "all_to_all", MFDCN_conn_param)
+    # nest.Connect(input_b_2, DCN, "all_to_all", MFDCN_conn_param)
+
+    # TODO: ci vuole anche l'input alle IO
+    # possiamo connettere lo stimolo in input giocando con l'indegree in modo da arrivare ad un output a 1/2Hz (facendo quindi un downscaling)
+    # altra possibilità è quella di crearle come parrot neuron (sono già dei parrot) e generare l'input con dei poisson generator creati 
+    # a seconda di qual è il lato dello stimolo (che quindi mi devo passare in input)
+    # questi stimoli devono essere tra 400 e 600 ms
+    trials_1 = par['trials_1']
+    trials_2 = par['trials_2']
+    IO_a = IO[:len(IO)//2]
+    IO_b = IO[len(IO)//2:]
+    for i in range(len(trials_1)):
+        pg = nest.Create('poisson_generator', params = {'rate': 1.5, 'start': float((i*3000.00)+400.00), 'stop': float((i*3000.00)+600.00)})
+        if trials_1[i]:
+            nest.Connect(pg, IO_a)
+        else:
+            nest.Connect(pg, IO_b)
 
     # PC-DCN inhibitory plastic connections
     # each DCN receives 2 connections from 2 contiguous PC
-    if PLAST3:
-        nest.SetDefaults('stdp_synapse', {"tau_plus": 30.0,
-                                                "lambda": LTP3,
-                                                "alpha": LTD3/LTP3,
-                                                "mu_plus": 0.0,   # Additive STDP
-                                                "mu_minus": 0.0,  # Additive STDP
-                                                "Wmax": -1.0,
-                                                "weight": Init_PCDCN,
-                                                "delay": 1.0})
-        PCDCN_conn_param = {"model": "stdp_synapse"} 
-    else:
-        PCDCN_conn_param = {"model": "static_synapse",
-                            "weight": Init_PCDCN,
-                            "delay": 1.0}
+    PCDCN_conn_param = {"model": "static_synapse",
+                        "weight": Init_PCDCN,
+                        "delay": 1.0}
+
     count_DCN = 0
     for P in range(PC_num):
         nest.Connect([PC[P]], [DCN[count_DCN]],
                             'one_to_one', PCDCN_conn_param)
-        if PLAST2:
-            nest.Connect([PC[P]], [vt2[count_DCN]], 'one_to_one',
-                                {"model":  "static_synapse",
-                                "weight": 1.0,
-                                "delay":  1.0})
         if P % 2 == 1:
             count_DCN += 1
-            
-            
-    # Input_generation = nest.Create("spike_generator", MF_num)
-    # nest.Connect(Input_generation,MF,'one_to_one')
-    # MFinput_file = open("/home/mizzou/.opt/nrpStorage/USER_DATA/MF_100Trial_VOR.dat",'r')
-    # for MFi in Input_generation:
-    #     Spikes_s = MFinput_file.readline()
-    #     Spikes_s = Spikes_s.split()
-    #     Spikes_f = []
-    #     for elements in Spikes_s:
-    #         Spikes_f.append(float(elements))
-    #     nest.SetStatus([MFi],{'spike_times' : Spikes_f})
-
-
-    # conn1 = nest.GetConnections(source=GR, target=PC)
-    # conn2 = nest.GetConnections(source=array_pre, target=DCN)
-    # conn3 = nest.GetConnections(source=PC, target=DCN)
+                   
 
     nest.Simulate(par['sim_time'])
 
     ret_vals = dict()
 
-    # ret_vals["rate_monitor_GR"] = rate_monitor_GR
-    # ret_vals["voltage_monitor_GR"] = voltage_monitor_GR
     ret_vals["spike_monitor_GR"] = spike_monitor_GR
     ret_vals["idx_monitored_neurons_GR"] = idx_monitored_neurons_GR
 
-    # ret_vals["rate_monitor_PC"] = rate_monitor_PC
-    # ret_vals["voltage_monitor_PC"] = voltage_monitor_PC
     ret_vals["spike_monitor_PC"] = spike_monitor_PC
     ret_vals["idx_monitored_neurons_PC"] = idx_monitored_neurons_PC
     
-    # ret_vals["rate_monitor_IO"] = rate_monitor_IO
-    # ret_vals["voltage_monitor_IO"] = voltage_monitor_IO
     ret_vals["spike_monitor_IO"] = spike_monitor_IO
     ret_vals["idx_monitored_neurons_IO"] = idx_monitored_neurons_IO
 
-    # ret_vals["rate_monitor_DCN"] = rate_monitor_DCN
-    # ret_vals["voltage_monitor_DCN"] = voltage_monitor_DCN
     ret_vals["spike_monitor_DCN"] = spike_monitor_DCN
     ret_vals["idx_monitored_neurons_DCN"] = idx_monitored_neurons_DCN
 

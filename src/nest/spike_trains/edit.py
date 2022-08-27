@@ -16,7 +16,6 @@ def spikes_for_simulation(spikes, durations, simulation_time):
     random.seed(1234)
     random.shuffle(trials)
     print('TRIALS', trials)
-    trials_to_string = "\n".join([f"Trial {index}: Right " if trial else f"Trial {index}: Left " for index, trial in enumerate(trials)])+"\n"
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
     spikes_A_status = nest.GetStatus(spikes_A)
@@ -46,4 +45,4 @@ def spikes_for_simulation(spikes, durations, simulation_time):
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)
     
-    return trials_to_string
+    return trials

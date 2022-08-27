@@ -1,0 +1,26 @@
+{
+    "brian_nest": [
+        ["spike_monitor_A", "raster"],
+        ["spike_monitor_B", "raster"],
+        ["spike_monitor_Z", "raster"],
+        ["spike_monitor_inhib", "raster"],
+        ["voltage_monitor_A", "voltage"],
+        ["voltage_monitor_B", "voltage"],
+        ["voltage_monitor_Z", "voltage"],
+        ["voltage_monitor_inhib", "voltage"]
+    ],
+    "decision_making_nrp": [
+        ["spike_monitor_A", "raster"],
+        ["spike_monitor_B", "raster"],
+        ["spike_monitor_inh", "raster"],
+        ["voltage_monitor_A", "voltage"],
+        ["voltage_monitor_B", "voltage"],
+        ["voltage_monitor_inh", "voltage"]
+    ],
+    "cerebellum_simple": [
+        ["spike_monitor_GR", "raster"],
+        ["spike_monitor_PC", "raster"],
+        ["spike_monitor_IO", "raster"],
+        ["spike_monitor_DCN", "raster"]
+    ]
+}
