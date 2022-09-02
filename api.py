@@ -10,6 +10,8 @@ from PIL import Image
 
 from flask_cors import CORS, cross_origin
 
+from main_api import run as run_execution
+
 app = Flask(__name__)
 cors = CORS(app, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
 
@@ -53,7 +55,7 @@ def old_execution_plots(id):
         encoded_imges.append(get_response_image(image_path))
     return jsonify({'result': encoded_imges})
 
-@app.route("/api/old_executions/<id>/notes", methods=["GET"])
+@app.route("/api/old_executions/<_id>/notes", methods=["GET"])
 @cross_origin()
 def old_execution_notes(_id):
     notes_path = 'output/executions/'+_id+'/simulations/cerebellum_simple/1/simulation_notes.txt'
@@ -66,11 +68,28 @@ def old_execution_notes(_id):
 def new_execution():
     
     params = json.loads(request.data)
-    print(params['config'])
-    print(params['execution_types'])
-    print(params['networks_params'])
+    run_execution(params)
     
     return jsonify({'result': 'success'})
+
+@app.route("/api/existing_types", methods=["GET"])
+@cross_origin()
+def existing_types():
+    with open('api_data/config/execution_types.json', 'r') as f:
+        file = json.load(f)
+
+    return jsonify({'types': list(file.keys())})
+
+@app.route("/api/existing_type/<_name>", methods=["GET"])
+@cross_origin()
+def existing_type(_name):
+    with open('api_data/config/execution_types.json', 'r') as f:
+        file = json.load(f)
+
+    if _name in file.keys():
+        return jsonify(file[_name])
+    else:
+        return jsonify({'result': 'error'})
 
 @app.route("/api/existing_networks", methods=["GET"])
 @cross_origin()

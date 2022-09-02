@@ -37,6 +37,15 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
         plt.close()
         # plt.show()
 
+    # plt.figure()
+    # plot_raster_plot.from_device(simulation_results['spike_monitor_GR'], False, hist=False, xlim =(0, 1000))
+    # plt.savefig(output_folder+'plots/gr_0-1000.png')
+    # plt.close()
+    # plt.figure()
+    # plot_raster_plot.from_device(simulation_results['spike_monitor_GR'], False, hist=False, xlim =(3000, 4000))
+    # plt.savefig(output_folder+'plots/gr_3000-4000.png')
+    # plt.close()
+
     #faccio un merge dei vari file per semplicità di visualizzazione
     merge_plots(output_folder, plots_to_create, 'plots')
 

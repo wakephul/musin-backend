@@ -375,41 +375,51 @@ if __name__ == '__main__':
                     
                     plots_to_create = plots_config[network] if (network in plots_config) else None
                     if plots_to_create:
-                        generate_plots(plots_to_create, output_folder, simulation_results, max_time)
+                        generate_plots(plots_to_create, output_folder, simulation_results, max_time*2)
                     
-                    senders_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['senders']
-                    times_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['times']
-                    senders_spike_monitor_PC = nest.GetStatus(simulation_results["spike_monitor_PC"], 'events')[0]['senders']
-                    times_spike_monitor_PC = nest.GetStatus(simulation_results["spike_monitor_PC"], 'events')[0]['times']
-                    senders_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['senders']
-                    times_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['times']
-                    senders_spike_monitor_DCN = nest.GetStatus(simulation_results["spike_monitor_DCN"], 'events')[0]['senders']
-                    times_spike_monitor_DCN = nest.GetStatus(simulation_results["spike_monitor_DCN"], 'events')[0]['times']
+                    # senders_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['senders']
+                    # times_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['times']
+                    # senders_spike_monitor_PC = nest.GetStatus(simulation_results["spike_monitor_PC"], 'events')[0]['senders']
+                    # times_spike_monitor_PC = nest.GetStatus(simulation_results["spike_monitor_PC"], 'events')[0]['times']
+                    # senders_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['senders']
+                    # times_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['times']
+                    senders_spike_monitor_DCN_a = nest.GetStatus(simulation_results["spike_monitor_DCN_a"], 'events')[0]['senders']
+                    times_spike_monitor_DCN_a = nest.GetStatus(simulation_results["spike_monitor_DCN_a"], 'events')[0]['times']
+                    senders_spike_monitor_DCN_b = nest.GetStatus(simulation_results["spike_monitor_DCN_b"], 'events')[0]['senders']
+                    times_spike_monitor_DCN_b = nest.GetStatus(simulation_results["spike_monitor_DCN_b"], 'events')[0]['times']
 
                     bin_size = 5
                     
-                    bin_rates_GR_complete = calculate_bins(senders_spike_monitor_GR, times_spike_monitor_GR, len(simulation_results["idx_monitored_neurons_GR"]), bin_size, max_time, 100)
-                    bin_rates_PC_complete = calculate_bins(senders_spike_monitor_PC, times_spike_monitor_PC, len(simulation_results["idx_monitored_neurons_PC"]), bin_size, max_time, 100)
-                    bin_rates_IO_complete = calculate_bins(senders_spike_monitor_PC, times_spike_monitor_IO, len(simulation_results["idx_monitored_neurons_IO"]), bin_size, max_time, 100)
-                    bin_rates_DCN_complete = calculate_bins(senders_spike_monitor_PC, times_spike_monitor_DCN, len(simulation_results["idx_monitored_neurons_DCN"]), bin_size, max_time, 100)
+                    # bin_rates_GR_complete = calculate_bins(senders_spike_monitor_GR, times_spike_monitor_GR, len(simulation_results["idx_monitored_neurons_GR"]), bin_size, max_time, 100)
+                    # bin_rates_PC_complete = calculate_bins(senders_spike_monitor_PC, times_spike_monitor_PC, len(simulation_results["idx_monitored_neurons_PC"]), bin_size, max_time, 100)
+                    # bin_rates_IO_complete = calculate_bins(senders_spike_monitor_IO, times_spike_monitor_IO, len(simulation_results["idx_monitored_neurons_IO"]), bin_size, max_time, 100)
+                    pdb.set_trace()
+                    bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(simulation_results["idx_monitored_neurons_DCN_a"]), bin_size, max_time, 100)
+                    bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(simulation_results["idx_monitored_neurons_DCN_a"]), bin_size, max_time, 100)
 
-                    file_handling.dict_to_json(bin_rates_GR_complete, output_folder+'bin_rates_GR_complete')
-                    file_handling.dict_to_json(bin_rates_PC_complete, output_folder+'bin_rates_PC_complete')
-                    file_handling.dict_to_json(bin_rates_IO_complete, output_folder+'bin_rates_IO_complete')
-                    file_handling.dict_to_json(bin_rates_DCN_complete, output_folder+'bin_rates_DCN_complete')
+                    # file_handling.dict_to_json(bin_rates_GR_complete, output_folder+'bin_rates_GR_complete')
+                    # file_handling.dict_to_json(bin_rates_PC_complete, output_folder+'bin_rates_PC_complete')
+                    # file_handling.dict_to_json(bin_rates_IO_complete, output_folder+'bin_rates_IO_complete')
+                    
+                    file_handling.dict_to_json(bin_rates_DCN_complete_a, output_folder+'bin_rates_DCN_complete_a')
+                    file_handling.dict_to_json(bin_rates_DCN_complete_b, output_folder+'bin_rates_DCN_complete_b')
 
-                    ma_rates_GR = moving_average_plot(bin_rates_GR_complete, output_folder+'plots/', 'ma_rates_GR')
-                    ma_rates_PC = moving_average_plot(bin_rates_PC_complete, output_folder+'plots/', 'ma_rates_PC')
-                    ma_rates_IO = moving_average_plot(bin_rates_IO_complete, output_folder+'plots/', 'ma_rates_IO')
-                    ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete, output_folder+'plots/', 'ma_rates_DCN')
+                    # ma_rates_GR = moving_average_plot(bin_rates_GR_complete, output_folder+'plots/', 'ma_rates_GR')
+                    # ma_rates_PC = moving_average_plot(bin_rates_PC_complete, output_folder+'plots/', 'ma_rates_PC')
+                    # ma_rates_IO = moving_average_plot(bin_rates_IO_complete, output_folder+'plots/', 'ma_rates_IO')
+                    
+                    # ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_a, output_folder+'plots/', 'ma_rates_DCN_a')
+                    # ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_b, output_folder+'plots/', 'ma_rates_DCN_b')
 
                     create_folder(output_folder+'multimeters')
                     create_folder(output_folder+'spike_detectors')
                     multimeters_merge(output_folder+'multimeters/')
                     spike_detectors_merge(output_folder+'spike_detectors/')
 
-                    monitors = ['spike_monitor_GR', 'spike_monitor_PC', 'spike_monitor_IO', 'spike_monitor_DCN']
-                    monitored_populations = ['idx_monitored_neurons_GR', 'idx_monitored_neurons_PC', 'idx_monitored_neurons_IO', 'idx_monitored_neurons_DCN']
+                    # monitors = ['spike_monitor_GR', 'spike_monitor_PC', 'spike_monitor_IO', 'spike_monitor_DCN']
+                    # monitored_populations = ['idx_monitored_neurons_GR', 'idx_monitored_neurons_PC', 'idx_monitored_neurons_IO', 'idx_monitored_neurons_DCN']
+                    monitors = ['spike_monitor_DCN_a', 'spike_monitor_DCN_b']
+                    monitored_populations = ['idx_monitored_neurons_DCN_a', 'idx_monitored_neurons_DCN_b']
                     rates = calculate_average_rate(simulation_results, max_time, monitors, monitored_populations)
 
                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))

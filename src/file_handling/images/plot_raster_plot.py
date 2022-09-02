@@ -273,7 +273,10 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         plotid = pylab.plot(ts1, gids, color_marker)
         pylab.ylabel(ylabel)
         pylab.xticks([])
-        xlim = pylab.xlim(xlim) if xlim else pylab.xlim()
+        if xlim:
+            pylab.xlim(xlim)
+        else:
+            pylab.xlim()
 
         pylab.axes([0.1, 0.1, 0.85, 0.17])
         t_bins = numpy.arange(

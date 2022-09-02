@@ -21,6 +21,7 @@
         ["spike_monitor_GR", "raster"],
         ["spike_monitor_PC", "raster"],
         ["spike_monitor_IO", "raster"],
-        ["spike_monitor_DCN", "raster"]
+        ["spike_monitor_DCN_a", "raster"],
+        ["spike_monitor_DCN_b", "raster"]
     ]
 }

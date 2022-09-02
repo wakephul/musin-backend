@@ -23,14 +23,22 @@ from src.file_handling.folder_handling import create_folder
 
 from src.nest.output.device_manager import multimeters_merge, spike_detectors_merge
 
+from src.nest.plots.generate import moving_average_plot_no_save
+from src.nest.output.rates import calculate_response_times
+import json
+
 def run(params):
     # CONFIGURATION FILE
-    config = params['config']
-    plots_config = params['plots_config']
-    network_config = params['network_config']
-    execution_types = params['execution_types']
+    config = params['config'] if ('config' in params) else {}
+    plots_config = params['plots_config'] if ('plots_config' in params) else {}
+    network_config = params['networks_params'] if ('networks_params' in params) else {}
+    execution_types = params['execution_types'] if ('execution_types' in params) else {}
     
-    executions = config['executions']
+    executions = config['executions'] if ('executions' in config) else {}
+
+    print(params)
+    print(config)
+    print(executions)
 
     # config = file_handling.read_json('data/config/config.json')
     # plots_config = file_handling.read_json('data/config/plots_config.json')
@@ -389,3 +397,45 @@ def run(params):
 
                 new_row('', current_simulations_folder+'simulations.csv', current_simulation)
                 network_params['sim_time'] = sim_time_old
+    
+
+def calculate_cdf():
+    with open('output/executions/259/simulations/cerebellum_simple/1/bin_rates_DCN_complete.json', 'r') as j:
+        bin_rates = json.loads(j.read())
+
+    ma_rates = moving_average_plot_no_save(bin_rates)
+
+    trial_time = 3000
+    bin_size = 5
+
+    # print('MA RATES: ', ma_rates)
+
+    th = 0.1
+    response_times = []
+    resp = calculate_response_times(ma_rates, th, trial_time, bin_size)
+    for rt in resp:
+        response_times.append(rt%1000)
+
+    print('RESPONSE TIMES: ', response_times)
+
+    # CDF plot for spike times
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    def cdf_calc(data):
+        count, bins_count = np.histogram(data, bins=10)
+        try:
+            print(count, sum(count))
+            pdf = count / sum(count)
+        except:
+            pdf = 0
+        cdf = np.cumsum(pdf)
+        return bins_count, cdf
+
+    bins_count, cdf = cdf_calc(response_times)
+    
+    plt.xlim(0, 600)
+    # plt.plot(bins_count[1:], pdf, color="red", label="PDF")
+    plt.plot(bins_count[1:], cdf, '--o', label="CDF cerebellum")
+    plt.legend()
+    plt.show()

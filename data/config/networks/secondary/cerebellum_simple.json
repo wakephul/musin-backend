@@ -6,10 +6,12 @@
     "LTP2": 1e-5,
     "LTD2": -1e-6,
     "Init_MFDCN": 0.07,
+    "Init_MFDCN_low": 0.06,
+    "Init_MFDCN_high": 0.11,
 
     "LTP3": 1e-7,
     "LTD3": 1e-6,
-    "Init_PCDCN": 0.5,
+    "Init_PCDCN": -0.5,
 
     "PLAST1": true,
     "PLAST2": false,
@@ -18,7 +20,7 @@
     "GR_num": 2000,
     "PC_num": 200,
 
-    "sim_time": 100000.00,
+    "sim_time": 2000.00,
     "t_stimulus_start": 0.00,
     "t_stimulus_end": 1000.00,
     "t_stimulus_duration": 1000.00

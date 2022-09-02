@@ -1,3 +1,4 @@
+import pdb
 import nest
 from random import sample, getrandbits, randint
 
@@ -23,6 +24,20 @@ def get_monitors(pop, monitored_subset_size):
 
     return spike_monitor, idx_monitored_neurons
 
+def train_test(inputs_1 = [], inputs_2 = [], sim_time = 0):
+    for input in inputs_1:
+        for index, neuron in enumerate(input):
+            n = nest.GetStatus([neuron])[0]
+            st = n['spike_times'].tolist()
+            st.extend(list(map(lambda x:(x+(sim_time)), st)))
+            nest.SetStatus([input[index]], {'spike_times': st})
+    for input in inputs_2:
+        for index, neuron in enumerate(input):
+            n = nest.GetStatus([neuron])[0]
+            st = n['spike_times'].tolist()
+            st = (list(map(lambda x:(x+(sim_time)), st)))
+            nest.SetStatus([input[index]], {'spike_times': st})
+
 def simulate_network(par):
     # CEREBELLUM
     LTP1 = par["LTP1"]
@@ -32,6 +47,8 @@ def simulate_network(par):
     LTP2 = par["LTP2"]
     LTD2 = par["LTD2"]
     Init_MFDCN = par["Init_MFDCN"]
+    Init_MFDCN_low = par["Init_MFDCN_low"]
+    Init_MFDCN_high = par["Init_MFDCN_high"]
 
     LTP3 = par["LTP3"]
     LTD3 = par["LTD3"]
@@ -86,6 +103,8 @@ def simulate_network(par):
     DCN_num = PC_num//2
     # DCN_num = PC_num
 
+    sim_time = par['sim_time']
+
 
     # MF = nest.Create("parrot_neuron", MF_num)
     GR = nest.Create("granular_neuron", GR_num)
@@ -104,25 +123,33 @@ def simulate_network(par):
     print('vt: ' + str(min(vt)) + " " + str(max(vt)))
 
     #per PC, IO e DCN crea 2 monitor per le due metà (una + e una -)
-    spike_monitor_GR,  idx_monitored_neurons_GR = get_monitors(GR, int(len(GR)))
-    spike_monitor_PC,  idx_monitored_neurons_PC = get_monitors(PC, int(len(PC)))
-    spike_monitor_IO,  idx_monitored_neurons_IO = get_monitors(IO, int(len(IO)))
-    spike_monitor_DCN,  idx_monitored_neurons_DCN = get_monitors(DCN, int(len(DCN)))
+    spike_monitor_GR, idx_monitored_neurons_GR = get_monitors(GR, int(len(GR)))
+    spike_monitor_PC, idx_monitored_neurons_PC = get_monitors(PC, int(len(PC)))
+    spike_monitor_IO, idx_monitored_neurons_IO = get_monitors(IO, int(len(IO)))
+
+    spike_monitor_DCN_a, idx_monitored_neurons_DCN_a = get_monitors(DCN[:len(DCN)//2], int(len(DCN))//2)
+    spike_monitor_DCN_b, idx_monitored_neurons_DCN_b = get_monitors(DCN[len(DCN)//2:], int(len(DCN))//2)
 
     # Connectivity
 
     # MF-GR excitatory connections
+    #TODO! prova ad aumentare il margine alto (non più di 7.0)
+    # MFGR_conn_param = {"model": "static_synapse",
+    #                     "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7},
+    #                     "delay": 1.0}
     MFGR_conn_param = {"model": "static_synapse",
-                        "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7},
+                        "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 1.5},
                         "delay": 1.0}
 
-    #questa regola andrà sovrascritta per descrivere gli stimoli che entrano nelle GR
-    #pesco A o B a caso
-    #a seconda di quello che ho pescato, prendo due GID visivi e due GID uditivi di quel lato (a o b)
-    #creo matrice pre e post (pre con gli id dei neuroni in input e post con gli id delle gr)
+    #nel test mi devo mettere sia il caso audiovisivo che il caso semplice solo audio o solo visivo
+    # "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7}, questo posso usarlo per gestire la distribuzione dei pesi
 
-    #TODO: prima di eseguire il test, dovremmo avere un periodo di training in cui passiamo solo a1/b1 oppure solo a2/b2,
-    #quindi una sola tipologia di stimolo per volta
+    input_a_1 = imported_stimulus_A['type_1']
+    input_b_1 = imported_stimulus_B['type_1']
+    input_a_2 = imported_stimulus_A['type_2']
+    input_b_2 = imported_stimulus_B['type_2']
+
+    train_test([input_a_1, input_b_1], [input_a_2, input_b_2], sim_time)
 
     input_dendrites_gr = 4
     
@@ -139,11 +166,11 @@ def simulate_network(par):
         stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
         array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
-    input_a_1 = imported_stimulus_A['type_1']
-    input_b_1 = imported_stimulus_B['type_1']
-    input_a_2 = imported_stimulus_A['type_2']
-    input_b_2 = imported_stimulus_B['type_2']
-
+    # pdb.set_trace()
+    # print(nest.GetStatus([input_a_1[0]]))
+    # print(nest.GetStatus([input_b_1[0]]))
+    # print(nest.GetStatus([input_a_1[0]]))
+    # print(nest.GetStatus([input_a_2[0]]))
     nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)
 
     # PF-PC excitatory plastic connections
@@ -171,8 +198,11 @@ def simulate_network(par):
                         "weight": 1.0, "delay": 1.0})
             
     # MF-DCN excitatory connections
+    # MFDCN_conn_param = {"model":  "static_synapse",
+    #                     "weight": Init_MFDCN,
+    #                     "delay":  10.0}
     MFDCN_conn_param = {"model":  "static_synapse",
-                        "weight": Init_MFDCN,
+                        "weight": {'distribution' : 'uniform', 'low': Init_MFDCN_low, 'high': Init_MFDCN_high},
                         "delay":  10.0}
 
     nest.Connect(input_a_1, DCN, "all_to_all", MFDCN_conn_param)
@@ -180,11 +210,6 @@ def simulate_network(par):
     # nest.Connect(input_a_2, DCN, "all_to_all", MFDCN_conn_param)
     # nest.Connect(input_b_2, DCN, "all_to_all", MFDCN_conn_param)
 
-    # TODO: ci vuole anche l'input alle IO
-    # possiamo connettere lo stimolo in input giocando con l'indegree in modo da arrivare ad un output a 1/2Hz (facendo quindi un downscaling)
-    # altra possibilità è quella di crearle come parrot neuron (sono già dei parrot) e generare l'input con dei poisson generator creati 
-    # a seconda di qual è il lato dello stimolo (che quindi mi devo passare in input)
-    # questi stimoli devono essere tra 400 e 600 ms
     trials_1 = par['trials_1']
     trials_2 = par['trials_2']
     IO_a = IO[:len(IO)//2]
@@ -209,8 +234,9 @@ def simulate_network(par):
         if P % 2 == 1:
             count_DCN += 1
                    
-
-    nest.Simulate(par['sim_time'])
+    nest.Simulate(sim_time)
+    nest.SetDefaults('stdp_synapse_sinexp', {"A_minus": 0.0, "A_plus":0.0})
+    nest.Simulate(sim_time//10)
 
     ret_vals = dict()
 
@@ -223,8 +249,10 @@ def simulate_network(par):
     ret_vals["spike_monitor_IO"] = spike_monitor_IO
     ret_vals["idx_monitored_neurons_IO"] = idx_monitored_neurons_IO
 
-    ret_vals["spike_monitor_DCN"] = spike_monitor_DCN
-    ret_vals["idx_monitored_neurons_DCN"] = idx_monitored_neurons_DCN
+    ret_vals["spike_monitor_DCN_a"] = spike_monitor_DCN_a
+    ret_vals["idx_monitored_neurons_DCN_a"] = idx_monitored_neurons_DCN_a
+    ret_vals["spike_monitor_DCN_b"] = spike_monitor_DCN_b
+    ret_vals["idx_monitored_neurons_DCN_b"] = idx_monitored_neurons_DCN_b
 
     return ret_vals
 
