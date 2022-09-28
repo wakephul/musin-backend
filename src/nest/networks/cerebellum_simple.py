@@ -24,19 +24,62 @@ def get_monitors(pop, monitored_subset_size):
 
     return spike_monitor, idx_monitored_neurons
 
-def train_test(inputs_1 = [], inputs_2 = [], sim_time = 0):
-    for input in inputs_1:
-        for index, neuron in enumerate(input):
-            n = nest.GetStatus([neuron])[0]
-            st = n['spike_times'].tolist()
-            st.extend(list(map(lambda x:(x+(sim_time)), st)))
-            nest.SetStatus([input[index]], {'spike_times': st})
-    for input in inputs_2:
-        for index, neuron in enumerate(input):
-            n = nest.GetStatus([neuron])[0]
-            st = n['spike_times'].tolist()
-            st = (list(map(lambda x:(x+(sim_time)), st)))
-            nest.SetStatus([input[index]], {'spike_times': st})
+def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0, trials_side = [], test_type = 3):
+    #inputs = [visivo_a, uditivo_a, visivo_b, uditivo_b]
+
+    all_trains = []
+    trial_index = 0
+    for start_time in range(0, int(train_time), int(stimulus_duration*3)):
+        end_time = start_time+stimulus_duration
+        random_value = getrandbits(1)
+        current_trial = trials_side[trial_index]
+        if not current_trial: # if trials --> population A
+            random_value += 2
+
+        all_trains.append(random_value)
+
+        for input_index in range(len(inputs)):
+            if input_index != random_value: #azzero i valori in quell'intervallo
+                for neuron in inputs[input_index]:
+                    neu = nest.GetStatus([neuron])[0]
+                    spike_times = neu['spike_times'].tolist()
+                    st = [time for time in spike_times if (time < start_time or time > end_time)]
+                    st.sort()
+                    nest.SetStatus([neuron], {'spike_times': st})
+        trial_index += 1
+    
+    all_tests = []
+    trial_index = 0
+    #inputs = [type_1_a, type_2_a, type_1_b, type_2_b]
+    inputs_to_keep = []
+    print("TEST TYPE:", test_type)
+    if test_type == 3:
+        inputs_to_keep = [0, 1, 2, 3]
+    elif test_type == 1:
+        inputs_to_keep = [0, 2]
+    elif test_type == 2:
+        inputs_to_keep = [1, 3]
+    for start_time in range(int(train_time), int(train_time+test_time), int(stimulus_duration*3)):
+        end_time = start_time+stimulus_duration
+
+        current_trial = trials_side[trial_index]
+        all_tests.append(test_type)
+
+        for input_index in range(len(inputs)):
+            if input_index not in inputs_to_keep:
+                for neuron in inputs[input_index]:
+                    neu = nest.GetStatus([neuron])[0]
+                    spike_times = neu['spike_times'].tolist()
+                    st = [time for time in spike_times if (time < start_time or time > end_time)]
+                    st.sort()
+                    nest.SetStatus([neuron], {'spike_times': st})
+        
+        trial_index += 1
+
+    print(all_trains)
+    print(all_tests)
+
+    return {"train": all_trains, "test": all_tests}
 
 def simulate_network(par):
     # CEREBELLUM
@@ -103,7 +146,10 @@ def simulate_network(par):
     DCN_num = PC_num//2
     # DCN_num = PC_num
 
-    sim_time = par['sim_time']
+    train_time = par['train_time']
+    test_time = par['test_time']
+    test_type = par['test_type']
+    stimulus_duration = par['t_stimulus_duration']
 
 
     # MF = nest.Create("parrot_neuron", MF_num)
@@ -126,6 +172,7 @@ def simulate_network(par):
     spike_monitor_GR, idx_monitored_neurons_GR = get_monitors(GR, int(len(GR)))
     spike_monitor_PC, idx_monitored_neurons_PC = get_monitors(PC, int(len(PC)))
     spike_monitor_IO, idx_monitored_neurons_IO = get_monitors(IO, int(len(IO)))
+    spike_monitor_DCN, idx_monitored_neurons_DCN = get_monitors(DCN, int(len(DCN)))
 
     spike_monitor_DCN_a, idx_monitored_neurons_DCN_a = get_monitors(DCN[:len(DCN)//2], int(len(DCN))//2)
     spike_monitor_DCN_b, idx_monitored_neurons_DCN_b = get_monitors(DCN[len(DCN)//2:], int(len(DCN))//2)
@@ -133,7 +180,6 @@ def simulate_network(par):
     # Connectivity
 
     # MF-GR excitatory connections
-    #TODO! prova ad aumentare il margine alto (non più di 7.0)
     # MFGR_conn_param = {"model": "static_synapse",
     #                     "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7},
     #                     "delay": 1.0}
@@ -149,7 +195,9 @@ def simulate_network(par):
     input_a_2 = imported_stimulus_A['type_2']
     input_b_2 = imported_stimulus_B['type_2']
 
-    train_test([input_a_1, input_b_1], [input_a_2, input_b_2], sim_time)
+    trials_side = par['trials_side']
+
+    train_test_result = train_test([input_a_1, input_a_2, input_b_1, input_b_2], train_time, test_time, stimulus_duration, trials_side, test_type)
 
     input_dendrites_gr = 4
     
@@ -166,11 +214,6 @@ def simulate_network(par):
         stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
         array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
-    # pdb.set_trace()
-    # print(nest.GetStatus([input_a_1[0]]))
-    # print(nest.GetStatus([input_b_1[0]]))
-    # print(nest.GetStatus([input_a_1[0]]))
-    # print(nest.GetStatus([input_a_2[0]]))
     nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)
 
     # PF-PC excitatory plastic connections
@@ -179,7 +222,7 @@ def simulate_network(par):
                     {"A_minus":   LTD1,
                     "A_plus":    LTP1,
                     "Wmin":      0.0,
-                    "Wmax":      4.0,
+                    "Wmax":      7.0,
                     "vt":        vt[0]})
     
     PFPC_conn_param = {"model":  'stdp_synapse_sinexp',
@@ -203,20 +246,19 @@ def simulate_network(par):
     #                     "delay":  10.0}
     MFDCN_conn_param = {"model":  "static_synapse",
                         "weight": {'distribution' : 'uniform', 'low': Init_MFDCN_low, 'high': Init_MFDCN_high},
-                        "delay":  10.0}
+                        "delay":  20.0}
 
+    #TODO! come dovrei collegarli, a seconda dei vari trial? sia training che test? 
     nest.Connect(input_a_1, DCN, "all_to_all", MFDCN_conn_param)
     nest.Connect(input_b_1, DCN, "all_to_all", MFDCN_conn_param)
-    # nest.Connect(input_a_2, DCN, "all_to_all", MFDCN_conn_param)
-    # nest.Connect(input_b_2, DCN, "all_to_all", MFDCN_conn_param)
+    nest.Connect(input_a_2, DCN, "all_to_all", MFDCN_conn_param)
+    nest.Connect(input_b_2, DCN, "all_to_all", MFDCN_conn_param)
 
-    trials_1 = par['trials_1']
-    trials_2 = par['trials_2']
     IO_a = IO[:len(IO)//2]
     IO_b = IO[len(IO)//2:]
-    for i in range(len(trials_1)):
-        pg = nest.Create('poisson_generator', params = {'rate': 1.5, 'start': float((i*3000.00)+400.00), 'stop': float((i*3000.00)+600.00)})
-        if trials_1[i]:
+    for i in range(len(trials_side)):
+        pg = nest.Create('poisson_generator', params = {'rate': 8.5, 'start': float((i*3000.00)+300.00), 'stop': float((i*3000.00)+600.00)})
+        if trials_side[i]:
             nest.Connect(pg, IO_a)
         else:
             nest.Connect(pg, IO_b)
@@ -234,9 +276,9 @@ def simulate_network(par):
         if P % 2 == 1:
             count_DCN += 1
                    
-    nest.Simulate(sim_time)
+    nest.Simulate(train_time)
     nest.SetDefaults('stdp_synapse_sinexp', {"A_minus": 0.0, "A_plus":0.0})
-    nest.Simulate(sim_time//10)
+    nest.Simulate(test_time)
 
     ret_vals = dict()
 
@@ -251,8 +293,17 @@ def simulate_network(par):
 
     ret_vals["spike_monitor_DCN_a"] = spike_monitor_DCN_a
     ret_vals["idx_monitored_neurons_DCN_a"] = idx_monitored_neurons_DCN_a
+
     ret_vals["spike_monitor_DCN_b"] = spike_monitor_DCN_b
     ret_vals["idx_monitored_neurons_DCN_b"] = idx_monitored_neurons_DCN_b
+
+    ret_vals["spike_monitor_DCN"] = spike_monitor_DCN
+    ret_vals["idx_monitored_neurons_DCN"] = idx_monitored_neurons_DCN
+
+    ret_vals["train"] = train_test_result["train"]
+    ret_vals["test"] = train_test_result["test"]
+
+    ret_vals["DCN"] = DCN
 
     return ret_vals
 

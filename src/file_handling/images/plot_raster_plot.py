@@ -21,6 +21,8 @@
 
 """ Functions for raster plotting."""
 
+import pdb
+from posixpath import split
 import nest
 import numpy
 import pylab
@@ -225,7 +227,7 @@ def _from_memory(detec):
 
 
 def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
-               grayscale=False, title=None, xlabel=None, xlim=None):
+               grayscale=False, title=None, xlabel=None, xlim=None, _types=[], split_population=[], train_or_test='train', sides=[]):
     """Generic plotting routine.
 
     Constructs a raster plot along with an optional histogram (common part in
@@ -252,6 +254,9 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
     xlabel : str, optional
         Label for x-axis
     """
+
+    ms = 1
+    
     pylab.figure()
 
     if grayscale:
@@ -269,34 +274,105 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
     ylabel = "Neuron ID"
 
     if hist:
-        ax1 = pylab.axes([0.1, 0.3, 0.85, 0.6])
-        plotid = pylab.plot(ts1, gids, color_marker)
+        ax1 = pylab.axes([0.1, 0.35, 0.85, 0.6])
+        if split_population:
+            
+            half_gids = split_population[0] + ((split_population[1] - split_population[0])//2)
+                
+            gids_first_half = []
+            times_first_half = []
+            gids_second_half = []
+            times_second_half = []
+            for index, gid in enumerate(gids):
+                time = ts1[index]
+                if gid < half_gids:
+                    gids_first_half.append(gid)
+                    times_first_half.append(time)
+                else:
+                    gids_second_half.append(gid)
+                    times_second_half.append(time)
+                
+            pylab.plot(times_first_half, gids_first_half, '.', ms=ms, color="blue")
+            pylab.plot(times_second_half, gids_second_half, '.', ms=ms, color="green")
+        else:
+            reduced_gids = [x for x,y in zip(gids,ts1) if (y > xlim[0] and y < xlim[1])]
+            reduced_ts = [y for x,y in zip(gids,ts1) if (y > xlim[0] and y < xlim[1])]
+            pylab.plot(reduced_ts, reduced_gids, color_marker, ms=ms)
+
+        if _types:
+            times_1 = []
+            times_2 = []
+            vals_1 = []
+            vals_2 = []
+            type_time = xlim[0]
+            max = numpy.max(gids)
+            min = numpy.min(gids)
+
+            for index, _type in enumerate(_types):
+                tt = type_time+400
+                side = sides[index]
+                if tt > xlim[0] and tt < xlim[1]:
+                    if train_or_test == 'train':
+                        if _type == 0 or _type == 2:
+                            times_1.append(tt)
+                            if side:
+                                vals_1.append(min)
+                            else:
+                                vals_1.append(max)
+                        else:
+                            times_2.append(tt)
+                            if side:
+                                vals_2.append(min)
+                            else:
+                                vals_2.append(max)
+                    elif train_or_test == 'test':
+                        if _type == 1: #type1
+                            times_1.append(tt)
+                            if side:
+                                vals_1.append(min)
+                            else:
+                                vals_1.append(max)
+                        elif _type == 2: #type2
+                            times_2.append(tt)
+                            if side:
+                                vals_2.append(min)
+                            else:
+                                vals_2.append(max)
+                        elif _type == 3: #both
+                            times_1.append(tt)
+                            times_2.append(tt)
+                            if side:
+                                vals_1.append(min)
+                                vals_2.append(min)
+                            else:
+                                vals_1.append(max)
+                                vals_2.append(max)
+                        
+
+                type_time=type_time+3000.0
+
+            pylab.plot(times_1, vals_1, '*', ms=ms*10, color="orange")
+            pylab.plot(times_2, vals_2, '.', ms=ms*10, color="red")
+
         pylab.ylabel(ylabel)
         pylab.xticks([])
-        if xlim:
-            pylab.xlim(xlim)
-        else:
-            pylab.xlim()
 
         pylab.axes([0.1, 0.1, 0.85, 0.17])
-        t_bins = numpy.arange(
-            numpy.amin(ts), numpy.amax(ts),
-            float(hist_binwidth)
-        )
+        pylab.xlim(xlim)
+        t_bins = numpy.arange( numpy.amin(ts), numpy.amax(ts), float(hist_binwidth) )
         n, bins = _histogram(ts, bins=t_bins)
         num_neurons = len(numpy.unique(neurons))
         heights = 1000 * n / (hist_binwidth * num_neurons)
 
-        pylab.bar(t_bins, heights, width=hist_binwidth, color=color_bar,
-                  edgecolor=color_edge)
-        pylab.yticks([
-            int(x) for x in
-            numpy.linspace(0.0, int(max(heights) * 1.1) + 5, 4)
-        ])
+        pylab.bar(t_bins, heights, width=hist_binwidth, color=color_bar, edgecolor=color_edge)
+        pylab.yticks([ int(x) for x in numpy.linspace(0.0, int(numpy.max(heights) * 1.1) + 5, 4)])
+        
         pylab.ylabel("Rate (Hz)")
         pylab.axes(ax1)
+        pylab.xlim(xlim)
+
     else:
-        plotid = pylab.plot(ts1, gids, color_marker, ms=1)
+        pylab.plot(ts1, gids, color_marker, ms=ms)
         pylab.xlabel(xlabel)
         pylab.ylabel(ylabel)
 
@@ -306,11 +382,13 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         pylab.title(title)
 
     pylab.xlabel(xlabel)
+
     if xlim:
         pylab.xlim(xlim)
+
     pylab.draw()
 
-    return plotid
+    return
 
 
 def _histogram(a, bins=10, bin_range=None, normed=False):

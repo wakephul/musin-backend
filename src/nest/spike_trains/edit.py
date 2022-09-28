@@ -8,10 +8,10 @@ import pdb
 # uso questi booleani per definire se un trial è dx o sx
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
-def spikes_for_simulation(spikes, durations, simulation_time):
+def spikes_for_simulation(spikes, durations, train_time):
     # import pdb
     # pdb.set_trace()
-    number_of_stimuli_in_simulation = int(simulation_time/durations)
+    number_of_stimuli_in_simulation = int(train_time/durations)
     trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
     random.seed(1234)
     random.shuffle(trials)

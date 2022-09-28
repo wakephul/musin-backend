@@ -2,34 +2,34 @@ import pdb
 import nest
 import numpy as np
 
-def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, max_time = 1000, threshold_rate = 100):
+def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start_time = 5, end_time = 1000):
 
+    # pdb.set_trace()
     print("Calculating rates divided into bins")
-    bins = list(range(bin_size, max_time+1, bin_size))
+    bins = list(range(int(start_time), int(end_time)+1, bin_size))
+
+    # pdb.set_trace()
     monitored_times = {}
     for index, time in enumerate(times):
         bin_index = np.digitize(time, bins, right=True)
         if bin_index < len(bins):
             bin_time = np.take(bins, bin_index)
             if bin_time in monitored_times:
-                if index in senders:
-                    monitored_times[bin_time].append(senders[index])
+                monitored_times[bin_time].append(senders[index])
             else:
                 monitored_times[bin_time] = [senders[index]]
     for id in monitored_times:
         monitored_times[id].sort()
 
     bin_rates_complete = {}
+
     for bin_time in bins:
         if bin_time in monitored_times:
             bin_rate = len(monitored_times[bin_time]) * 1000 / (bin_size * number_monitored_neurons)
+            # bin_rate = len(monitored_times[bin_time]) * 1000 / bin_size
             bin_rates_complete[bin_time] = bin_rate
         else:
             bin_rates_complete[bin_time] = 0
-
-        # print(f'rate nel bin {bin_time}: {bin_rate} Hz')
-
-    # print('bin_rates', bin_rates)
 
     return bin_rates_complete
 

@@ -1,0 +1,9 @@
+{
+    "cerebellum_simple": {
+        "rates_DCN": [
+            ["spike_monitor_DCN_test"],
+            ["ma_rates_DCN_a"],
+            ["ma_rates_DCN_b"]
+        ]
+    }
+}

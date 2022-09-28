@@ -1,6 +1,6 @@
 {
     "LTP1": 0.05,
-    "LTD1": -0.7,
+    "LTD1": -6.0,
     "Init_PFPC": 4.0,
 
     "LTP2": 1e-5,
@@ -11,16 +11,19 @@
 
     "LTP3": 1e-7,
     "LTD3": 1e-6,
-    "Init_PCDCN": -0.5,
+    "Init_PCDCN": -20.0,
 
     "PLAST1": true,
     "PLAST2": false,
     "PLAST3": false,
 
     "GR_num": 2000,
-    "PC_num": 200,
+    "PC_num": 100,
 
-    "sim_time": 2000.00,
+    "test_type": 1,
+
+    "train_time": 60000.00,
+    "test_time": 30000.00,
     "t_stimulus_start": 0.00,
     "t_stimulus_end": 1000.00,
     "t_stimulus_duration": 1000.00

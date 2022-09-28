@@ -20,13 +20,16 @@ from importlib import import_module
 from src.nest.spike_trains.edit import spikes_for_simulation
 from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
 from src.file_handling.folder_handling import create_folder
+from src.file_handling.images.edit import merge_plots
 
 from src.nest.output.device_manager import multimeters_merge, spike_detectors_merge
+
 
 if __name__ == '__main__':
     # CONFIGURATION FILE
     config = file_handling.read_json('data/config/config.json')
     plots_config = file_handling.read_json('data/config/plots_config.json')
+    plots_merge_config = file_handling.read_json('data/config/plots_merge_config.json')
     network_config = file_handling.read_json('data/config/network_config.json')
     execution_types = file_handling.read_json('data/config/execution_types.json')
     exit = False
@@ -361,21 +364,26 @@ if __name__ == '__main__':
 
                     current_simulation = [network]
 
-                    trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
-                    trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                    trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['train_time']+network_params['test_time'])/3)
+                    trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['train_time']+network_params['test_time'])/3)
 
                     network_params['imported_stimulus_A'] = {'type_1': spikes_type_1_A, 'type_2': spikes_type_2_A}
                     network_params['imported_stimulus_B'] = {'type_1': spikes_type_1_B, 'type_2': spikes_type_2_B}
-                    sim_time_old = network_params['sim_time']
-                    network_params['sim_time'] = max_time = int(network_params['sim_time'])*3
-                    network_params['trials_1'] = trials_1
-                    network_params['trials_2'] = trials_2
+                    train_time_old = network_params['train_time']
+                    network_params['train_time'] = train_time = int(network_params['train_time'])
+                    network_params['test_time'] = test_time = int(network_params['test_time'])
+                    network_params['test_type'] = int(network_params['test_type'])
+                    network_params['trials_side'] = trials_1
 
                     simulation_results = network_module.run(network_params)
+
+                    # print("\n\nSIMULATION RESULTS: ", simulation_results)
                     
                     plots_to_create = plots_config[network] if (network in plots_config) else None
                     if plots_to_create:
-                        generate_plots(plots_to_create, output_folder, simulation_results, max_time*2)
+                        generate_plots(plots_to_create, output_folder, simulation_results, train_time=train_time, test_time=test_time, train=simulation_results["train"], test=simulation_results["test"], sides=trials_1)
+
+                    plots_to_merge = plots_merge_config[network] if (network in plots_merge_config) else None
                     
                     # senders_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['senders']
                     # times_spike_monitor_GR = nest.GetStatus(simulation_results["spike_monitor_GR"], 'events')[0]['times']
@@ -383,19 +391,27 @@ if __name__ == '__main__':
                     # times_spike_monitor_PC = nest.GetStatus(simulation_results["spike_monitor_PC"], 'events')[0]['times']
                     # senders_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['senders']
                     # times_spike_monitor_IO = nest.GetStatus(simulation_results["spike_monitor_IO"], 'events')[0]['times']
+                    
+                    #PER I BIN
                     senders_spike_monitor_DCN_a = nest.GetStatus(simulation_results["spike_monitor_DCN_a"], 'events')[0]['senders']
                     times_spike_monitor_DCN_a = nest.GetStatus(simulation_results["spike_monitor_DCN_a"], 'events')[0]['times']
                     senders_spike_monitor_DCN_b = nest.GetStatus(simulation_results["spike_monitor_DCN_b"], 'events')[0]['senders']
                     times_spike_monitor_DCN_b = nest.GetStatus(simulation_results["spike_monitor_DCN_b"], 'events')[0]['times']
+                    # PER I PLOT
+                    # senders_spike_monitor_DCN = nest.GetStatus(simulation_results["spike_monitor_DCN"], 'events')[0]['senders']
+                    # times_spike_monitor_DCN = nest.GetStatus(simulation_results["spike_monitor_DCN"], 'events')[0]['times']
 
                     bin_size = 5
                     
                     # bin_rates_GR_complete = calculate_bins(senders_spike_monitor_GR, times_spike_monitor_GR, len(simulation_results["idx_monitored_neurons_GR"]), bin_size, max_time, 100)
                     # bin_rates_PC_complete = calculate_bins(senders_spike_monitor_PC, times_spike_monitor_PC, len(simulation_results["idx_monitored_neurons_PC"]), bin_size, max_time, 100)
                     # bin_rates_IO_complete = calculate_bins(senders_spike_monitor_IO, times_spike_monitor_IO, len(simulation_results["idx_monitored_neurons_IO"]), bin_size, max_time, 100)
-                    pdb.set_trace()
-                    bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(simulation_results["idx_monitored_neurons_DCN_a"]), bin_size, max_time, 100)
-                    bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(simulation_results["idx_monitored_neurons_DCN_a"]), bin_size, max_time, 100)
+                    # pdb.set_trace()
+                    times_spike_monitor_DCN_a = [t for t in times_spike_monitor_DCN_a if t > train_time]
+                    times_spike_monitor_DCN_b = [t for t in times_spike_monitor_DCN_b if t > train_time]
+                    bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, test_time)
+                    bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, test_time)
+                    # bin_rates_DCN_complete = calculate_bins(senders_spike_monitor_DCN, times_spike_monitor_DCN, len(simulation_results["idx_monitored_neurons_DCN_a"]), bin_size, max_time, 100)
 
                     # file_handling.dict_to_json(bin_rates_GR_complete, output_folder+'bin_rates_GR_complete')
                     # file_handling.dict_to_json(bin_rates_PC_complete, output_folder+'bin_rates_PC_complete')
@@ -408,8 +424,8 @@ if __name__ == '__main__':
                     # ma_rates_PC = moving_average_plot(bin_rates_PC_complete, output_folder+'plots/', 'ma_rates_PC')
                     # ma_rates_IO = moving_average_plot(bin_rates_IO_complete, output_folder+'plots/', 'ma_rates_IO')
                     
-                    # ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_a, output_folder+'plots/', 'ma_rates_DCN_a')
-                    # ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_b, output_folder+'plots/', 'ma_rates_DCN_b')
+                    ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_a, output_folder+'plots/', 'ma_rates_DCN_a', (train_time, test_time))
+                    ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_b, output_folder+'plots/', 'ma_rates_DCN_b', (train_time, test_time))
 
                     create_folder(output_folder+'multimeters')
                     create_folder(output_folder+'spike_detectors')
@@ -420,9 +436,14 @@ if __name__ == '__main__':
                     # monitored_populations = ['idx_monitored_neurons_GR', 'idx_monitored_neurons_PC', 'idx_monitored_neurons_IO', 'idx_monitored_neurons_DCN']
                     monitors = ['spike_monitor_DCN_a', 'spike_monitor_DCN_b']
                     monitored_populations = ['idx_monitored_neurons_DCN_a', 'idx_monitored_neurons_DCN_b']
-                    rates = calculate_average_rate(simulation_results, max_time, monitors, monitored_populations)
+                    # rates = calculate_average_rate(simulation_results = simulation_results, max_time = test_time-train_time, monitors = monitors, monitored_populations = monitored_populations)
+                    rates = calculate_average_rate(simulation_results = simulation_results, max_time = test_time, monitors = monitors, monitored_populations = monitored_populations)
 
                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
 
+                    # pdb.set_trace()
+                    for k in plots_to_merge:
+                        v = plots_to_merge[k]
+                        merge_plots(output_folder, v, k, 1)
+
                     new_row('', current_simulations_folder+'simulations.csv', current_simulation)
-                    network_params['sim_time'] = sim_time_old
