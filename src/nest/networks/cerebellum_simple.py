@@ -24,7 +24,7 @@ def get_monitors(pop, monitored_subset_size):
 
     return spike_monitor, idx_monitored_neurons
 
-def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0, trials_side = [], test_type = 3):
+def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0, trials_side = [], test_types = [3]):
     #inputs = [visivo_a, uditivo_a, visivo_b, uditivo_b]
 
     all_trains = []
@@ -52,29 +52,30 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
     trial_index = 0
     #inputs = [type_1_a, type_2_a, type_1_b, type_2_b]
     inputs_to_keep = []
-    print("TEST TYPE:", test_type)
-    if test_type == 3:
-        inputs_to_keep = [0, 1, 2, 3]
-    elif test_type == 1:
-        inputs_to_keep = [0, 2]
-    elif test_type == 2:
-        inputs_to_keep = [1, 3]
-    for start_time in range(int(train_time), int(train_time+test_time), int(stimulus_duration*3)):
-        end_time = start_time+stimulus_duration
+    print("TEST TYPES:", test_types)
+    for test_type_index, test_type in enumerate(test_types):
+        if test_type == 3:
+            inputs_to_keep = [0, 1, 2, 3]
+        elif test_type == 1:
+            inputs_to_keep = [0, 2]
+        elif test_type == 2:
+            inputs_to_keep = [1, 3]
+        for start_time in range(int(train_time+(test_time*(test_type_index))), int(train_time+(test_time*(test_type_index+1))), int(stimulus_duration*3)):
+            end_time = start_time+stimulus_duration
 
-        current_trial = trials_side[trial_index]
-        all_tests.append(test_type)
+            current_trial = trials_side[trial_index]
+            all_tests.append(test_type)
 
-        for input_index in range(len(inputs)):
-            if input_index not in inputs_to_keep:
-                for neuron in inputs[input_index]:
-                    neu = nest.GetStatus([neuron])[0]
-                    spike_times = neu['spike_times'].tolist()
-                    st = [time for time in spike_times if (time < start_time or time > end_time)]
-                    st.sort()
-                    nest.SetStatus([neuron], {'spike_times': st})
-        
-        trial_index += 1
+            for input_index in range(len(inputs)):
+                if input_index not in inputs_to_keep:
+                    for neuron in inputs[input_index]:
+                        neu = nest.GetStatus([neuron])[0]
+                        spike_times = neu['spike_times'].tolist()
+                        st = [time for time in spike_times if (time < start_time or time > end_time)]
+                        st.sort()
+                        nest.SetStatus([neuron], {'spike_times': st})
+            
+            trial_index += 1
 
     print(all_trains)
     print(all_tests)
@@ -148,7 +149,7 @@ def simulate_network(par):
 
     train_time = par['train_time']
     test_time = par['test_time']
-    test_type = par['test_type']
+    test_types = par['test_types']
     stimulus_duration = par['t_stimulus_duration']
 
 
@@ -197,7 +198,7 @@ def simulate_network(par):
 
     trials_side = par['trials_side']
 
-    train_test_result = train_test([input_a_1, input_a_2, input_b_1, input_b_2], train_time, test_time, stimulus_duration, trials_side, test_type)
+    train_test_result = train_test([input_a_1, input_a_2, input_b_1, input_b_2], train_time, test_time, stimulus_duration, trials_side, test_types)
 
     input_dendrites_gr = 4
     
@@ -278,7 +279,8 @@ def simulate_network(par):
                    
     nest.Simulate(train_time)
     nest.SetDefaults('stdp_synapse_sinexp', {"A_minus": 0.0, "A_plus":0.0})
-    nest.Simulate(test_time)
+    for i in range(len(test_types)):
+        nest.Simulate(test_time)
 
     ret_vals = dict()
 

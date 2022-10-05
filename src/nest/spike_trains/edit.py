@@ -8,14 +8,18 @@ import pdb
 # uso questi booleani per definire se un trial è dx o sx
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
-def spikes_for_simulation(spikes, durations, train_time):
+def spikes_for_simulation(spikes, durations, train_time, test_time, test_number):
     # import pdb
     # pdb.set_trace()
-    number_of_stimuli_in_simulation = int(train_time/durations)
-    trials = [True if x%2 else False for x in range(number_of_stimuli_in_simulation)]
+    number_of_train_stimuli = int(train_time/durations)
+    number_of_test_stimuli = int(test_time/durations)
+    train_trials = [True if x%2 else False for x in range(number_of_train_stimuli)]
+    test_trials = [True if x%2 else False for x in range(number_of_test_stimuli)]
     random.seed(1234)
-    random.shuffle(trials)
-    print('TRIALS', trials)
+    random.shuffle(train_trials)
+    random.shuffle(test_trials)
+    print('TRAIN TRIALS', train_trials)
+    print('TEST TRIALS', test_trials)
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
     spikes_A = spikes[0]
     spikes_A_status = nest.GetStatus(spikes_A)
@@ -25,10 +29,18 @@ def spikes_for_simulation(spikes, durations, train_time):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
         i=0
-        for trial_index, trial in enumerate(trials):
+
+        for trial_index, trial in enumerate(train_trials):
             if trial:
                 new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
             i+=2
+
+        for test_index in range(test_number):
+            for trial_index, trial in enumerate(test_trials):
+                if trial:
+                    new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+                i+=2
+
         new_spike_times.sort()
         nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
     spikes_A_status = nest.GetStatus(spikes_A)
@@ -37,12 +49,20 @@ def spikes_for_simulation(spikes, durations, train_time):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
         i=0
-        for trial_index, trial in enumerate(trials):
+
+        for trial_index, trial in enumerate(train_trials):
             if not trial:
                 new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
             i+=2
+
+        for test_index in range(test_number):
+            for trial_index, trial in enumerate(test_trials):
+                if not trial:
+                    new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+                i+=2
+
         new_spike_times.sort()
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)
     
-    return trials
+    return train_trials+test_trials

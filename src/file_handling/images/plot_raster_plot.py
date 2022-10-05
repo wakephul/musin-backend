@@ -285,7 +285,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
             times_second_half = []
             for index, gid in enumerate(gids):
                 time = ts1[index]
-                if gid < half_gids:
+                if gid <= half_gids:
                     gids_first_half.append(gid)
                     times_first_half.append(time)
                 else:

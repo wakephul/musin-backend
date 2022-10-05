@@ -1,5 +1,6 @@
 from PIL import Image
 from math import ceil
+import pdb
 
 def merge_images(images, single_size, filename, col_number = 0, color = (240, 240, 240)):
     '''
@@ -41,7 +42,7 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
 
     new_image.save(filename ,"JPEG")
 
-def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_title', col_number = 3):
+def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_title', col_number = 3, test_number = 1):
 
     if (not output_folder or not plots_to_merge): return
     
@@ -49,8 +50,21 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
     for plot in plots_to_merge:
         title = plot[0]
         if len(plot) > 2:
-            title = title + '_' + plot[2]
-        filename = output_folder+'plots/'+title+'.png'
-        filenames.append(filename)
+            if plot[2] == 'test':
+                # pdb.set_trace()
+                for t in range(test_number):
+                    _title = title + '_test_' + str(t)
+                    filename = output_folder+'plots/'+_title+'.png'
+                    filenames.append(filename)
+            else:
+                title = title + '_' + plot[2]
+                filename = output_folder+'plots/'+title+'_0.png'
+                filenames.append(filename)
+
+        else:
+            filename = output_folder+'plots/'+title+'_0.png'
+            filenames.append(filename)
+
+    print('filenames', filenames)
 
     merge_images(filenames, [400, 400], output_folder+merge_title+'.jpg', col_number)
