@@ -22,7 +22,6 @@
         ["spike_monitor_GR", "raster", "test"],
         ["spike_monitor_PC", "raster", "train"],
         ["spike_monitor_PC", "raster", "test"],
-        ["spike_monitor_IO", "raster"],
         ["spike_monitor_DCN", "raster", "train", "split_population", "DCN"],
         ["spike_monitor_DCN", "raster", "test", "split_population", "DCN"]
     ]

@@ -23,7 +23,7 @@
     "test_types": [1, 2, 3],
 
     "train_time": 3000.00,
-    "test_time": 3000.00,
+    "test_time": 6000.00,
     "t_stimulus_start": 0.00,
     "t_stimulus_end": 1000.00,
     "t_stimulus_duration": 1000.00

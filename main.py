@@ -364,11 +364,12 @@ if __name__ == '__main__':
 
                     current_simulation = [network]
 
+                    duration = float(network_params['t_stimulus_duration'])
                     train_time = float((network_params['train_time']))
                     test_time = float((network_params['test_time']))
                     test_number = len(network_params['test_types'])
-                    trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), train_time/3, test_time/3, test_number)
-                    trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), train_time/3, test_time/3, test_number)
+                    trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], duration, train_time/3, test_time/3, test_number)
+                    trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], duration, train_time/3, test_time/3, test_number)
 
                     network_params['imported_stimulus_A'] = {'type_1': spikes_type_1_A, 'type_2': spikes_type_2_A}
                     network_params['imported_stimulus_B'] = {'type_1': spikes_type_1_B, 'type_2': spikes_type_2_B}
