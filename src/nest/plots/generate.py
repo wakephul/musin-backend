@@ -35,8 +35,8 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                 if len(plot) > 2 and plot[2] == 'test':
                     for t in range(test_number):
                         train_or_test = 'test'
-                        start_time = train_time
-                        end_time = train_time+test_time
+                        start_time = train_time+(test_time*(t))
+                        end_time = train_time+(test_time*(t+1))
                         _types = [test[t]]
                         test_start_index = -int(test_time/3000)
                         _sides = sides[test_start_index:]
@@ -45,6 +45,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                         plot_raster_plot.from_device(simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test=train_or_test)
                         plt.savefig(output_folder+'plots/'+_title+'.png')
                         plt.close()
+
                 else:
                     train_start_index = int(train_time/3000)
                     _sides = sides[:train_start_index]

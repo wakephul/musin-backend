@@ -57,7 +57,8 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
                     filename = output_folder+'plots/'+_title+'.png'
                     filenames.append(filename)
             else:
-                title = title + '_' + plot[2]
+                if plot[2] == 'train':
+                    title = title + '_' + plot[2]
                 filename = output_folder+'plots/'+title+'_0.png'
                 filenames.append(filename)
 

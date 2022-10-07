@@ -49,11 +49,11 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
         trial_index += 1
     
     all_tests = []
-    trial_index = 0
     #inputs = [type_1_a, type_2_a, type_1_b, type_2_b]
     inputs_to_keep = []
     print("TEST TYPES:", test_types)
     for test_type_index, test_type in enumerate(test_types):
+        trial_index = 0
         if test_type == 3:
             inputs_to_keep = [0, 1, 2, 3]
         elif test_type == 1:
@@ -62,8 +62,10 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
             inputs_to_keep = [1, 3]
         for start_time in range(int(train_time+(test_time*(test_type_index))), int(train_time+(test_time*(test_type_index+1))), int(stimulus_duration*3)):
             end_time = start_time+stimulus_duration
-
+            print('trials_side', trials_side)
+            print('trial_index', trial_index)
             current_trial = trials_side[trial_index]
+            print('current_trial', current_trial)
             all_tests.append(test_type)
 
             for input_index in range(len(inputs)):
@@ -249,7 +251,6 @@ def simulate_network(par):
                         "weight": {'distribution' : 'uniform', 'low': Init_MFDCN_low, 'high': Init_MFDCN_high},
                         "delay":  20.0}
 
-    #TODO! come dovrei collegarli, a seconda dei vari trial? sia training che test? 
     nest.Connect(input_a_1, DCN, "all_to_all", MFDCN_conn_param)
     nest.Connect(input_b_1, DCN, "all_to_all", MFDCN_conn_param)
     nest.Connect(input_a_2, DCN, "all_to_all", MFDCN_conn_param)

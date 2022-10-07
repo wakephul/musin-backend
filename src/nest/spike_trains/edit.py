@@ -38,10 +38,11 @@ def spikes_for_simulation(spikes, durations, train_time, test_time, test_number)
         for test_index in range(test_number):
             for trial_index, trial in enumerate(test_trials):
                 if trial:
-                    new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+                    new_spike_times.extend(list(map(lambda x:(x+train_time+((trial_index+i)*durations)), spike_times)))
                 i+=2
 
         new_spike_times.sort()
+        print('new_spike_times_a:', new_spike_times)
         nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
     spikes_A_status = nest.GetStatus(spikes_A)
 
@@ -58,10 +59,11 @@ def spikes_for_simulation(spikes, durations, train_time, test_time, test_number)
         for test_index in range(test_number):
             for trial_index, trial in enumerate(test_trials):
                 if not trial:
-                    new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
+                    new_spike_times.extend(list(map(lambda x:(x+train_time+((trial_index+i)*durations)), spike_times)))
                 i+=2
 
         new_spike_times.sort()
+        print('new_spike_times_b:', new_spike_times)
         nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
     spikes_B_status = nest.GetStatus(spikes_B)
     
