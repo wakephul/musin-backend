@@ -2,14 +2,14 @@ import pdb
 import nest
 import numpy as np
 
-def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start_time = 5, end_time = 1000):
+def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start_time = 5, end_time = 1000, split_into = 1):
 
     # pdb.set_trace()
     print("Calculating rates divided into bins")
     bins = list(range(int(start_time), int(end_time)+1, bin_size))
 
-    # pdb.set_trace()
     monitored_times = {}
+
     for index, time in enumerate(times):
         bin_index = np.digitize(time, bins, right=True)
         if bin_index < len(bins):
@@ -21,17 +21,25 @@ def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start
     for id in monitored_times:
         monitored_times[id].sort()
 
-    bin_rates_complete = {}
+    bin_rates = {}
 
     for bin_time in bins:
         if bin_time in monitored_times:
             bin_rate = len(monitored_times[bin_time]) * 1000 / (bin_size * number_monitored_neurons)
-            # bin_rate = len(monitored_times[bin_time]) * 1000 / bin_size
-            bin_rates_complete[bin_time] = bin_rate
+            bin_rates[bin_time] = bin_rate
         else:
-            bin_rates_complete[bin_time] = 0
+            bin_rates[bin_time] = 0
+        
 
-    return bin_rates_complete
+    bin_rates_split = {i: [] for i in range(split_into)}
+
+    step = int((end_time-start_time)/split_into)
+    start = int(start_time)
+    end = int(end_time)
+    for index, value in enumerate(range(start, end, step)):
+        bin_rates_split[index] = {k:v for k, v in bin_rates.items() if (k>=value and k<value+step)}
+
+    return bin_rates_split
 
 def calculate_average_rate(simulation_results = [], max_time = 1000, monitors = [], monitored_populations = []):
 

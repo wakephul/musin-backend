@@ -308,9 +308,13 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
             max = numpy.max(gids)
             min = numpy.min(gids)
 
+            # print('_types:', _types)
+            tt = type_time+400
             for index, _type in enumerate(_types):
-                tt = type_time+400
                 side = sides[index]
+                # print('_type:', _type)
+                # print('sides:', sides)
+                # for side_index, side in enumerate(sides):
                 if tt > xlim[0] and tt < xlim[1]:
                     if train_or_test == 'train':
                         if _type == 0 or _type == 2:
@@ -347,9 +351,9 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                             else:
                                 vals_1.append(max)
                                 vals_2.append(max)
-                        
+                    
 
-                type_time=type_time+3000.0
+                tt+=3000.0
 
             pylab.plot(times_1, vals_1, '*', ms=ms*10, color="orange")
             pylab.plot(times_2, vals_2, '.', ms=ms*10, color="red")

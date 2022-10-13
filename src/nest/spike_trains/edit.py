@@ -49,7 +49,6 @@ def spikes_for_simulation(spikes, durations, train_time, test_time, test_number)
     for neuron_index, neuron in enumerate(spikes_B_status):
         new_spike_times = []
         spike_times = neuron['spike_times'].tolist()
-        print('spike_times_b:', spike_times)
 
         i=0
         for trial_index, trial in enumerate(train_trials):

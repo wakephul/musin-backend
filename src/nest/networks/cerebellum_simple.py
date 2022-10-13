@@ -51,7 +51,6 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
     all_tests = []
     #inputs = [type_1_a, type_2_a, type_1_b, type_2_b]
     inputs_to_keep = []
-    print("TEST TYPES:", test_types)
     for test_type_index, test_type in enumerate(test_types):
         trial_index = 0
         if test_type == 3:
@@ -61,12 +60,9 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
         elif test_type == 2:
             inputs_to_keep = [1, 3]
         for start_time in range(int(train_time+(test_time*(test_type_index))), int(train_time+(test_time*(test_type_index+1))), int(stimulus_duration*3)):
-            end_time = start_time+stimulus_duration
-            print('trials_side', trials_side)
-            print('trial_index', trial_index)
-            current_trial = trials_side[trial_index]
-            print('current_trial', current_trial)
             all_tests.append(test_type)
+            end_time = start_time+stimulus_duration
+            current_trial = trials_side[trial_index]
 
             for input_index in range(len(inputs)):
                 if input_index not in inputs_to_keep:
@@ -78,9 +74,6 @@ def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0
                         nest.SetStatus([neuron], {'spike_times': st})
             
             trial_index += 1
-
-    print(all_trains)
-    print(all_tests)
 
     return {"train": all_trains, "test": all_tests}
 
@@ -211,6 +204,9 @@ def simulate_network(par):
     for n in range(len(GR)):
         random_side = bool(getrandbits(1))
         stimulus = imported_stimulus_A if random_side else imported_stimulus_B
+        print(len(stimulus))
+        print(max_pos)
+        print(stimulus)
         stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
         stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
         stim_2_1 = stimulus['type_2'][randint(0, max_pos)]

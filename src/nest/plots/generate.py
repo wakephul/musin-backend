@@ -34,14 +34,14 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
 
                 if len(plot) > 2 and plot[2] == 'test':
                     for t in range(test_number):
+                        _title=title+'_'+str(t)
                         train_or_test = 'test'
                         start_time = train_time+(test_time*(t))
                         end_time = train_time+(test_time*(t+1))
-                        _types = [test[t]]
                         test_start_index = -int(test_time/3000)
                         _sides = sides[test_start_index:]
+                        _types = test[(t*len(_sides)):((t+1)*len(_sides))]
                         plt.figure()
-                        _title=title+'_'+str(t)
                         plot_raster_plot.from_device(simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test=train_or_test)
                         plt.savefig(output_folder+'plots/'+_title+'.png')
                         plt.close()
@@ -73,8 +73,6 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             except:
                 print('error while generating voltage trace: ', plot[0])
 
-    print('plots_to_merge', plots_to_create)
-    print('test_number', test_number)
     merge_plots(output_folder, plots_to_create, 'plots', 4, test_number)
 
 def moving_average_plot(plot_data, output_folder, plot_name, xlim = []):
@@ -117,7 +115,7 @@ def moving_average_plot_no_save(plot_data):
     values = [x for _, x in sorted(zip(times, values))]
     times = sorted(times)
 
-    window_size = 10
+    window_size = 50
     i = window_size//2
     ma = []
 
@@ -132,4 +130,4 @@ def moving_average_plot_no_save(plot_data):
         
         i += 1
 
-    return ma
+    return ma, times

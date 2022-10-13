@@ -51,7 +51,6 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
         title = plot[0]
         if len(plot) > 2:
             if plot[2] == 'test':
-                # pdb.set_trace()
                 for t in range(test_number):
                     _title = title + '_test_' + str(t)
                     filename = output_folder+'plots/'+_title+'.png'
@@ -65,7 +64,5 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
         else:
             filename = output_folder+'plots/'+title+'_0.png'
             filenames.append(filename)
-
-    print('filenames', filenames)
 
     merge_images(filenames, [400, 400], output_folder+merge_title+'.jpg', col_number)

@@ -14,7 +14,22 @@
             ],
             "secondary_networks": [
                 "cerebellum_simple"
-            ]
+            ],
+            "reset_value": 111
+        },
+        {
+            "name": "audiovisual",
+            "types": [
+                "auditory",
+                "visual"
+            ],
+            "merge_stimuli": false,
+            "primary_networks": [
+            ],
+            "secondary_networks": [
+                "cerebellum_simple"
+            ],
+            "reset_value": 222
         }
     ]
 }

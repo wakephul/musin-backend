@@ -3,6 +3,7 @@ import pdb
 import nest
 nest.set_verbosity('M_ERROR') #lo metto qui per evitare tutte le print
 import sys
+import shutil
 from src.connection.connect import create_connection, close_connection
 from src.queries import spikes_queries, support_queries
 from src.file_handling import file_handling
@@ -13,6 +14,7 @@ from src.file_handling.support_file import new_row
 
 from src.utils.dictionaries import merge_sort_dicts_of_lists
 from src.utils.combinations import combinations_generator
+import src.utils.cdf as cdf
 from scripts.network_output_clean import network_output_clean
 
 from src.nest.reset.reset import nest_reset
@@ -70,6 +72,9 @@ if __name__ == '__main__':
             new_simulation_id = new_row(file_path='output/executions/executions.csv', data=[execution['name'], '/'.join(execution['types']), primary_networks_for_csv, '/'.join(execution['secondary_networks'])])
             current_simulations_folder = 'output/executions/'+str(new_simulation_id)+'/'
             create_folder(current_simulations_folder)
+            # create_folder(current_simulations_folder+'config/')
+            shutil.copytree('data/config', current_simulations_folder+'config')
+            file_handling.write_to_file(current_simulations_folder+'config/execution_id', str(execution_index))
             
             execution_stimuli = {}
 
@@ -103,11 +108,11 @@ if __name__ == '__main__':
                     start = combination['first_spike_latency']
                     number_of_neurons = combination['number_of_neurons']
                     trial_duration = stop = combination['trial_duration']
-                    # print(rate, start, stop, number_of_neurons, trial_duration)
+                    
                     spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-                    nest_reset(3232) # altrimenti l'rng genera tempi uguali
+                    nest_reset(execution['reset_value'])
                     spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-                    nest_reset(1214)
+
                     execution_stimuli[execution_type].append({'info': 'rate='+str(rate)+'&start='+str(start)+'&number_of_neurons='+str(number_of_neurons)+'&trial_duration='+str(trial_duration), 'A': spikes_A_times, 'B': spikes_B_times})
 
             # print('stimuli:', execution_stimuli)
@@ -150,7 +155,6 @@ if __name__ == '__main__':
             current_simulation_folder = current_simulations_folder+'simulations/'
             create_folder(current_simulation_folder)
             current_simulation_id = 1 # parto da 1 così è allineato con l'ID nel CSV
-            nest_reset()
 
 
             # if len(execution['primary_networks']):
@@ -168,7 +172,7 @@ if __name__ == '__main__':
             #                 if ((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1: # in questo caso usiamo una sola corteccia
             #                     for stim, stim_info in zip(list(zip(input_stimuli_A['cortex_1']['stimuli'], input_stimuli_B['cortex_1']['stimuli'])), input_stimuli_A['cortex_1']['info']):
 
-            #                         nest_reset(1111)
+            #                         nest_reset(execution['reset_value'])
             #                         network_output_clean()
 
             #                         output_folder = current_simulation_folder+str(current_simulation_id)+'/'
@@ -242,7 +246,7 @@ if __name__ == '__main__':
                     #         create_folder(current_cortex_folder)
                     #         for stim, stim_info in zip(list(zip(input_stimuli_A[current_cortex_value]['stimuli'], input_stimuli_B[current_cortex_value]['stimuli'])), input_stimuli_A[current_cortex_value]['info']):
 
-                    #             nest_reset(12345)
+                    #             nest_reset(execution['reset_value'])
                     #             network_output_clean()
 
                     #             output_folder = current_cortex_folder+str(current_simulation_id)+'/'
@@ -349,7 +353,7 @@ if __name__ == '__main__':
                     current_network_folder = current_simulation_folder+'/'+network+'/'
                     create_folder(current_network_folder)
 
-                    nest_reset(12345)
+                    nest_reset(execution['reset_value'])
                     network_output_clean()
 
                     output_folder = current_network_folder+str(current_simulation_id)+'/'
@@ -367,7 +371,8 @@ if __name__ == '__main__':
                     duration = float(network_params['t_stimulus_duration'])
                     train_time = float((network_params['train_time']))
                     test_time = float((network_params['test_time']))
-                    test_number = len(network_params['test_types'])
+                    test_types = network_params['test_types']
+                    test_number = len(test_types)
                     trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], duration, train_time/3, test_time/3, test_number)
                     trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], duration, train_time/3, test_time/3, test_number)
 
@@ -376,7 +381,6 @@ if __name__ == '__main__':
                     train_time_old = network_params['train_time']
                     network_params['train_time'] = int(train_time)
                     network_params['test_time'] = int(test_time)
-                    network_params['test_types'] = network_params['test_types']
                     network_params['trials_side'] = trials_1
  
                     simulation_results = network_module.run(network_params)
@@ -396,33 +400,36 @@ if __name__ == '__main__':
                     
                     times_spike_monitor_DCN_a = [t for t in times_spike_monitor_DCN_a if t > train_time]
                     times_spike_monitor_DCN_b = [t for t in times_spike_monitor_DCN_b if t > train_time]
-                    bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, train_time+(test_time*test_number))
-                    bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, train_time+(test_time*test_number))
+                    bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, train_time+(test_time*test_number), test_number)
+                    bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(simulation_results["idx_monitored_neurons_DCN_a"])//2, bin_size, train_time, train_time+(test_time*test_number), test_number)
 
+                    cdf_plots = []
                     
-                    file_handling.dict_to_json(bin_rates_DCN_complete_a, output_folder+'bin_rates_DCN_complete_a')
-                    file_handling.dict_to_json(bin_rates_DCN_complete_b, output_folder+'bin_rates_DCN_complete_b')
+                    for tt_index, tt in enumerate(test_types):
+                        bin_rates_a_portion = bin_rates_DCN_complete_a[tt_index]
+                        bin_rates_b_portion = bin_rates_DCN_complete_b[tt_index]
+                        json_title_a = file_handling.dict_to_json(bin_rates_a_portion, output_folder+'bin_rates_DCN_a_test_'+str(tt_index))
+                        json_title_b = file_handling.dict_to_json(bin_rates_a_portion, output_folder+'bin_rates_DCN_b_test_'+str(tt_index))
+
+                        # moving_average_plot(bin_rates_a_portion, output_folder+'plots/', 'ma_rates_DCN_a_test_'+str(tt_index), (train_time+(test_time*tt_index), train_time+test_time+(test_time*tt_index)))
+
+                        cdf.calculate([json_title_a, json_title_b], output_folder+'plots/', 'cdf_test_'+str(tt_index), 5, 'save')
+
+                        # ma_plots.append(['ma_rates_DCN_a', 'ma_rates', 'test'])
+                        cdf_plots.append(['cdf', 'cdf', 'test'])
                     
-                    ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_a, output_folder+'plots/', 'ma_rates_DCN_a_0', (train_time, train_time+(test_time*test_number)))
-                    ma_rates_DCN = moving_average_plot(bin_rates_DCN_complete_b, output_folder+'plots/', 'ma_rates_DCN_b_0', (train_time, train_time+(test_time*test_number)))
+                    merge_plots(output_folder, cdf_plots, 'cdf_plots', len(test_types))
 
                     create_folder(output_folder+'multimeters')
                     create_folder(output_folder+'spike_detectors')
                     multimeters_merge(output_folder+'multimeters/')
                     spike_detectors_merge(output_folder+'spike_detectors/')
 
-                    # monitors = ['spike_monitor_GR', 'spike_monitor_PC', 'spike_monitor_IO', 'spike_monitor_DCN']
-                    # monitored_populations = ['idx_monitored_neurons_GR', 'idx_monitored_neurons_PC', 'idx_monitored_neurons_IO', 'idx_monitored_neurons_DCN']
                     monitors = ['spike_monitor_DCN_a', 'spike_monitor_DCN_b']
                     monitored_populations = ['idx_monitored_neurons_DCN_a', 'idx_monitored_neurons_DCN_b']
-                    # rates = calculate_average_rate(simulation_results = simulation_results, max_time = test_time-train_time, monitors = monitors, monitored_populations = monitored_populations)
+
                     rates = calculate_average_rate(simulation_results=simulation_results, max_time=test_time*test_number, monitors=monitors, monitored_populations=monitored_populations)
 
                     file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
-
-                    # pdb.set_trace()
-                    for k in plots_to_merge:
-                        v = plots_to_merge[k]
-                        merge_plots(output_folder, v, k, 1)
 
                     new_row('', current_simulations_folder+'simulations.csv', current_simulation)
