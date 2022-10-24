@@ -73,7 +73,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
             except:
                 print('error while generating voltage trace: ', plot[0])
 
-    merge_plots(output_folder, plots_to_create, 'plots', 4, test_number)
+    merge_plots(output_folder, plots_to_create, 'plots', 1+test_number, test_number)
 
 def moving_average_plot(plot_data, output_folder, plot_name, xlim = []):
 

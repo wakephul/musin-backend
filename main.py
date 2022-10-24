@@ -72,7 +72,6 @@ if __name__ == '__main__':
             new_simulation_id = new_row(file_path='output/executions/executions.csv', data=[execution['name'], '/'.join(execution['types']), primary_networks_for_csv, '/'.join(execution['secondary_networks'])])
             current_simulations_folder = 'output/executions/'+str(new_simulation_id)+'/'
             create_folder(current_simulations_folder)
-            # create_folder(current_simulations_folder+'config/')
             shutil.copytree('data/config', current_simulations_folder+'config')
             file_handling.write_to_file(current_simulations_folder+'config/execution_id', str(execution_index))
             
@@ -86,41 +85,39 @@ if __name__ == '__main__':
                     spikes_values = {}
                     for spikes_params_key, spikes_params_info in spikes_params.items():
                         if 'single_value' in spikes_params_info and not spikes_params_info['single_value']:
-                            # print('spikes_params_info', spikes_params_info)
                             spikes_values[spikes_params_key] = []
                             for value in range(int(spikes_params_info['first_value']*1000), int(spikes_params_info['last_value']*1000+spikes_params_info['increment']*1000), int(spikes_params_info['increment']*1000)):
                                 spikes_values[spikes_params_key].append(float(value/1000))
                         else:
                             spikes_values[spikes_params_key] = [spikes_params_info['value']]
-                    
-                # else: qui andrà effettivamente il codice per usare un file di spikes già esistente (passato in input)
-                    # spikes_A_times = file_handling.file_open(spikes_A)
-                    # spikes_B_times = file_handling.file_open(spikes_B)
-                    # spikes_A = spike_generator_from_times(spikes_A_times)
-                    # spikes_B = spike_generator_from_times(spikes_B_times)
 
                 spikes_combinations = combinations_generator(spikes_values)
-                # pdb.set_trace()
 
                 for combination in spikes_combinations:
-                    # print('combination: ', combination)
                     rate = combination['rate']
                     start = combination['first_spike_latency']
                     number_of_neurons = combination['number_of_neurons']
                     trial_duration = stop = combination['trial_duration']
                     
-                    spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
-                    nest_reset(execution['reset_value'])
-                    spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
+                    if execution_index > 0:
+                        nest_reset(execution['reset_values'][2])
 
+                    spikes_A_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
+                    nest_reset(execution['reset_values'][0])
+                    spikes_B_times = poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration)
+                    nest_reset(execution['reset_values'][1])
+
+                    # print('combination:', combination)
+                    # print('spikes_A_times:', spikes_A_times)
+                    # print('spikes_B_times:', spikes_B_times)
                     execution_stimuli[execution_type].append({'info': 'rate='+str(rate)+'&start='+str(start)+'&number_of_neurons='+str(number_of_neurons)+'&trial_duration='+str(trial_duration), 'A': spikes_A_times, 'B': spikes_B_times})
 
-            # print('stimuli:', execution_stimuli)
             duplicate_primary_network = False
             input_stimuli_A = {'cortex_1': {'info': [], 'stimuli': []}, 'cortex_2': {'info': [], 'stimuli': []}}
             input_stimuli_B = {'cortex_1': {'info': [], 'stimuli': []}, 'cortex_2': {'info': [], 'stimuli': []}}
 
             if(len(execution['types']) > 1):
+                #TODO! il numero di cortecce e dei tipi di esecuzione deve essere gestito in maniera DINAMICA
                 for ex_type_1 in execution_stimuli[execution['types'][0]]:
                     for ex_type_2 in execution_stimuli[execution['types'][1]]:
                         if merge_stimuli:
@@ -138,7 +135,7 @@ if __name__ == '__main__':
                             input_stimuli_A['cortex_2']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
                             input_stimuli_A['cortex_2']['stimuli'].append(ex_type_2['A'])
 
-                            input_stimuli_B['cortex_1']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
+                            input_stimuli_B['cortex_1']['info'].append(execution['types'][0]+'_'+ex_type_1['info'])
                             input_stimuli_B['cortex_1']['stimuli'].append(ex_type_1['B'])
                             input_stimuli_B['cortex_2']['info'].append(execution['types'][1]+'_'+ex_type_2['info'])
                             input_stimuli_B['cortex_2']['stimuli'].append(ex_type_2['B'])
@@ -150,7 +147,6 @@ if __name__ == '__main__':
                     input_stimuli_B['cortex_1']['info'].append(x['info'])
                     input_stimuli_B['cortex_1']['stimuli'].append(x['B'])
             
-            # pdb.set_trace()
             new_row(file_path=current_simulations_folder+'simulations.csv', heading=['id','spikes_info','firing_rate_extern','rate_A','rate_B'])
             current_simulation_folder = current_simulations_folder+'simulations/'
             create_folder(current_simulation_folder)
@@ -172,7 +168,7 @@ if __name__ == '__main__':
             #                 if ((len(execution['types']) > 1) and merge_stimuli) or len(execution['types']) == 1: # in questo caso usiamo una sola corteccia
             #                     for stim, stim_info in zip(list(zip(input_stimuli_A['cortex_1']['stimuli'], input_stimuli_B['cortex_1']['stimuli'])), input_stimuli_A['cortex_1']['info']):
 
-            #                         nest_reset(execution['reset_value'])
+            #                         nest_reset(execution['reset_values'][0])
             #                         network_output_clean()
 
             #                         output_folder = current_simulation_folder+str(current_simulation_id)+'/'
@@ -246,7 +242,7 @@ if __name__ == '__main__':
                     #         create_folder(current_cortex_folder)
                     #         for stim, stim_info in zip(list(zip(input_stimuli_A[current_cortex_value]['stimuli'], input_stimuli_B[current_cortex_value]['stimuli'])), input_stimuli_A[current_cortex_value]['info']):
 
-                    #             nest_reset(execution['reset_value'])
+                    #             nest_reset(execution['reset_values'][0])
                     #             network_output_clean()
 
                     #             output_folder = current_cortex_folder+str(current_simulation_id)+'/'
@@ -343,7 +339,7 @@ if __name__ == '__main__':
                     #             # current_simulation.append(rates[1])
                     #             new_row('', current_simulations_folder+'simulations.csv', current_simulation)
                     #             network_params['sim_time'] = sim_time_old
-            
+
             if (len(execution['types']) > 1) and len(execution['secondary_networks']):
                 for network in execution['secondary_networks']:
                     print('secondary network:', network)
@@ -353,7 +349,7 @@ if __name__ == '__main__':
                     current_network_folder = current_simulation_folder+'/'+network+'/'
                     create_folder(current_network_folder)
 
-                    nest_reset(execution['reset_value'])
+                    nest_reset(execution['reset_values'][0])
                     network_output_clean()
 
                     output_folder = current_network_folder+str(current_simulation_id)+'/'
@@ -409,7 +405,7 @@ if __name__ == '__main__':
                         bin_rates_a_portion = bin_rates_DCN_complete_a[tt_index]
                         bin_rates_b_portion = bin_rates_DCN_complete_b[tt_index]
                         json_title_a = file_handling.dict_to_json(bin_rates_a_portion, output_folder+'bin_rates_DCN_a_test_'+str(tt_index))
-                        json_title_b = file_handling.dict_to_json(bin_rates_a_portion, output_folder+'bin_rates_DCN_b_test_'+str(tt_index))
+                        json_title_b = file_handling.dict_to_json(bin_rates_b_portion, output_folder+'bin_rates_DCN_b_test_'+str(tt_index))
 
                         # moving_average_plot(bin_rates_a_portion, output_folder+'plots/', 'ma_rates_DCN_a_test_'+str(tt_index), (train_time+(test_time*tt_index), train_time+test_time+(test_time*tt_index)))
 

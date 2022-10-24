@@ -1,5 +1,5 @@
 import itertools
-def combinations_generator(spikes_values):
-    keys, values = zip(*spikes_values.items())
-    combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
+def combinations_generator(values):
+    _keys, _values = zip(*values.items())
+    combinations = [dict(zip(_keys, v)) for v in itertools.product(*_values)]
     return combinations

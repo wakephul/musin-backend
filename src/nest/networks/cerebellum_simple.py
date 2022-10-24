@@ -204,13 +204,14 @@ def simulate_network(par):
     for n in range(len(GR)):
         random_side = bool(getrandbits(1))
         stimulus = imported_stimulus_A if random_side else imported_stimulus_B
-        print(len(stimulus))
-        print(max_pos)
-        print(stimulus)
-        stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
-        stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
-        stim_2_1 = stimulus['type_2'][randint(0, max_pos)]
-        stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
+        try:
+            stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
+            stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
+            stim_2_1 = stimulus['type_2'][randint(0, max_pos)]
+            stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
+        except Exception as e:
+            print("exception in cerebellum_simple, line 213")
+            print(e)
         array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
     nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)

@@ -32,31 +32,5 @@
                 "value": 600.00
             }
         }
-    },
-    "visual_new_multiple": {
-        "use_existent_spikes": false,
-        "spikes": {
-            "rate": {
-                "single_value": false,
-                "first_value": 10.0,
-                "last_value": 50.0,
-                "increment": 10.0
-            },
-            "first_spike_latency": {
-                "value": 80.0
-            },
-            "number_of_neurons": {
-                "single_value": false,
-                "first_value": 100,
-                "last_value": 400,
-                "increment": 50
-            },
-            "trial_duration": {
-                "single_value": false,
-                "first_value": 500.00,
-                "last_value": 800.00,
-                "increment": 100.00
-            }
-        }
     }
 }

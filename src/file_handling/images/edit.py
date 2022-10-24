@@ -26,19 +26,22 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
     y_position = margin
     
     for img in images:
-        image = Image.open(img)
-        image = image.resize(single_size)
-        if(column_index == col_number):
-            column_index = 0
-            row_index += 1
-            x_position = margin
-            y_position = (single_size[1]*row_index)+(margin*(row_index+1))
-        else:
-            x_position = (single_size[0]*column_index)+(margin*(column_index+1))
-            y_position = (single_size[1]*row_index)+(margin*(row_index+1))
-        column_index += 1
-        new_position = (x_position, y_position)
-        new_image.paste(image, new_position)
+        try:
+            image = Image.open(img)
+            image = image.resize(single_size)
+            if(column_index == col_number):
+                column_index = 0
+                row_index += 1
+                x_position = margin
+                y_position = (single_size[1]*row_index)+(margin*(row_index+1))
+            else:
+                x_position = (single_size[0]*column_index)+(margin*(column_index+1))
+                y_position = (single_size[1]*row_index)+(margin*(row_index+1))
+            column_index += 1
+            new_position = (x_position, y_position)
+            new_image.paste(image, new_position)
+        except:
+            pass
 
     new_image.save(filename ,"JPEG")
 
