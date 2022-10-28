@@ -115,7 +115,7 @@ def moving_average_plot_no_save(plot_data):
     values = [x for _, x in sorted(zip(times, values))]
     times = sorted(times)
 
-    window_size = 50
+    window_size = 5
     i = window_size//2
     ma = []
 

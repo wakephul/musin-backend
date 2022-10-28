@@ -1,12 +1,12 @@
 {
-    "visual": {
+    "auditory": {
         "use_existent_spikes": false,
         "spikes": {
             "rate": {
                 "value": 30.0
             },
             "first_spike_latency": {
-                "value": 220.0
+                "value": 150.0
             },
             "number_of_neurons": {
                 "value": 80
@@ -16,14 +16,14 @@
             }
         }
     },
-    "auditory": {
+    "visual": {
         "use_existent_spikes": false,
         "spikes": {
             "rate": {
                 "value": 30.0
             },
             "first_spike_latency": {
-                "value": 150.0
+                "value": 220.0
             },
             "number_of_neurons": {
                 "value": 80

@@ -25,7 +25,7 @@ def get_monitors(pop, monitored_subset_size):
     return spike_monitor, idx_monitored_neurons
 
 def train_test(inputs = [], train_time = 0, test_time = 0, stimulus_duration = 0, trials_side = [], test_types = [3]):
-    #inputs = [visivo_a, uditivo_a, visivo_b, uditivo_b]
+    #inputs = [uditivo_a, visivo_a, uditivo_b, visivo_b]
 
     all_trains = []
     trial_index = 0

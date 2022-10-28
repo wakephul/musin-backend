@@ -61,6 +61,8 @@ def calculate_response_times(values, threshold, trial_time, bin_size):
             first_time_id = time_ids[0]
             actual_time = (values_index*trial_time)+(first_time_id*bin_size)
             response_times.append(actual_time)
+        else:
+            response_times.append(999999999)
     return response_times
 
 def divide_into_trials(seq, size):
