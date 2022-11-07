@@ -4,7 +4,6 @@ import numpy as np
 
 def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start_time = 5, end_time = 1000, split_into = 1):
 
-    # pdb.set_trace()
     print("Calculating rates divided into bins")
     bins = list(range(int(start_time), int(end_time)+1, bin_size))
 
@@ -30,7 +29,6 @@ def calculate_bins(senders, times, number_monitored_neurons, bin_size = 5, start
         else:
             bin_rates[bin_time] = 0
         
-
     bin_rates_split = {i: [] for i in range(split_into)}
 
     step = int((end_time-start_time)/split_into)

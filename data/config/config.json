@@ -11,67 +11,12 @@
             ],
             "merge_stimuli": false,
             "primary_networks": [
+                "decision_making_nrp"
             ],
             "secondary_networks": [
-                "cerebellum_simple"
+                
             ],
             "reset_values": [111, 222]
-        },
-        {
-            "name": "audiovisual",
-            "types": [
-                "auditory",
-                "visual"
-            ],
-            "merge_stimuli": false,
-            "primary_networks": [
-            ],
-            "secondary_networks": [
-                "cerebellum_simple"
-            ],
-            "reset_values": [333, 444, 555]
-        },
-        {
-            "name": "audiovisual",
-            "types": [
-                "auditory",
-                "visual"
-            ],
-            "merge_stimuli": false,
-            "primary_networks": [
-            ],
-            "secondary_networks": [
-                "cerebellum_simple"
-            ],
-            "reset_values": [666, 777, 888]
-        },
-        {
-            "name": "audiovisual",
-            "types": [
-                "auditory",
-                "visual"
-            ],
-            "merge_stimuli": false,
-            "primary_networks": [
-            ],
-            "secondary_networks": [
-                "cerebellum_simple"
-            ],
-            "reset_values": [999, 1111, 2222]
-        },
-        {
-            "name": "audiovisual",
-            "types": [
-                "auditory",
-                "visual"
-            ],
-            "merge_stimuli": false,
-            "primary_networks": [
-            ],
-            "secondary_networks": [
-                "cerebellum_simple"
-            ],
-            "reset_values": [3333, 4444, 5555]
         }
     ]
 }

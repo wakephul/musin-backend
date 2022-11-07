@@ -26,5 +26,7 @@
     "test_time": 45000.00,
     "t_stimulus_start": 0.00,
     "t_stimulus_end": 1000.00,
-    "t_stimulus_duration": 1000.00
+    "t_stimulus_duration": 1000.00,
+
+    "number_of_populations": 2
 }

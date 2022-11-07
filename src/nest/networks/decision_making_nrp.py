@@ -29,8 +29,7 @@ def simulate_network(coherence, par):
     # nest.SetKernelStatus({"resolution": dt, "print_time": False, "overwrite_files": True})
     # t0 = nest.GetKernelStatus('time')
 
-    startbuild = time.time()
-    sim_time = par['sim_time']
+    # startbuild = time.time()
     order = int(par['order'])
     NB = 2 * order  # number of excitatory neurons in pop B
     NA = 2 * order   # number of excitatory neurons in pop A
@@ -112,7 +111,6 @@ def simulate_network(coherence, par):
     #'''**********************************************************************************
     
     # Input stimulus
-    # pdb.set_trace()
     PG_input_AMPA_A = nest.Create("poisson_generator") if (not 'imported_stimulus_A' in par) else par['imported_stimulus_A']
     PG_input_AMPA_B = nest.Create("poisson_generator")if (not 'imported_stimulus_B' in par) else par['imported_stimulus_B']
 
@@ -312,7 +310,7 @@ def simulate_network(coherence, par):
     nest.SetStatus(PG_noise_to_B, "rate", rate_noise_B)
     nest.SetStatus(PG_noise_to_inh, "rate", rate_noise_inh)
 
-    nest.Simulate(par['sim_time'])
+    nest.Simulate(par['test_time'])
 
     endsimulate = time.time()
 
@@ -332,6 +330,9 @@ def simulate_network(coherence, par):
     ret_vals["voltage_monitor_inh"] = voltage_monitor_inh
     ret_vals["spike_monitor_inh"] = spike_monitor_inh
     ret_vals["idx_monitored_neurons_inh"] = idx_monitored_neurons_inh
+    
+    ret_vals["train"] = []
+    ret_vals["test"] = par["trials_side"]
 
     return ret_vals
 

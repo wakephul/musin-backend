@@ -19,7 +19,7 @@ from scripts.network_output_clean import network_output_clean
 
 from src.nest.reset.reset import nest_reset
 from importlib import import_module
-from src.nest.spike_trains.edit import spikes_for_simulation
+from src.nest.spike_trains.edit import edit_spikes_for_simulation
 from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
 from src.file_handling.folder_handling import create_folder
 from src.file_handling.images.edit import merge_plots
@@ -155,11 +155,11 @@ if __name__ == '__main__':
 
             # if len(execution['primary_networks']):
             #     for network in execution['primary_networks']:
-            #         # print('network:', network)
+            #         print('network:', network)
             #         network_module = import_module('src.nest.networks.'+network)
             #         network_params = file_handling.read_json('data/config/networks/primary/'+network+'.json')
             #         network_config_params = network_config[network] if (network in network_config) else None
-            #         # pdb.set_trace()
+            #         pdb.set_trace()
             #         if network_config_params:
             #             # TODO: gestire in automatico i diversi parametri
             #             firing_rate_extern = network_config_params['firing_rate_extern']
@@ -340,7 +340,96 @@ if __name__ == '__main__':
                     #             new_row('', current_simulations_folder+'simulations.csv', current_simulation)
                     #             network_params['sim_time'] = sim_time_old
 
-            if (len(execution['types']) > 1) and len(execution['secondary_networks']):
+            if len(execution['primary_networks']):
+                for network in execution['primary_networks']:
+                    print('primary network:', network)
+                    network_module = import_module('src.nest.networks.'+network)
+                    network_params = file_handling.read_json('data/config/networks/primary/'+network+'.json')
+                    
+                    current_network_folder = current_simulation_folder+'/'+network+'/'
+                    create_folder(current_network_folder)
+
+                    if not merge_stimuli:
+                        number_of_cortex = 2
+                        for cortex_id in range(1, (number_of_cortex+1)):
+                            nest_reset(execution['reset_values'][0])
+                            network_output_clean()
+                            current_cortex_value = 'cortex_'+str(cortex_id)
+                            print('CORTEX ID: ', current_cortex_value)
+                            current_cortex_folder = current_network_folder+current_cortex_value+'/'
+                            create_folder(current_cortex_folder)
+                            output_folder = current_cortex_folder+str(current_simulation_id)+'/'
+                            create_folder(output_folder)
+                            create_folder(output_folder+'spikes')
+                            current_simulation_id += 1
+                            
+                            spikes_A = spike_generator_from_times(input_stimuli_A[current_cortex_value]['stimuli'][0])
+                            spikes_B = spike_generator_from_times(input_stimuli_B[current_cortex_value]['stimuli'][0])
+
+                            current_simulation = [network]
+
+                            duration = float(network_params['t_stimulus_duration'])
+                            train_time = float((network_params['train_time']))
+                            test_time = float((network_params['test_time']))
+                            test_types = network_params['test_types']
+                            test_number = len(test_types)
+                            trials_side = edit_spikes_for_simulation([spikes_A, spikes_B], duration, train_time/3, test_time/3, test_number)
+
+                            network_params['imported_stimulus_A'] = spikes_A
+                            network_params['imported_stimulus_B'] = spikes_B
+                            train_time_old = network_params['train_time']
+                            network_params['train_time'] = int(train_time)
+                            network_params['test_time'] = int(test_time)
+                            network_params['trials_side'] = trials_side
+        
+                            try:
+                                simulation_results = network_module.run(network_params)
+                            except Exception as e:
+                                print(e)
+                                import traceback
+                                print(traceback.format_exc())
+
+                            # pdb.set_trace()
+                            
+                            plots_to_create = plots_config[network] if (network in plots_config) else None
+                            if plots_to_create:
+                                generate_plots(plots_to_create, output_folder, simulation_results, train_time=train_time, test_time=test_time, test_number=test_number, train=simulation_results["train"], test=simulation_results["test"], sides=trials_side)
+
+                            plots_to_merge = plots_merge_config[network] if (network in plots_merge_config) else None
+                            
+                            #TODO! automatizzare questa cosa perché così è tutto hardcodato male
+                            senders_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['senders']
+                            times_spike_monitor_A = nest.GetStatus(simulation_results["spike_monitor_A"], 'events')[0]['times']
+                            senders_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['senders']
+                            times_spike_monitor_B = nest.GetStatus(simulation_results["spike_monitor_B"], 'events')[0]['times']
+
+                            bin_size = 5
+                            
+                            bin_rates_A_complete = calculate_bins(senders_spike_monitor_A, times_spike_monitor_A, len(simulation_results["idx_monitored_neurons_A"]), bin_size, train_time, train_time+(test_time*test_number), test_number)
+                            bin_rates_B_complete = calculate_bins(senders_spike_monitor_B, times_spike_monitor_B, len(simulation_results["idx_monitored_neurons_B"]), bin_size, train_time, train_time+(test_time*test_number), test_number)
+
+
+                            for tt_index, tt in enumerate(test_types):
+                                bin_rates_a_portion = bin_rates_A_complete[tt_index]
+                                bin_rates_b_portion = bin_rates_B_complete[tt_index]
+                                json_title_a = file_handling.dict_to_json(bin_rates_a_portion, output_folder+'bin_rates_A_test_'+str(tt_index))
+                                json_title_b = file_handling.dict_to_json(bin_rates_b_portion, output_folder+'bin_rates_B_test_'+str(tt_index))
+
+                            create_folder(output_folder+'multimeters')
+                            create_folder(output_folder+'spike_detectors')
+                            multimeters_merge(output_folder+'multimeters/')
+                            spike_detectors_merge(output_folder+'spike_detectors/')
+
+                            monitors = ['spike_monitor_A', 'spike_monitor_B']
+                            monitored_populations = ['idx_monitored_neurons_A', 'idx_monitored_neurons_B']
+
+                            rates = calculate_average_rate(simulation_results=simulation_results, max_time=test_time*test_number, monitors=monitors, monitored_populations=monitored_populations)
+
+                            file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
+
+                            new_row('', current_simulations_folder+'simulations.csv', current_simulation)
+
+            if len(execution['secondary_networks']):
                 for network in execution['secondary_networks']:
                     print('secondary network:', network)
                     network_module = import_module('src.nest.networks.'+network)
@@ -369,15 +458,15 @@ if __name__ == '__main__':
                     test_time = float((network_params['test_time']))
                     test_types = network_params['test_types']
                     test_number = len(test_types)
-                    trials_1 = spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], duration, train_time/3, test_time/3, test_number)
-                    trials_2 = spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], duration, train_time/3, test_time/3, test_number)
+                    trials_type_1 = edit_spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], duration, train_time/3, test_time/3, test_number)
+                    trials_type_2 = edit_spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], duration, train_time/3, test_time/3, test_number)
 
                     network_params['imported_stimulus_A'] = {'type_1': spikes_type_1_A, 'type_2': spikes_type_2_A}
                     network_params['imported_stimulus_B'] = {'type_1': spikes_type_1_B, 'type_2': spikes_type_2_B}
                     train_time_old = network_params['train_time']
                     network_params['train_time'] = int(train_time)
                     network_params['test_time'] = int(test_time)
-                    network_params['trials_side'] = trials_1
+                    network_params['trials_side'] = trials_type_1
  
                     simulation_results = network_module.run(network_params)
                     

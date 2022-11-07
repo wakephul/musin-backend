@@ -8,7 +8,7 @@ import pdb
 # uso questi booleani per definire se un trial è dx o sx
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
-def spikes_for_simulation(spikes, durations, train_time, test_time, test_number):
+def edit_spikes_for_simulation(spikes, durations, train_time, test_time, test_number):
     # import pdb
     # pdb.set_trace()
     number_of_train_stimuli = int(train_time/durations)
@@ -21,6 +21,7 @@ def spikes_for_simulation(spikes, durations, train_time, test_time, test_number)
     print('TRAIN TRIALS', train_trials)
     print('TEST TRIALS', test_trials)
     #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
+    #TODO: questo va decisamente reso automatico
     spikes_A = spikes[0]
     spikes_A_status = nest.GetStatus(spikes_A)
     spikes_B = spikes[1]

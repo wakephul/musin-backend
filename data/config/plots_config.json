@@ -10,12 +10,9 @@
         ["voltage_monitor_inhib", "voltage"]
     ],
     "decision_making_nrp": [
-        ["spike_monitor_A", "raster"],
-        ["spike_monitor_B", "raster"],
-        ["spike_monitor_inh", "raster"],
-        ["voltage_monitor_A", "voltage"],
-        ["voltage_monitor_B", "voltage"],
-        ["voltage_monitor_inh", "voltage"]
+        ["spike_monitor_A", "raster", "test"],
+        ["spike_monitor_B", "raster", "test"],
+        ["spike_monitor_inh", "raster", "test"]
     ],
     "cerebellum_simple": [
         ["spike_monitor_GR", "raster", "train"],
