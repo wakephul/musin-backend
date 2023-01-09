@@ -10,10 +10,31 @@ from PIL import Image
 
 from flask_cors import CORS, cross_origin
 
+# from flask_mysqldb import MySQL
+from flaskext.mysql import MySQL
+from pymysql.cursors import DictCursor
+from src.connection.mysql.select import select_rows
+from src.connection.mysql.insert import insert_row
+
 from main_api import run as run_execution
 
-app = Flask(__name__)
-cors = CORS(app, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
+import string
+import random
+
+
+
+api = Flask(__name__)
+cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
+
+api.config['MYSQL_DATABASE_HOST'] = 'localhost'
+api.config['MYSQL_DATABASE_USER'] = 'root'
+api.config['MYSQL_DATABASE_PASSWORD'] = 'CerebSens01!'
+api.config['MYSQL_DATABASE_DB'] = 'sensorycerebellum'
+api.config['MYSQL_DATABASE_CHARSET'] = 'utf8mb4'
+
+# conn = connect(host='localhost', user='root', password='CerebSens01!', db='sensorycerebellum', charset='utf8mb4', cursorclass=cursors.DictCursor)
+mysql = MySQL(cursorclass=DictCursor)
+mysql.init_app(api)
 
 def get_response_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
@@ -22,15 +43,55 @@ def get_response_image(image_path):
     encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
     return encoded_img
 
-@app.route("/", methods=["GET"])
+@api.route("/api/", methods=["GET"])
 @cross_origin()
 def index():
-    return send_file('api_data/config/execution_types.json')
+    return "APIs working"
 
-
-@app.route("/api/old_executions/", methods=["GET"])
+@api.route("/api/existing_networks", methods=["GET"])
 @cross_origin()
-def old_executions():
+def existing_networks():
+
+    networks = []
+
+    if request.method == 'GET':
+        conn = mysql.get_db()
+        query = "SELECT `code`, `name`, `default_parameters` FROM `networks`"
+        networks = select_rows(conn, query)
+        if networks:
+            for net in networks:
+                query = "SELECT `name`, `raster`, `voltage`, `train`, `test`, `split`, `population_name` FROM `plots` WHERE network = %s"
+                net['plots'] = select_rows(conn, query, (net['name']))
+
+    return jsonify({'result': networks})
+
+@api.route("/api/existing_types", methods=["GET"])
+@cross_origin()
+def existing_types():
+    result = []
+
+    if request.method == 'GET':
+        conn = mysql.get_db()
+        query = "SELECT `code`, `name`, `parameters_id` FROM `input_types`"
+        types = select_rows(conn, query)
+        if types:
+            for type in types:
+                query = "SELECT `rate_start`,`rate_end`,`rate_step`,`first_spike_latency_start`,`first_spike_latency_end`,`first_spike_latency_step`,`number_of_neurons_start`,`number_of_neurons_end`,`number_of_neurons_step`,`trial_duration_start`,`trial_duration_end`,`trial_duration_step` FROM `input_parameters` WHERE id = %s"
+                r = {
+                    'code': type['code'],
+                    'name': type['name'],
+                    'parameters': select_rows(conn, query, (type['parameters_id']))
+                }
+                result.append(r)
+
+        print('existing_types: ', result)
+        
+    return jsonify({'result': result})
+
+
+@api.route("/api/previous_executions/", methods=["GET"])
+@cross_origin()
+def previous_executions():
     executions = {
         "list": []
     }
@@ -40,14 +101,14 @@ def old_executions():
             executions['list'].append(row)
     return executions
 
-@app.route("/api/old_executions/<id>", methods=["GET"])
+@api.route("/api/previous_executions/<id>", methods=["GET"])
 @cross_origin()
-def old_executions_detail(id):
+def previous_executions_detail(id):
     return id
 
-@app.route("/api/old_executions/<id>/plots", methods=["GET"])
+@api.route("/api/previous_executions/<id>/plots", methods=["GET"])
 @cross_origin()
-def old_execution_plots(id):
+def previous_execution_plots(id):
     plots_path = 'output/executions/'+id+'/simulations/cerebellum_simple/1/plots/'
     result = glob.glob(plots_path+'*.png')
     encoded_imges = []
@@ -55,15 +116,15 @@ def old_execution_plots(id):
         encoded_imges.append(get_response_image(image_path))
     return jsonify({'result': encoded_imges})
 
-@app.route("/api/old_executions/<_id>/notes", methods=["GET"])
+@api.route("/api/previous_executions/<_id>/notes", methods=["GET"])
 @cross_origin()
-def old_execution_notes(_id):
+def previous_execution_notes(_id):
     notes_path = 'output/executions/'+_id+'/simulations/cerebellum_simple/1/simulation_notes.txt'
     with open(notes_path, 'r') as f: 
         text = f.read()
     return jsonify({'result': text})
 
-@app.route("/api/new_execution/", methods=["POST"])
+@api.route("/api/new_execution/", methods=["POST"])
 @cross_origin()
 def new_execution():
     
@@ -72,15 +133,7 @@ def new_execution():
     
     return jsonify({'result': 'success'})
 
-@app.route("/api/existing_types", methods=["GET"])
-@cross_origin()
-def existing_types():
-    with open('api_data/config/execution_types.json', 'r') as f:
-        file = json.load(f)
-
-    return jsonify({'types': list(file.keys())})
-
-@app.route("/api/existing_type/<_name>", methods=["GET"])
+@api.route("/api/existing_type/<_code>", methods=["GET"])
 @cross_origin()
 def existing_type(_name):
     with open('api_data/config/execution_types.json', 'r') as f:
@@ -91,12 +144,27 @@ def existing_type(_name):
     else:
         return jsonify({'result': 'error'})
 
-@app.route("/api/existing_networks", methods=["GET"])
+@api.route("/api/new_input_type/", methods=["POST"])
 @cross_origin()
-def existing_networks():
-    return send_file('api_data/config/networks/existing_networks.json')
+def new_input_type():
+    params = json.loads(request.data)
+    name = params['name']
+    spikes = params['spikes']
+    placeholders = ', '.join(['%s'] * len(spikes))
+    columns = ', '.join(spikes.keys())
+    if request.method == 'POST':
+        conn = mysql.get_db()
+        query = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('spikes', columns, placeholders)
+        spikes_id = insert_row(conn, query, list(spikes.values()))
 
-@app.route("/api/existing_network/<_type>/<_name>", methods=["GET"])
+        new_code = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16))
+        query = "INSERT INTO input_types VALUES (NULL, %s, %s, %s)";
+        result = insert_row(conn, query, (new_code, name, spikes_id))
+        print('new_input_type', result)
+        
+    return jsonify({'result': 'aaa'})
+
+@api.route("/api/existing_network/<_type>/<_name>", methods=["GET"])
 @cross_origin()
 def existing_network(_type, _name):
     filename = Path('api_data/config/networks/'+_type+'/'+_name+'.json')
@@ -106,7 +174,7 @@ def existing_network(_type, _name):
         return jsonify({'result': 'error'})
 
 #TODO! da aggiungere gestione plots
-@app.route("/api/plots_config/<_name>", methods=["GET"])
+@api.route("/api/plots_config/<_name>", methods=["GET"])
 @cross_origin()
 def plots_config(_type, _name):
     filename = Path('api_data/config/plots_config.json')
@@ -116,4 +184,4 @@ def plots_config(_type, _name):
         return jsonify({'result': 'error'})
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=False)
+    api.run(debug=True, threaded=True)

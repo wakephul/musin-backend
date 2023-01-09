@@ -10,13 +10,34 @@
                 "visual"
             ],
             "merge_stimuli": false,
-            "primary_networks": [
+            "networks": [
                 "decision_making_nrp"
             ],
-            "secondary_networks": [
-                
+            "reset_values": [123, 99]
+        },
+        {
+            "name": "audiovisual",
+            "types": [
+                "auditory",
+                "visual"
             ],
-            "reset_values": [111, 222]
+            "merge_stimuli": false,
+            "networks": [
+                "decision_making_nrp"
+            ],
+            "reset_values": [111, 222, 333]
+        },
+        {
+            "name": "audiovisual",
+            "types": [
+                "auditory",
+                "visual"
+            ],
+            "merge_stimuli": false,
+            "networks": [
+                "decision_making_nrp"
+            ],
+            "reset_values": [444, 555, 666]
         }
     ]
 }

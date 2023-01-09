@@ -11,3 +11,6 @@ start-create-support-table:
 
 start-api:
 	flask --app api --debug run
+
+start-web-server:
+	gunicorn api:api

@@ -17,7 +17,7 @@ from scripts.network_output_clean import network_output_clean
 
 from src.nest.reset.reset import nest_reset
 from importlib import import_module
-from src.nest.spike_trains.edit import spikes_for_simulation
+from src.nest.spike_trains.edit import edit_spikes_for_simulation
 from src.nest.spike_trains.generate import poisson_spikes_generator_parrot, spike_generator_from_times
 from src.file_handling.folder_handling import create_folder
 
@@ -166,7 +166,7 @@ def run(params):
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution name:'+execution['name'])
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
-                                trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                                trials_side_to_string = edit_spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
                                 file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
                                 # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
@@ -241,7 +241,7 @@ def run(params):
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', '\nExecution types:'+'/'.join(execution['types'])+'\n')
 
                             
-                            trials_side_to_string = spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                            trials_side_to_string = edit_spikes_for_simulation([spikes_A, spikes_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
                             file_handling.append_to_file(output_folder+'simulation_notes.txt', trials_side_to_string)
 
                             # current_simulation = [spikes_A_file_name, spikes_B_file_name]+[str(exec[0])]
@@ -344,8 +344,8 @@ def run(params):
 
                 current_simulation = [network]
 
-                spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
-                spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                edit_spikes_for_simulation([spikes_type_1_A, spikes_type_1_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
+                edit_spikes_for_simulation([spikes_type_2_A, spikes_type_2_B], (float(network_params['t_stimulus_duration']) - float(network_params['t_stimulus_start'])), float(network_params['sim_time']))
 
                 network_params['imported_stimulus_A'] = {'type_1': spikes_type_1_A, 'type_2': spikes_type_2_A}
                 network_params['imported_stimulus_B'] = {'type_1': spikes_type_1_B, 'type_2': spikes_type_2_B}
