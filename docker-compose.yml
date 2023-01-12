@@ -1,0 +1,13 @@
+version: '3'
+services:
+  app:
+    build: .
+    environment:
+      - FLASK_APP=api.py
+      - PATH=$PATH/opt/nest/bin
+      - PYTHONPATH=/opt/nest/lib/python3.8/site-packages
+    command: flask --debug run --host=0.0.0.0
+    ports:
+      - "5555:5000"
+    volumes:
+      - .:/app

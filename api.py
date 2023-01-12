@@ -184,4 +184,4 @@ def plots_config(_type, _name):
         return jsonify({'result': 'error'})
 
 if __name__ == "__main__":
-    api.run(debug=True, threaded=True)
+    api.run(host='0.0.0.0', debug=True)
