@@ -5,11 +5,11 @@ flask-ext
 flask-mysql
 h5py
 matplotlib
-matplotlib-inline
+# matplotlib-inline
 numpy
 pandas
-pexpect
+# pexpect
 pickleshare
 Pillow
-scipy
-simplejson
+# scipy
+# simplejson

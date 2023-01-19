@@ -3,10 +3,18 @@ services:
   app:
     build: .
     environment:
-      - FLASK_APP=api.py
-      - PATH=$PATH/opt/nest/bin
-      - PYTHONPATH=/opt/nest/lib/python3.8/site-packages
-    command: flask --debug run --host=0.0.0.0
+      - FLASK_APP=api-test.py
+      - FLASK_DEBUG=1
+      - PYTHONFAULTHANDLER=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    command: /bin/bash -c
+      "source /nest/build/bin/nest_vars.sh
+      && export NEST_MODULE_PATH=/nest/build/lib/nest:$NEST_MODULE_PATH
+      && export SLI_PATH=/nest/build/share/nest/sli:$SLI_PATH
+      && flask run --host=0.0.0.0"
     ports:
       - "5555:5000"
     volumes:
