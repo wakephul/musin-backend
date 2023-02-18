@@ -1,15 +1,32 @@
-# nest==2.18.0
+# # nest==2.18.0
+# Flask
+# flask-cors
+# flask-ext
+# flask-mysql
+# h5py
+# matplotlib
+# # matplotlib-inline
+# numpy
+# pandas
+# # pexpect
+# pickleshare
+# Pillow
+# # scipy
+# # simplejson
+# gunicorn
+# mysql-connector-python
+
+
 Flask
+Flask-SQLAlchemy
+gunicorn
+psycopg2-binary
 flask-cors
 flask-ext
-flask-mysql
 h5py
 matplotlib
-# matplotlib-inline
 numpy
 pandas
-# pexpect
 pickleshare
 Pillow
-# scipy
-# simplejson
+watchdog

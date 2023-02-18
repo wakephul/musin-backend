@@ -10,16 +10,17 @@ from PIL import Image
 
 from flask_cors import CORS, cross_origin
 
-# from flask_mysqldb import MySQL
-from flaskext.mysql import MySQL
-from pymysql.cursors import DictCursor
-from src.connection.mysql.select import select_rows
-from src.connection.mysql.insert import insert_row
+# from flaskext.mysql import MySQL
+# from pymysql.cursors import DictCursor
+# from src.connection.mysql.select import select_rows
+# from src.connection.mysql.insert import insert_row
 
 from main_api import run as run_execution
 
 import string
 import random
+
+from flask_sqlalchemy import SQLAlchemy
 
 
 
@@ -33,8 +34,10 @@ api.config['MYSQL_DATABASE_DB'] = 'sensorycerebellum'
 api.config['MYSQL_DATABASE_CHARSET'] = 'utf8mb4'
 
 # conn = connect(host='localhost', user='root', password='CerebSens01!', db='sensorycerebellum', charset='utf8mb4', cursorclass=cursors.DictCursor)
-mysql = MySQL(cursorclass=DictCursor)
-mysql.init_app(api)
+# mysql = MySQL(cursorclass=DictCursor)
+# mysql.init_app(api)
+
+db = SQLAlchemy(api)
 
 def get_response_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
@@ -43,10 +46,15 @@ def get_response_image(image_path):
     encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
     return encoded_img
 
-@api.route("/api/", methods=["GET"])
+@api.route("/")
 @cross_origin()
-def index():
-    return "APIs working"
+def home():
+    return "MuSiN homepage"
+
+@api.route("/api/")
+@cross_origin()
+def api_home():
+    return "APIs are up and running correctly"
 
 @api.route("/api/existing_networks", methods=["GET"])
 @cross_origin()

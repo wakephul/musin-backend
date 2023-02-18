@@ -9,7 +9,7 @@ RUN echo alias python=python3 >>  ~/.bashrc
 RUN echo alias pip=pip3 >>  ~/.bashrc
 RUN source  ~/.bashrc
 
-RUN apt-get update && apt-get upgrade
+RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install -y build-essential
 RUN apt-get install -y cmake
 RUN apt-get install -y cython
@@ -64,5 +64,6 @@ COPY . /app
 WORKDIR /app
 
 RUN pip3 install --default-timeout=100 -r requirements.txt
+RUN chmod +x run_gunicorn.sh
 
-EXPOSE 5000
+# EXPOSE 5000
