@@ -1,5 +1,9 @@
-from csv import DictReader
 from flask import Flask, send_file, jsonify, request, make_response
+from csv import DictReader
+import nest
+
+import string
+import random
 import glob
 import json
 from pathlib import Path
@@ -9,6 +13,7 @@ from base64 import encodebytes
 from PIL import Image
 
 from flask_cors import CORS, cross_origin
+from flask_sqlalchemy import SQLAlchemy
 
 # from flaskext.mysql import MySQL
 # from pymysql.cursors import DictCursor
@@ -17,27 +22,37 @@ from flask_cors import CORS, cross_origin
 
 from main_api import run as run_execution
 
-import string
-import random
+# api = Flask(__name__)
+# cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
 
-from flask_sqlalchemy import SQLAlchemy
-
-
-
-api = Flask(__name__)
-cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
-
-api.config['MYSQL_DATABASE_HOST'] = 'localhost'
-api.config['MYSQL_DATABASE_USER'] = 'root'
-api.config['MYSQL_DATABASE_PASSWORD'] = 'CerebSens01!'
-api.config['MYSQL_DATABASE_DB'] = 'sensorycerebellum'
-api.config['MYSQL_DATABASE_CHARSET'] = 'utf8mb4'
+# api.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# api.config['MYSQL_DATABASE_USER'] = 'root'
+# api.config['MYSQL_DATABASE_PASSWORD'] = 'CerebSens01!'
+# api.config['MYSQL_DATABASE_DB'] = 'sensorycerebellum'
+# api.config['MYSQL_DATABASE_CHARSET'] = 'utf8mb4'
 
 # conn = connect(host='localhost', user='root', password='CerebSens01!', db='sensorycerebellum', charset='utf8mb4', cursorclass=cursors.DictCursor)
 # mysql = MySQL(cursorclass=DictCursor)
 # mysql.init_app(api)
 
+api = Flask(__name__)
+api.config['DEBUG'] = True
+api.config['FLASK_ENV'] = 'development'
+
+cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
 db = SQLAlchemy(api)
+
+nest.Install("cerebmodule")
+
+class User(db.Model):
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    active = db.Column(db.Boolean(), default=True, nullable=False)
+
+    def __init__(self, email):
+        self.email = email
 
 def get_response_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
@@ -49,7 +64,7 @@ def get_response_image(image_path):
 @api.route("/")
 @cross_origin()
 def home():
-    return "MuSiN homepage"
+    return "MuSiN api homepage"
 
 @api.route("/api/")
 @cross_origin()

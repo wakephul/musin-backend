@@ -1,6 +1,6 @@
 from flask.cli import FlaskGroup
 
-from apiTest import api, db, User
+from api import api, db, User
 
 
 cli = FlaskGroup(api)
