@@ -61,4 +61,8 @@ output/*
 
 multiple_trials/*
 
-.nest-venv/
+.nest-venv/*
+.ipynb_checkpoints/*
+environment/secrets.env
+.vscode/*
+db/data/*

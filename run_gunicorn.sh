@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start Gunicorn with the --reload option
-gunicorn --bind 0.0.0.0:5000 --workers 3 --reload manage:api &
+gunicorn --bind 0.0.0.0:5000 --workers 3 --reload api:api &
 pid=$!
 
 # Start watchdog to monitor the application source files for changes
@@ -13,7 +13,7 @@ watchmedo auto-restart \
     --ignore-pattern='venv/*' \
     --signal SIGTERM \
     --signal SIGHUP \
-    -- python -m gunicorn --reload manage:api
+    -- python -m gunicorn --reload api:api
 
 # Kill Gunicorn when watchdog exits
 kill $pid

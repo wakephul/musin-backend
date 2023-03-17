@@ -1,58 +1,49 @@
-from flask import Flask, send_file, jsonify, request, make_response
-from csv import DictReader
 import nest
+nest.set_verbosity('M_ERROR') #lo metto qui per evitare tutte le print
+nest.Install("cerebmodule")
 
-import string
-import random
+from flask import Flask, send_file, jsonify, request, make_response
+
+from sqlalchemy.sql import func
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS, cross_origin
+
+import os
+import io
 import glob
 import json
-from pathlib import Path
-
-import io
-from base64 import encodebytes
+import string
+import random
 from PIL import Image
-
-from flask_cors import CORS, cross_origin
-from flask_sqlalchemy import SQLAlchemy
-
-# from flaskext.mysql import MySQL
-# from pymysql.cursors import DictCursor
-# from src.connection.mysql.select import select_rows
-# from src.connection.mysql.insert import insert_row
+from pathlib import Path
+from csv import DictReader
+from base64 import encodebytes
 
 from main_api import run as run_execution
 
-# api = Flask(__name__)
-# cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
-
-# api.config['MYSQL_DATABASE_HOST'] = 'localhost'
-# api.config['MYSQL_DATABASE_USER'] = 'root'
-# api.config['MYSQL_DATABASE_PASSWORD'] = 'CerebSens01!'
-# api.config['MYSQL_DATABASE_DB'] = 'sensorycerebellum'
-# api.config['MYSQL_DATABASE_CHARSET'] = 'utf8mb4'
-
-# conn = connect(host='localhost', user='root', password='CerebSens01!', db='sensorycerebellum', charset='utf8mb4', cursorclass=cursors.DictCursor)
-# mysql = MySQL(cursorclass=DictCursor)
-# mysql.init_app(api)
 
 api = Flask(__name__)
 api.config['DEBUG'] = True
 api.config['FLASK_ENV'] = 'development'
-
-cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
+api.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}:{}@{}/{}'.format(
+    os.getenv('DB_USER', ''),
+    os.getenv('DB_PASSWORD', ''),
+    os.getenv('DB_HOST', ''),
+    os.getenv('DB_NAME', '')
+)
 db = SQLAlchemy(api)
 
-nest.Install("cerebmodule")
+cors = CORS(api, resources={r'/*': {'origins': '*'}}, supports_credentials=True)
 
 class User(db.Model):
-    __tablename__ = "users"
-
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean(), default=True, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, email):
-        self.email = email
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 def get_response_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
@@ -70,6 +61,20 @@ def home():
 @cross_origin()
 def api_home():
     return "APIs are up and running correctly"
+
+@api.route("/add_db_user/")
+@cross_origin()
+def add_db_user():
+    db.session.add(User(username="wakephul", email="wakephul@gmail.com"))
+    db.session.commit()
+    return "Correctly added user to db"
+
+@api.route("/list_users/")
+@cross_origin()
+def list_users():
+    users = db.session.query(User).all()
+    u = ', '.join(str(user.username)+' - '+str(user.email) for user in users)
+    return u
 
 @api.route("/api/existing_networks", methods=["GET"])
 @cross_origin()
@@ -205,6 +210,10 @@ def plots_config(_type, _name):
         return send_file(filename)
     else: 
         return jsonify({'result': 'error'})
+
+@api.before_first_request
+def create_tables():
+    db.create_all()
 
 if __name__ == "__main__":
     api.run(host='0.0.0.0', debug=True)

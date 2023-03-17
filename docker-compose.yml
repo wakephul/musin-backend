@@ -1,21 +1,15 @@
 version: '3'
 name: musin
 services:
-  web:
+  api:
     build: .
-    environment:
-      - FLASK_APP=manage.py
-      - FLASK_DEBUG=1
-      - PYTHONFAULTHANDLER=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
-      - LC_ALL=C.UTF-8
-      - LANG=C.UTF-8
+    env_file:
+      - ./environment/development.env
+      - ./environment/secrets.env
     command: /bin/bash -c
       "source /nest/build/bin/nest_vars.sh
       && export NEST_MODULE_PATH=/nest/build/lib/nest:$NEST_MODULE_PATH
       && export SLI_PATH=/nest/build/share/nest/sli:$SLI_PATH
-      && ls -la
       && chmod +x run_gunicorn.sh
       && ./run_gunicorn.sh"
     # command: /bin/bash -c
@@ -28,24 +22,30 @@ services:
     ports:
       - "5555:5000"
     links:
-      - db
-  # db:
-  #   image: mysql:latest
-  #   environment:
-  #     MYSQL_DATABASE_DB: sensorycerebellum
-  #     MYSQL_DATABASE_USER: root
-  #     MYSQL_DATABASE_PASSWORD: CerebSens01!
-  #     MYSQL_DATABASE_CHARSET: utf8mb4
-  #   ports:
-  #     - "3306:3306"
-  db:
-    image: postgres:13-alpine
+      - mysql
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:latest
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=musin
-      - POSTGRES_PASSWORD=musin
-      - POSTGRES_DB=musin_db
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    env_file:
+      - ./environment/development.env
+      - ./environment/secrets.env
+  
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin:latest
+    restart: unless-stopped
+    ports:
+      - "8888:80"
+    env_file:
+      - ./environment/phpmyadmin.env
+      - ./environment/secrets.env
   nginx:
     image: nginx:latest
     ports:
@@ -53,8 +53,9 @@ services:
     volumes:
       - .:/app
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    links:
-      - web
+    depends_on:
+      - api
 
 volumes:
-  postgres_data:
+  mysql-data:
+    driver: local
