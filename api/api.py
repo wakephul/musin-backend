@@ -19,8 +19,10 @@ from pathlib import Path
 from csv import DictReader
 from base64 import encodebytes
 
-from main_api import run as run_execution
+from api.main_api import run
 
+from api.routes.welcome import welcome
+from api.routes.networks import networks
 
 api = Flask(__name__)
 api.config['DEBUG'] = True
@@ -45,22 +47,20 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+@api.route("/")
+@cross_origin()
+def home():
+    return "MuSiN api homepage"
+
+api.register_blueprint(welcome)
+api.register_blueprint(networks)
+
 def get_response_image(image_path):
     pil_img = Image.open(image_path, mode='r') # reads the PIL image
     byte_arr = io.BytesIO()
     pil_img.save(byte_arr, format='PNG') # convert the PIL image to byte array
     encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
     return encoded_img
-
-@api.route("/")
-@cross_origin()
-def home():
-    return "MuSiN api homepage"
-
-@api.route("/api/")
-@cross_origin()
-def api_home():
-    return "APIs are up and running correctly"
 
 @api.route("/add_db_user/")
 @cross_origin()
@@ -76,22 +76,22 @@ def list_users():
     u = ', '.join(str(user.username)+' - '+str(user.email) for user in users)
     return u
 
-@api.route("/api/existing_networks", methods=["GET"])
-@cross_origin()
-def existing_networks():
+# @api.route("/api/existing_networks", methods=["GET"])
+# @cross_origin()
+# def existing_networks():
 
-    networks = []
+#     networks = []
 
-    if request.method == 'GET':
-        conn = mysql.get_db()
-        query = "SELECT `code`, `name`, `default_parameters` FROM `networks`"
-        networks = select_rows(conn, query)
-        if networks:
-            for net in networks:
-                query = "SELECT `name`, `raster`, `voltage`, `train`, `test`, `split`, `population_name` FROM `plots` WHERE network = %s"
-                net['plots'] = select_rows(conn, query, (net['name']))
+#     if request.method == 'GET':
+#         conn = mysql.get_db()
+#         query = "SELECT `code`, `name`, `default_parameters` FROM `networks`"
+#         networks = select_rows(conn, query)
+#         if networks:
+#             for net in networks:
+#                 query = "SELECT `name`, `raster`, `voltage`, `train`, `test`, `split`, `population_name` FROM `plots` WHERE network = %s"
+#                 net['plots'] = select_rows(conn, query, (net['name']))
 
-    return jsonify({'result': networks})
+#     return jsonify({'result': networks})
 
 @api.route("/api/existing_types", methods=["GET"])
 @cross_origin()

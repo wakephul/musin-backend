@@ -39,17 +39,10 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10 \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
 RUN pip3 install --upgrade pip requests setuptools pipenv
 
-# ENV PATH=$PATH/opt/nest/bin
-# ENV PYTHONPATH=/opt/nest/lib/python3.6/site-packages:$PYTHONPATH
-
 RUN cd /nest/build && \
     cmake   -Dwith-python=3 \
             -Dwith-mpi=ON \
             -Dwith-openmp=ON \
-            # -DPYTHON_EXECUTABLE=/usr/bin/python3 \
-            # -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so \
-            # -DPYTHON_INCLUDE_DIR=/usr/include/python3.6 \
-            # -DPYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python3.6m \
             -DCMAKE_INSTALL_PREFIX:PATH=/nest/build/ ../nest-simulator-2.18.0 && \
     make && \
     make install
@@ -63,7 +56,7 @@ COPY . /app
 
 WORKDIR /app
 
-RUN pip3 install --default-timeout=100 -r requirements.txt
-RUN chmod +x run_gunicorn.sh
+RUN pip3 install --default-timeout=100 -r docker/requirements.txt
+RUN chmod +x docker/run_gunicorn.sh
 
 # EXPOSE 5000
