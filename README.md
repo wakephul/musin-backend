@@ -1,16 +1,18 @@
 # Environment
 
-The whole project has been developed and tested only with Python 3.6.9 and NEST 2.18. In fact, these have been proven as the only conditions under which we were able to correctly install and import CerebNEST.
-The project has been run on Linux (Ubuntu 18.04.5) and MacOS (Catalina 10.15.7).
-
+The whole project has been developed and tested only with Python 3.6 and NEST 2.18. In fact, these have been proven as the only conditions under which we were able to correctly install and import CerebNEST.
+In order to make everything work with ease we dockerized everything, for everybody's convenience.
 
 # How to use
 
-**main.py** is the only file that will have to be executed most of the times.
-It accepts two arguments:
-- CreateSpikesTable: _boolean_, to be used if the db does not contain the 'spikes' table;
-- CreateSpikes: _boolean_, to be used in order to create brand new sets of spikes (one per population). This will generate new pickle files (in the data/spikes/ directory) and add rows to the database.
+**docker-compose build** creates all the docker images that will be needed.
 
-# Timeline
+For security reasons, we have excluded the database password from the git repository. Just go ahead and create a secrets.env file in the environment folder.
+It should contain 3 variables:
+DB_PASSWORD=your_db_password
+PMA_PASSWORD=your_pma_password
+MYSQL_ROOT_PASSWORD=your_root_password
 
-In order to keep track of the main decisions that have been taken throughout the development process, a google doc file has been created and can be found at this link https://docs.google.com/document/d/1dwEzuM9EzCm5iHnLf5xwrhfLia-iF0Vh1lOtKBGmA1A/edit?usp=sharing
+**docker-compose up** will create the containers based on those images. You will be ready to go.
+
+
