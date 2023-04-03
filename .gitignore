@@ -55,7 +55,6 @@ Thumbs.db
 
 __pycache__
 */__pycache__
-__pycache__/*
 
 output/*
 
@@ -66,3 +65,4 @@ multiple_trials/*
 environment/secrets.env
 .vscode/*
 db/data/*
+
