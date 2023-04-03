@@ -56,13 +56,13 @@ Thumbs.db
 __pycache__
 */__pycache__
 
-output/*
+output/
 
-multiple_trials/*
+multiple_trials/
 
-.nest-venv/*
-.ipynb_checkpoints/*
+.nest-venv/
+.ipynb_checkpoints/
 environment/secrets.env
-.vscode/*
-db/data/*
+.vscode/
+db/data/
 
