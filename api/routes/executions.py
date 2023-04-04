@@ -7,7 +7,7 @@ import json
 from csv import DictReader
 from ..utils.images import get_response_image
 
-from ..models.executions import ExecutionType, Input, Execution, ExecutionTypesRelation, ExecutionInputRelation, ExecutionNetworksRelation
+# from ..models.executions import ExecutionType, Execution, ExecutionTypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
 
 executions = Blueprint('executions', __name__)
 @executions.route("/api/executions/types/<_name>/", methods=["GET"])

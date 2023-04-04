@@ -6,6 +6,8 @@ import json
 import string
 import random
 
+from ..models.executions import Input
+
 inputs = Blueprint('inputs', __name__)
 @inputs.route("/api/inputs/list/", methods=["GET"])
 @cross_origin()
