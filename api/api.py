@@ -47,6 +47,7 @@ api.register_blueprint(welcome)
 
 @api.before_first_request
 def create_tables():
+    db.init_app(api)
     db.create_all()
 
 if __name__ == "__main__":

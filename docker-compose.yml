@@ -31,12 +31,14 @@ services:
     image: mysql:latest
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./db/init/init.sql:/data/mysql/init.sql
     restart: unless-stopped
     ports:
       - "3306:3306"
     env_file:
       - ./environment/development.env
       - ./environment/secrets.env
+    command: --init-file /data/mysql/init.sql
   
   phpmyadmin:
     depends_on:

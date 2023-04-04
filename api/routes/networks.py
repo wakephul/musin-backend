@@ -4,6 +4,8 @@ from ..api import db
 
 from pathlib import Path
 
+from ..models.networks import Network, NetworkParameter
+
 networks = Blueprint('networks', __name__)
 @networks.route("/api/networks/list/", methods=["GET"])
 @cross_origin()
