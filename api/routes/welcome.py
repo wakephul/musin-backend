@@ -18,15 +18,28 @@ def sample_db():
     # import os
     # backup_file = "backup.sql"
     # os.system(f"mysqldump -u <username> -p<password> <database_name> > {backup_file}")
-    db.drop_all()
-    db.create_all()
-    user_code = User.create('test', 'test@test.com', True)
-    execution_code = Execution.create('test_exec')
-    executiontype_code = Executiontype.create('test_type')
-    ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code)
-    input_code = Input.create(10.0, 10.0, 50.0, 50.0, 10, 10, 100, 100)
-    ExecutionInputRelationship.create(execution_code, input_code)
-    network_code = Network.create('test_network')
-    NetworkParameter.create(network_code, 'param_test', 1.23)
-    ExecutionNetworkRelationship.create(execution_code, network_code)
-    return 'DONE!'
+    check_tables = all_tables_empty()
+    if (check_tables):
+        db.drop_all()
+        db.create_all()
+        user_code = User.create('test', 'test@test.com', True)
+        execution_code = Execution.create('test_exec')
+        executiontype_code = Executiontype.create('test_type')
+        ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code)
+        input_code = Input.create(10.0, 10.0, 50.0, 50.0, 10, 10, 100, 100)
+        ExecutionInputRelationship.create(execution_code, input_code)
+        network_code = Network.create('test_network')
+        NetworkParameter.create(network_code, 'param_test', 1.23)
+        ExecutionNetworkRelationship.create(execution_code, network_code)
+        return 'DONE! You now have a sample database to test everything'
+    else:
+        return 'Not all tables in the database are empty. Sorry, but I cannot risk to delete possibly important data'
+
+
+def all_tables_empty():
+    models = [Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship, Input, Network, NetworkParameter, User]
+    for model in models:
+        result = model.get_all()
+        if len(result) > 0:
+            return False
+    return True
