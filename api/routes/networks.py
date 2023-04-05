@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request, send_file
 from flask_cors import cross_origin
-from ..api import db
+from api.api import db
 
 from pathlib import Path
 
-from ..models.networks import Network, NetworkParameter
+from api.models.networks import Network, NetworkParameter
 
 networks = Blueprint('networks', __name__)
 @networks.route("/api/networks/list/", methods=["GET"])

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, send_file
 from flask_cors import cross_origin
-from ..api import db
+from api.api import db
 
 from pathlib import Path
 

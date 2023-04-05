@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify
 from flask_cors import cross_origin
-from ..api import db
+from api.api import db
 
-from ..models.users import User
+from api.models.users import User
 
 users = Blueprint('users', __name__)
 
@@ -16,5 +16,4 @@ def add():
 @cross_origin()
 def list():
     users = User.get_all()
-    print(users)
     return jsonify(users)

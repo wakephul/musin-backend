@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from ..api import db
+from api.api import db
 
 import json
 import string
 import random
 
-from ..models.executions import Input
+from api.models.inputs import Input
 
 inputs = Blueprint('inputs', __name__)
 @inputs.route("/api/inputs/list/", methods=["GET"])

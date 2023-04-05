@@ -1,13 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from ..api import db
+from api.api import db
 
 import glob
 import json
 from csv import DictReader
-from ..utils.images import get_response_image
+from api.utils.images import get_response_image
 
-# from ..models.executions import ExecutionType, Execution, ExecutionTypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
+from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
 
 executions = Blueprint('executions', __name__)
 @executions.route("/api/executions/types/<_name>/", methods=["GET"])
