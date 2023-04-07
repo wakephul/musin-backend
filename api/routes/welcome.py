@@ -18,7 +18,8 @@ def sample_db():
     # import os
     # backup_file = "backup.sql"
     # os.system(f"mysqldump -u <username> -p<password> <database_name> > {backup_file}")
-    check_tables = all_tables_empty()
+    # check_tables = all_tables_empty()
+    check_tables = True #to test the sample db
     if (check_tables):
         db.drop_all()
         db.create_all()
@@ -26,11 +27,19 @@ def sample_db():
         execution_code = Execution.create('test_exec')
         executiontype_code = Executiontype.create('test_type')
         ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code)
-        input_code = Input.create(10.0, 10.0, 50.0, 50.0, 10, 10, 100, 100)
+        executiontype_code_2 = Executiontype.create('test_type_1')
+        ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code_2)
+        input_code = Input.create('test_input', 10.0, 10.0, 50.0, 50.0, 10, 10, 100, 100)
         ExecutionInputRelationship.create(execution_code, input_code)
+        input_code_2 = Input.create('test_input_1', 20.0, 20.0, 20.0, 20.0, 20, 20, 200, 200)
+        ExecutionInputRelationship.create(execution_code, input_code_2)
         network_code = Network.create('test_network')
         NetworkParameter.create(network_code, 'param_test', 1.23)
+        NetworkParameter.create(network_code, 'param_test_2', 4.56)
         ExecutionNetworkRelationship.create(execution_code, network_code)
+        network_code_2 = Network.create('test_network_1')
+        NetworkParameter.create(network_code_2, 'param_test_3', 7.89)
+        ExecutionNetworkRelationship.create(execution_code, network_code_2)
         return 'DONE! You now have a sample database to test everything'
     else:
         return 'Not all tables in the database are empty. Sorry, but I cannot risk to delete possibly important data'

@@ -30,7 +30,15 @@ class Execution(db.Model):
         result = Execution.query.get(code)
         if not result:
             return None
-        return {'code': result.code, 'name': result.name,'created_at': result.created_at}
+        return {'code': result.code, 'name': result.name, 'created_at': result.created_at}
+    
+    @staticmethod
+    def get_execution_details(code):
+        result = Execution.query.get(code)
+        if not result:
+            return None
+        execution = {'code': result.code, 'name': result.name, 'created_at': result.created_at}
+        return execution
 
     @staticmethod
     def get_all():
@@ -62,7 +70,14 @@ class Executiontype(db.Model):
         result = Executiontype.query.get(code)
         if not result:
             return None
-        return {'code': result.code, 'name': result.name,'created_at': result.created_at}
+        return {'code': result.code, 'name': result.name, 'created_at': result.created_at}
+    
+    @staticmethod
+    def get_name(code):
+        result = Executiontype.query.get(code)
+        if not result:
+            return None
+        return result.name
 
     @staticmethod
     def get_all():

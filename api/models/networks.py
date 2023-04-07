@@ -31,6 +31,13 @@ class Network(db.Model):
         if not result:
             return None
         return {'network_code': result.network_code, 'name': result.name, 'value': result.value}
+    
+    @staticmethod
+    def get_name(code):
+        result = Network.query.get(code)
+        if not result:
+            return None
+        return result.name
 
     @staticmethod
     def get_all():

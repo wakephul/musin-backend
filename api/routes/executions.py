@@ -8,6 +8,8 @@ from csv import DictReader
 from api.utils.images import get_response_image
 
 from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
+from api.models.inputs import Input
+from api.models.networks import Network, NetworkParameter
 
 executions = Blueprint('executions', __name__)
 @executions.route("/api/executions/types/<_name>/", methods=["GET"])
@@ -24,18 +26,21 @@ def types_details(_name):
 @executions.route("/api/executions/list/", methods=["GET"])
 @cross_origin()
 def list():
-    executions = {
-        "list": []
-    }
-    with open('output/executions/executions.csv', 'r') as csvfile:
-        csv_dict_reader = DictReader(csvfile)
-        for row in csv_dict_reader:
-            executions['list'].append(row)
-    return executions
+    executions = Execution.get_all()
+    for execution in executions:
+        executiontypes = ExecutionExecutiontypeRelationship.get_by_execution_code(execution['code'])
+        execution['executiontypes'] = [Executiontype.get_name(executiontype['executiontype_code']) for executiontype in executiontypes]
+        inputs = ExecutionInputRelationship.get_by_execution_code(execution['code'])
+        execution['inputs'] = [Input.get_name(input['input_code']) for input in inputs]
+        print(execution)
+        networks = ExecutionNetworkRelationship.get_by_execution_code(execution['code'])
+        execution['networks'] = [Network.get_name(network['network_code']) for network in networks]
+    return jsonify({'result': executions})
 
 @executions.route("/api/executions/<id>/", methods=["GET"])
 @cross_origin()
 def details(id):
+    print(id)
     return id
 
 @executions.route("/api/executions/<id>/plots/", methods=["GET"])

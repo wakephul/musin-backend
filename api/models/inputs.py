@@ -10,6 +10,7 @@ class Input(db.Model):
     __tablename__ = "input"
 
     code = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4().hex))
+    name = Column(String(255), nullable=False)
     rate_start = Column(Float, nullable=False)
     rate_end = Column(Float, nullable=False)
     first_spike_latency_start = Column(Float, nullable=False)
@@ -20,8 +21,9 @@ class Input(db.Model):
     trial_duration_end = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, code: str, rate_start: float, rate_end: float, first_spike_latency_start: float, first_spike_latency_end: float, number_of_neurons_start: int, number_of_neurons_end: int, trial_duration_start: int, trial_duration_end: int):
+    def __init__(self, code: str, name: str, rate_start: float, rate_end: float, first_spike_latency_start: float, first_spike_latency_end: float, number_of_neurons_start: int, number_of_neurons_end: int, trial_duration_start: int, trial_duration_end: int):
         self.code = code
+        self.name = name
         self.rate_start = rate_start
         self.rate_end = rate_end
         self.first_spike_latency_start = first_spike_latency_start
@@ -32,9 +34,9 @@ class Input(db.Model):
         self.trial_duration_end = trial_duration_end
 
     @staticmethod
-    def create(rate_start: float, rate_end: float, first_spike_latency_start: float, first_spike_latency_end: float, number_of_neurons_start: int, number_of_neurons_end: int, trial_duration_start: int, trial_duration_end: int):
+    def create(name: str, rate_start: float, rate_end: float, first_spike_latency_start: float, first_spike_latency_end: float, number_of_neurons_start: int, number_of_neurons_end: int, trial_duration_start: int, trial_duration_end: int):
         code = str(uuid.uuid4())
-        to_create = Input(code=code, rate_start=rate_start, rate_end=rate_end, first_spike_latency_start=first_spike_latency_start, first_spike_latency_end=first_spike_latency_end, number_of_neurons_start=number_of_neurons_start, number_of_neurons_end=number_of_neurons_end, trial_duration_start=trial_duration_start, trial_duration_end=trial_duration_end)
+        to_create = Input(name=name, code=code, rate_start=rate_start, rate_end=rate_end, first_spike_latency_start=first_spike_latency_start, first_spike_latency_end=first_spike_latency_end, number_of_neurons_start=number_of_neurons_start, number_of_neurons_end=number_of_neurons_end, trial_duration_start=trial_duration_start, trial_duration_end=trial_duration_end)
         db.session.add(to_create)
         db.session.commit()
         return code
@@ -44,9 +46,16 @@ class Input(db.Model):
         result = Input.query.get(code)
         if not result:
             return None
-        return {'code': result.code, 'rate_start': result.rate_start, 'rate_end': result.rate_end, 'first_spike_latency_start': result.first_spike_latency_start, 'first_spike_latency_end': result.first_spike_latency_end, 'number_of_neurons_start': result.number_of_neurons_start, 'number_of_neurons_end': result.number_of_neurons_end, 'trial_duration_start': result.trial_duration_start, 'trial_duration_end': result.trial_duration_end, 'created_at': result.created_at}
+        return {'code': result.code, 'name': result.name, 'rate_start': result.rate_start, 'rate_end': result.rate_end, 'first_spike_latency_start': result.first_spike_latency_start, 'first_spike_latency_end': result.first_spike_latency_end, 'number_of_neurons_start': result.number_of_neurons_start, 'number_of_neurons_end': result.number_of_neurons_end, 'trial_duration_start': result.trial_duration_start, 'trial_duration_end': result.trial_duration_end, 'created_at': result.created_at}
+    
+    @staticmethod
+    def get_name(code):
+        result = Input.query.get(code)
+        if not result:
+            return None
+        return result.name
 
     @staticmethod
     def get_all():
-        return [{'code': i.code, 'rate_start': i.rate_start, 'rate_end': i.rate_end, 'first_spike_latency_start': i.first_spike_latency_start, 'first_spike_latency_end': i.first_spike_latency_end, 'number_of_neurons_start': i.number_of_neurons_start, 'number_of_neurons_end': i.number_of_neurons_end, 'trial_duration_start': i.trial_duration_start, 'trial_duration_end': i.trial_duration_end, 'created_at': i.created_at}
+        return [{'code': i.code, 'name': i.name, 'rate_start': i.rate_start, 'rate_end': i.rate_end, 'first_spike_latency_start': i.first_spike_latency_start, 'first_spike_latency_end': i.first_spike_latency_end, 'number_of_neurons_start': i.number_of_neurons_start, 'number_of_neurons_end': i.number_of_neurons_end, 'trial_duration_start': i.trial_duration_start, 'trial_duration_end': i.trial_duration_end, 'created_at': i.created_at}
                 for i in Input.query.all()]
