@@ -3,6 +3,7 @@
 
 The whole project has been developed and tested with Python 3.6 and NEST 2.18. In fact, these have been proven as the only conditions under which we were able to correctly install and import CerebNEST without big changes.
 In order to make everything work with ease we dockerized everything, for everybody's convenience.
+
 ## Installation
 
 The only requirement is to have **Docker** installed on your system.\
@@ -33,9 +34,11 @@ This will create all containers based on those images.
 
 To test that everything is working as expected, just look at your terminal. If you don't want to, or if everything looks ok, just navigate to http://localhost:5555/ and it should work.
 
-If you want to create a test database, just navigate to http://localhost:5555/api/delete_db_and_populate_sample
+If you want to create a sample database, just navigate to http://localhost:5555/api/delete_db_and_populate_sample
 
-Now you can start simulating your networks with the MuSiN!
+If you want to check the status of your database, you can easily do that thanks to phpMyAdmin, which you can find at http://localhost:8888/ 
+
+Now you can start simulating your networks with the MuSiN web interface!
 ## Support
 
 For support and suggestions, please feel free to open an issue or to email me at riccardo (dot) cavadini (at) polimi (dot) it.
