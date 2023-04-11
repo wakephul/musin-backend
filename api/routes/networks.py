@@ -12,13 +12,10 @@ networks = Blueprint('networks', __name__)
 def list():
     networks = []
     if request.method == 'GET':
-        conn = mysql.get_db()
-        query = "SELECT `code`, `name`, `default_parameters` FROM `networks`"
-        networks = select_rows(conn, query)
-        if networks:
-            for net in networks:
-                query = "SELECT `name`, `raster`, `voltage`, `train`, `test`, `split`, `population_name` FROM `plots` WHERE network = %s"
-                net['plots'] = select_rows(conn, query, (net['name']))
+        networks = Network.get_all()
+        for network in networks:
+            parameters = NetworkParameter.get_by_network_code(network['code'])
+            network['parameters'] = parameters
 
     return jsonify({'result': networks})
 

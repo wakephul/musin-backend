@@ -72,7 +72,7 @@ class NetworkParameter(db.Model):
     
     @staticmethod
     def get_by_network_code(code):
-        return [{'execution_code': i.execution_code, 'network_code': i.network_code}
+        return [{'network_code': i.network_code, 'name': i.name, 'value': i.value}
                 for i in NetworkParameter.query.filter_by(network_code=code).all()]
 
     @staticmethod
