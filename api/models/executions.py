@@ -116,66 +116,129 @@ class ExecutionExecutiontypeRelationship(db.Model):
         return [{'execution_code': i.execution_code, 'executiontype_code': i.executiontype_code}
                 for i in ExecutionExecutiontypeRelationship.query.all()]
 
-class ExecutionInputRelationship(db.Model):
+# class ExecutionInputRelationship(db.Model):
 
-    __tablename__ = "execution_input_relationship"
+#     __tablename__ = "execution_input_relationship"
 
-    execution_code = Column(String(36), ForeignKey("execution.code"), primary_key=True)
-    input_code = Column(String(36), ForeignKey("input.code"), primary_key=True)
+#     execution_code = Column(String(36), ForeignKey("execution.code"), primary_key=True)
+#     input_code = Column(String(36), ForeignKey("input.code"), primary_key=True)
 
-    def __init__(self, execution_code: str, input_code: str):
-        self.execution_code = execution_code
-        self.input_code = input_code
+#     def __init__(self, execution_code: str, input_code: str):
+#         self.execution_code = execution_code
+#         self.input_code = input_code
 
-    @staticmethod
-    def create(execution_code: str, input_code: str):
-        to_create = ExecutionInputRelationship(execution_code, input_code)
-        db.session.add(to_create)
-        db.session.commit()
+#     @staticmethod
+#     def create(execution_code: str, input_code: str):
+#         to_create = ExecutionInputRelationship(execution_code, input_code)
+#         db.session.add(to_create)
+#         db.session.commit()
 
-    @staticmethod
-    def get_by_execution_code(code):
-        return [{'execution_code': i.execution_code, 'input_code': i.input_code}
-                for i in ExecutionInputRelationship.query.filter_by(execution_code=code).all()]
+#     @staticmethod
+#     def get_by_execution_code(code):
+#         return [{'execution_code': i.execution_code, 'input_code': i.input_code}
+#                 for i in ExecutionInputRelationship.query.filter_by(execution_code=code).all()]
+    
+#     @staticmethod
+#     def get_by_input_code(code):
+#         return [{'execution_code': i.execution_code, 'input_code': i.input_code}
+#                 for i in ExecutionInputRelationship.query.filter_by(input_code=code).all()]
+
+#     @staticmethod
+#     def get_all():
+#         return [{'execution_code': i.execution_code, 'input_code': i.input_code}
+#                 for i in ExecutionInputRelationship.query.all()]
+
+# class ExecutionNetworkRelationship(db.Model):
+
+#     __tablename__ = "execution_network_relationship"
+
+#     execution_code = Column(String(36), ForeignKey("execution.code"), primary_key=True)
+#     network_code = Column(String(36), ForeignKey("network.code"), primary_key=True)
+
+#     def __init__(self, execution_code: str, network_code: str):
+#         self.execution_code = execution_code
+#         self.network_code = network_code
+
+#     @staticmethod
+#     def create(execution_code: str, network_code: str):
+#         to_create = ExecutionNetworkRelationship(execution_code, network_code)
+#         db.session.add(to_create)
+#         db.session.commit()
+
+#     @staticmethod
+#     def get_by_execution_code(code):
+#         return [{'execution_code': i.execution_code, 'network_code': i.network_code}
+#                 for i in ExecutionNetworkRelationship.query.filter_by(execution_code=code).all()]
+    
+#     @staticmethod
+#     def get_by_network_code(code):
+#         return [{'execution_code': i.execution_code, 'network_code': i.network_code}
+#                 for i in ExecutionNetworkRelationship.query.filter_by(network_code=code).all()]
+
+#     @staticmethod
+#     def get_all():
+#         return [{'execution_code': i.execution_code, 'network_code': i.network_code}
+#                 for i in ExecutionNetworkRelationship.query.all()]
+    
+class ExecutionNetworkSideInputRelationship(db.Model):
+    
+        __tablename__ = "execution_network_side_input_relationship"
+    
+        execution_code = Column(String(36), ForeignKey("execution.code"), primary_key=True)
+        network_code = Column(String(36), ForeignKey("network.code"), primary_key=True)
+        side = Column(Integer, primary_key=True)
+        input_code = Column(String(36), ForeignKey("input.code"), primary_key=True)
+    
+        def __init__(self, execution_code: str, network_code: str, side: int, input_code: str):
+            self.execution_code = execution_code
+            self.network_code = network_code
+            self.side = side
+            self.input_code = input_code
+    
+        @staticmethod
+        def create(execution_code: str, network_code: str, side: int, input_code: str):
+            to_create = ExecutionNetworkSideInputRelationship(execution_code, network_code, side, input_code)
+            db.session.add(to_create)
+            db.session.commit()
+    
+        @staticmethod
+        def get_by_execution_code(code):
+            return [{'execution_code': i.execution_code, 'network_code': i.network_code, 'side': i.side, 'input_code': i.input_code}
+                    for i in ExecutionNetworkSideInputRelationship.query.filter_by(execution_code=code).all()]
+        
+        @staticmethod
+        def get_by_network_code(code):
+            return [{'execution_code': i.execution_code, 'network_code': i.network_code, 'side': i.side, 'input_code': i.input_code}
+                    for i in ExecutionNetworkSideInputRelationship.query.filter_by(network_code=code).all()]
+        
+        @staticmethod
+        def get_all():
+            return [{'execution_code': i.execution_code, 'network_code': i.network_code, 'side': i.side, 'input_code': i.input_code}
+                    for i in ExecutionNetworkSideInputRelationship.query.all()]
+class ExecutionResult(db.Model):
+    id = Column(Integer, primary_key=True)
+    result_path = Column(String(100))
+    image_path = Column(String(100))
+
+    def __init__(self, result_path: str, image_path: str):
+        self.result_path = result_path
+        self.image_path = image_path
     
     @staticmethod
-    def get_by_input_code(code):
-        return [{'execution_code': i.execution_code, 'input_code': i.input_code}
-                for i in ExecutionInputRelationship.query.filter_by(input_code=code).all()]
-
-    @staticmethod
-    def get_all():
-        return [{'execution_code': i.execution_code, 'input_code': i.input_code}
-                for i in ExecutionInputRelationship.query.all()]
-
-class ExecutionNetworkRelationship(db.Model):
-
-    __tablename__ = "execution_network_relationship"
-
-    execution_code = Column(String(36), ForeignKey("execution.code"), primary_key=True)
-    network_code = Column(String(36), ForeignKey("network.code"), primary_key=True)
-
-    def __init__(self, execution_code: str, network_code: str):
-        self.execution_code = execution_code
-        self.network_code = network_code
-
-    @staticmethod
-    def create(execution_code: str, network_code: str):
-        to_create = ExecutionNetworkRelationship(execution_code, network_code)
+    def create(result_path: str, image_path: str):
+        to_create = ExecutionResult(result_path, image_path)
         db.session.add(to_create)
         db.session.commit()
-
-    @staticmethod
-    def get_by_execution_code(code):
-        return [{'execution_code': i.execution_code, 'network_code': i.network_code}
-                for i in ExecutionNetworkRelationship.query.filter_by(execution_code=code).all()]
+        return to_create.id
     
     @staticmethod
-    def get_by_network_code(code):
-        return [{'execution_code': i.execution_code, 'network_code': i.network_code}
-                for i in ExecutionNetworkRelationship.query.filter_by(network_code=code).all()]
-
+    def get_one(id):
+        result = ExecutionResult.query.get(id)
+        if not result:
+            return None
+        return {'id': result.id, 'result_path': result.result_path, 'image_path': result.image_path}
+    
     @staticmethod
     def get_all():
-        return [{'execution_code': i.execution_code, 'network_code': i.network_code}
-                for i in ExecutionNetworkRelationship.query.all()]
+        return [{'id': i.id, 'result_path': i.result_path, 'image_path': i.image_path}
+                for i in ExecutionResult.query.all()]

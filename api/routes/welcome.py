@@ -1,5 +1,6 @@
 from api.api import db
-from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
+# from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionInputRelationship, ExecutionNetworkRelationship
+from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionNetworkSideInputRelationship, ExecutionResult
 from api.models.inputs import Input
 from api.models.networks import Network, NetworkParameter
 from api.models.users import User
@@ -29,17 +30,20 @@ def sample_db():
         ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code)
         executiontype_code_2 = Executiontype.create('test_type_1')
         ExecutionExecutiontypeRelationship.create(execution_code, executiontype_code_2)
-        input_code = Input.create('test_input', 10.0, 10.0, 50.0, 50.0, 10, 10, 100, 100)
-        ExecutionInputRelationship.create(execution_code, input_code)
-        input_code_2 = Input.create('test_input_1', 20.0, 20.0, 20.0, 20.0, 20, 20, 200, 200)
-        ExecutionInputRelationship.create(execution_code, input_code_2)
-        network_code = Network.create('test_network')
+        input_code = Input.create('test_input', False, 10.0, None, None, 10.0, None, None, 10, None, None, 10, None, None)
+        input_code_2 = Input.create('test_input_1', False, 20.0, None, None, 20.0, None, None, 20, None, None, 20, None, None)
+        network_code = Network.create('test_network', 2)
+        network_code_2 = Network.create('test_network_1', 2)
         NetworkParameter.create(network_code, 'param_test', 1.23)
         NetworkParameter.create(network_code, 'param_test_2', 4.56)
-        ExecutionNetworkRelationship.create(execution_code, network_code)
-        network_code_2 = Network.create('test_network_1')
         NetworkParameter.create(network_code_2, 'param_test_3', 7.89)
-        ExecutionNetworkRelationship.create(execution_code, network_code_2)
+        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, 1, input_code)
+        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, 2, input_code_2)
+        ExecutionNetworkSideInputRelationship.create(execution_code, network_code_2, 1, input_code)
+        # ExecutionInputRelationship.create(execution_code, input_code)
+        # ExecutionInputRelationship.create(execution_code, input_code_2)
+        # ExecutionNetworkRelationship.create(execution_code, network_code)
+        # ExecutionNetworkRelationship.create(execution_code, network_code_2)
         return 'DONE! You now have a sample database to test everything'
     else:
         return 'Not all tables in the database are empty. Sorry, but I cannot risk to delete possibly important data'

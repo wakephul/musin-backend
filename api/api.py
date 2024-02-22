@@ -1,7 +1,3 @@
-# import nest
-# nest.set_verbosity('M_ERROR') #lo metto qui per evitare tutte le print
-# nest.Install("cerebmodule")
-
 from flask import Flask
 
 from flask_sqlalchemy import SQLAlchemy

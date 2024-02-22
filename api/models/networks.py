@@ -11,26 +11,37 @@ class Network(db.Model):
 
     code = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4().hex))
     name = Column(String(100), nullable=False)
+    sides = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, code: str, name: str):
+    def __init__(self, code: str, name: str, sides: int):
         self.code = code
         self.name = name
+        self.sides = sides
 
     @staticmethod
-    def create(name: str):
+    def create(name: str, sides: int):
         code = str(uuid.uuid4())
-        to_create = Network(code=code, name=name)
+        to_create = Network(code=code, name=name, sides=sides)
         db.session.add(to_create)
         db.session.commit()
         return code
+    
+    @staticmethod
+    def to_dict(network):
+        return {
+            'code': network.code,
+            'name': network.name,
+            'sides': network.sides,
+            'created_at': network.created_at
+        }
 
     @staticmethod
     def get_one(code):
-        result = NetworkParameter.query.get(code)
+        result = Network.query.get(code)
         if not result:
             return None
-        return {'network_code': result.network_code, 'name': result.name, 'value': result.value}
+        return Network.to_dict(result)
     
     @staticmethod
     def get_name(code):
@@ -41,8 +52,10 @@ class Network(db.Model):
 
     @staticmethod
     def get_all():
-        return [{'code': i.code, 'name': i.name, 'created_at': i.created_at}
-                for i in Network.query.all()]
+        return [
+            Network.to_dict(i)
+            for i in Network.query.all()
+        ]
 
 class NetworkParameter(db.Model):
 
@@ -64,18 +77,30 @@ class NetworkParameter(db.Model):
         db.session.commit()
 
     @staticmethod
+    def to_dict(network_parameter):
+        return {
+            'network_code': network_parameter.network_code,
+            'name': network_parameter.name,
+            'value': network_parameter.value
+        }
+
+    @staticmethod
     def get_one(code):
         result = NetworkParameter.query.get(code)
         if not result:
             return None
-        return {'network_code': result.network_code, 'name': result.name, 'value': result.value}
+        return NetworkParameter.to_dict(result)
     
     @staticmethod
     def get_by_network_code(code):
-        return [{'network_code': i.network_code, 'name': i.name, 'value': i.value}
-                for i in NetworkParameter.query.filter_by(network_code=code).all()]
+        return [
+            NetworkParameter.to_dict(i)
+            for i in NetworkParameter.query.filter_by(network_code=code).all()
+        ]
 
     @staticmethod
     def get_all():
-        return [{'network_code': i.network_code, 'name': i.name, 'value': i.value}
-                for i in NetworkParameter.query.all()]
+        return [
+            NetworkParameter.to_dict(i)
+            for i in NetworkParameter.query.all()
+        ]
