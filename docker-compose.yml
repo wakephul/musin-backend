@@ -1,8 +1,8 @@
-version: '3'
+version: "3"
 name: musin
 services:
   api:
-    build: 
+    build:
       context: ./
       dockerfile: ./docker/Dockerfile
     env_file:
@@ -39,11 +39,11 @@ services:
       - ./environment/development.env
       - ./environment/secrets.env
     command: --init-file /data/mysql/init.sql
-  
+
   phpmyadmin:
     depends_on:
       - mysql
-    image: phpmyadmin/phpmyadmin:latest
+    image: phpmyadmin
     restart: unless-stopped
     ports:
       - "8888:80"

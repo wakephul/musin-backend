@@ -10,19 +10,21 @@ If you don't, please go ahead and install it.
 
 After having downloaded this project, enter the main directory.
 
-In order to create all the docker images that will be needed, just run:
-
-```bash
-docker-compose build
-```
-
 For security reasons, we have excluded the database password from the git repository. Just go ahead and create a _secrets.env_ file in the environment folder.
 It should contain 3 variables:
 
 ```
-DB_PASSWORD=your_db_password
-PMA_PASSWORD=your_pma_password
+DB_PASSWORD=your_password
+PMA_PASSWORD=your_password
 MYSQL_ROOT_PASSWORD=your_root_password
+```
+
+**Important**: if you change these at some point, you should delete the mysql cache :)
+
+In order to create all the docker images that will be needed, just run:
+
+```bash
+docker-compose build
 ```
 
 At this point, you can run:
