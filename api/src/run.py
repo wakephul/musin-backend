@@ -4,24 +4,30 @@ nest.set_verbosity('M_ERROR')
 from api.src.spikes.spikes import spikesValuesFromInput
 from api.src.spikes.generate import generatePoissonSpikes
 
+from api.models.inputs import Input
+
 def run_execution(params):
+    print('running execution')
     spikes_values = {}
     for network in params['networks']:
         network_code = network['code']
         for side in network['inputsForSides']:
-            for input in side:
+            for input_code in side['inputs']:
+                input = Input.get_one(input_code)
+                print('input: ', input)
                 spikes_values = spikesValuesFromInput(input)
+                print('spikes_values: ', spikes_values)
                 for spikes in spikes_values:
-                        rate = spikes['rate']
-                        start = spikes['first_spike_latency']
-                        number_of_neurons = spikes['number_of_neurons']
-                        trial_duration = spikes['trial_duration']
-                        spikesTimes = []
-                        number_of_sides = 2 #TODO: to change with the number of sides. Right now, a stimulus is a side. They can be merged or not
-                        for i in range(number_of_sides):
-                            spikesTimes.append(generatePoissonSpikes(rate, start, number_of_neurons, trial_duration))
+                    rate = spikes['rate']
+                    start = spikes['first_spike_latency']
+                    number_of_neurons = spikes['number_of_neurons']
+                    trial_duration = spikes['trial_duration']
+                    spikesTimes = []
+                    number_of_sides = 2 #TODO: to change with the number of sides. Right now, a stimulus is a side. They can be merged or not
+                    for i in range(number_of_sides):
+                        spikesTimes.append(generatePoissonSpikes(rate, start, number_of_neurons, trial_duration))
 
-                        print('spikesTimes: ', spikesTimes)
+                    print('spikesTimes: ', spikesTimes)
 
     # # Save execution results to a file
     # result_dir = 'results'

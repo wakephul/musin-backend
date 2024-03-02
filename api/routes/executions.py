@@ -76,11 +76,11 @@ def new():
                 params['new_inputs'][inputs.index(input)]['code'] = input_code
             print('updated inputs:', params['new_inputs'])
         
-        #if there is a name and an array of networks, then save the execution in the database
         if 'name' in params and 'networks' in params and len(params['networks']) > 0 and 'execution_type' in params:
+            #first I run all the checks, then I save stuff in the database
             for network in params['networks']:
-                network_code = Network.get_one(network['code'])
-                if not network_code:
+                network_exists = Network.get_one(network['code'])
+                if not network_exists:
                     # network_code = Network.create(network['name'], network['sides'])
                     # for parameter in network['parameters']:
                     #     NetworkParameter.create(network_code, parameter['name'], parameter['value'])
@@ -88,25 +88,29 @@ def new():
                 if 'inputsForSides' in network:
                     one_input = False
                     for side in network['inputsForSides']:
-                        for input in side:
-                            print('looking for input:', input)
-                            input_exists = Input.get_one(input)
-                            if not input_exists:
-                                return jsonify({'result': 'error', 'message': 'Input not found'})
-                            one_input = True
+                        if 'inputs' in side and len(side['inputs']) > 0:
+                            for input_code in side['inputs']:
+                                input_exists = Input.get_one(input_code)
+                                if not input_exists:
+                                    return jsonify({'result': 'error', 'message': 'Input not found'})
+                                one_input = True
                     if not one_input:
-                        return jsonify({'result': 'error', 'message': 'No inputs for sides'})
+                        return jsonify({'result': 'error', 'message': 'No inputs for sides selected'})
                 else:
                     return jsonify({'result': 'error', 'message': 'No inputs for sides'})
 
             execution_code = Execution.create(params['name'])
-            ExecutionExecutiontypeRelationship.create(execution_code, params['execution_type'])
+            execution_type_code = params['execution_type']
+            execution_type_exists = Executiontype.get_one(execution_type_code)
+            if not execution_type_exists:
+                return jsonify({'result': 'error', 'message': 'Execution type not found'})
+            print('execution - execution type relationship:', execution_code, execution_type_code)
+            ExecutionExecutiontypeRelationship.create(execution_code, execution_type_code)
             for network in params['networks']:
                 network_code = network['code']
-                #loop sides while keeping track of the index
                 for side in network['inputsForSides']:
-                    for input in side:
-                        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, side.index(input), input)             
+                    for input_code in side['inputs']:
+                        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, network['inputsForSides'].index(side), input_code)
         else:
             return jsonify({'result': 'error', 'message': 'Missing some description to run'})
         
