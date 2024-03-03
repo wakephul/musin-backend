@@ -17,17 +17,17 @@ def run_execution(params):
                 print('input: ', input)
                 spikes_values = spikesValuesFromInput(input)
                 print('spikes_values: ', spikes_values)
+                spikes_times = []
                 for spikes in spikes_values:
                     rate = spikes['rate']
                     start = spikes['first_spike_latency']
                     number_of_neurons = spikes['number_of_neurons']
                     trial_duration = spikes['trial_duration']
-                    spikesTimes = []
-                    number_of_sides = 2 #TODO: to change with the number of sides. Right now, a stimulus is a side. They can be merged or not
-                    for i in range(number_of_sides):
-                        spikesTimes.append(generatePoissonSpikes(rate, start, number_of_neurons, trial_duration))
-
-                    print('spikesTimes: ', spikesTimes)
+                    poisson_spikes = generatePoissonSpikes(rate, start, number_of_neurons, trial_duration)
+                    spikes_times.append(poisson_spikes)
+                print('spikes_times: ', spikes_times)
+                #TODO: save spikes_times in the database
+                
 
     # # Save execution results to a file
     # result_dir = 'results'
