@@ -8,25 +8,28 @@ from api.models.inputs import Input
 
 def run_execution(params):
     print('running execution')
-    spikes_values = {}
+    spikes_times = {}
     for network in params['networks']:
         network_code = network['code']
+        spikes_times[network_code] = []
+        side_index = 0
         for side in network['inputsForSides']:
+            spikes_times[network_code].append({}) #we want to do this even if there are no inputs, so that we can keep track of all the sides
             for input_code in side['inputs']:
                 input = Input.get_one(input_code)
-                print('input: ', input)
+                spikes_times[network_code][side_index][input_code] = []
                 spikes_values = spikesValuesFromInput(input)
-                print('spikes_values: ', spikes_values)
-                spikes_times = []
                 for spikes in spikes_values:
                     rate = spikes['rate']
                     start = spikes['first_spike_latency']
                     number_of_neurons = spikes['number_of_neurons']
                     trial_duration = spikes['trial_duration']
+                    #this will be a dictionary with sender(keys)-times(array values) pairs
                     poisson_spikes = generatePoissonSpikes(rate, start, number_of_neurons, trial_duration)
-                    spikes_times.append(poisson_spikes)
-                print('spikes_times: ', spikes_times)
-                #TODO: save spikes_times in the database
+                    spikes_times[network_code][side_index][input_code].append(poisson_spikes)
+    print('spikes_times: ', spikes_times)
+    
+    #TODO: save spikes_times in the database
                 
 
     # # Save execution results to a file

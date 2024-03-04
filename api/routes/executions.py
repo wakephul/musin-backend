@@ -69,14 +69,13 @@ def new():
     if request.method == 'POST':
         params = json.loads(request.data)
         #if there are new inputs, save them and their corresponding parameters in the database
-        if 'new_inputs' in params:
+        if 'new_inputs' in params and len(params['new_inputs']) > 0:
             inputs = params['new_inputs']
             for input in inputs:
                 input_code = Input.create(input)
                 params['new_inputs'][inputs.index(input)]['code'] = input_code
-            print('updated inputs:', params['new_inputs'])
         
-        if 'name' in params and 'networks' in params and len(params['networks']) > 0 and 'execution_type' in params:
+        if 'name' in params and params['name'] != '' and 'networks' in params and len(params['networks']) > 0 and 'execution_types' in params and len(params['execution_types']) > 0:
             #first I run all the checks, then I save stuff in the database
             for network in params['networks']:
                 network_exists = Network.get_one(network['code'])
@@ -100,12 +99,16 @@ def new():
                     return jsonify({'result': 'error', 'message': 'No inputs for sides'})
 
             execution_code = Execution.create(params['name'])
-            execution_type_code = params['execution_type']
-            execution_type_exists = Executiontype.get_one(execution_type_code)
-            if not execution_type_exists:
-                return jsonify({'result': 'error', 'message': 'Execution type not found'})
-            print('execution - execution type relationship:', execution_code, execution_type_code)
-            ExecutionExecutiontypeRelationship.create(execution_code, execution_type_code)
+            #loop through the execution types and save them in the database
+            for execution_type in params['execution_types']:
+                if 'code' not in execution_type:
+                    return jsonify({'result': 'error', 'message': 'Execution type broken'})
+                execution_type_code = execution_type['code']
+                execution_type_exists = Executiontype.get_one(execution_type_code)
+                if not execution_type_exists:
+                    return jsonify({'result': 'error', 'message': 'Execution type not found'})
+                ExecutionExecutiontypeRelationship.create(execution_code, execution_type_code)
+            #loop through the networks and save them in the database
             for network in params['networks']:
                 network_code = network['code']
                 for side in network['inputsForSides']:
