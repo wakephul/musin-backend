@@ -1,17 +1,12 @@
+import pdb
 import nest
-from random import randint
 from collections import defaultdict
-from api.src.reset.reset import nest_reset
 
-def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
-    print('generating poisson spikes')
-    # TO DISCUSS: should we reset the nest kernel here?
-    # TO DISCUSS: should we have a seed for the random number generator to allow reproducibility?
-    nest_reset(randint(0, 10000))
+def poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration):
     spikes = nest.Create('poisson_generator',
                         params={'rate': rate,
-                                'start': start,
-                                'stop': trial_duration
+                                'start' : start,
+                                'stop' : stop
                                 }
                         )
     parrot_neurons = nest.Create('parrot_neuron', int(number_of_neurons))
@@ -27,8 +22,7 @@ def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
 
     return dict(ordered_events) # tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
 
-def generateSpikesFromTimes(times_dict):
-    print('times_dics', times_dict)
+def spike_generator_from_times(times_dict):
     import numpy as np
     #neuron = nest.Create('iaf_cond_alpha')
     spikes = []
