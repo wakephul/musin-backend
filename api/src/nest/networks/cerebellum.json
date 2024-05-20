@@ -42,7 +42,7 @@
 
   "test_types": [3],
   "train_time": 0,
-  "test_time": 60000.0,
+  "test_time": 6000.0,
   "t_stimulus_start": 0.0,
   "t_stimulus_end": 1000.0,
   "t_stimulus_duration": 1000.0

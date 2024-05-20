@@ -32,7 +32,6 @@ def run(params):
     config = params['config'] if ('config' in params) else {}
     plots_config = params['plots_config'] if ('plots_config' in params) else {}
     network_config = params['networks_params'] if ('networks_params' in params) else {}
-    execution_types = params['execution_types'] if ('execution_types' in params) else {}
     
     executions = config['executions'] if ('executions' in config) else {}
 
@@ -43,7 +42,7 @@ def run(params):
     # config = file_handling.read_json('data/config/config.json')
     # plots_config = file_handling.read_json('data/config/plots_config.json')
     # network_config = file_handling.read_json('data/config/network_config.json')
-    # execution_types = file_handling.read_json('data/config/execution_types.json')
+
 
     for execution in executions:
         merge_stimuli = True if ((not 'merge_stimuli' in execution) or ('merge_stimuli' in execution and execution['merge_stimuli'])) else False
@@ -54,7 +53,7 @@ def run(params):
         
         execution_stimuli = {}
 
-        for execution_type in execution['types']:
+        for input in execution['inputs']:
             execution_params = execution_types[execution_type]
             execution_stimuli[execution_type] = []
             if 'use_existent_spikes' in execution_params and not execution_params['use_existent_spikes']:

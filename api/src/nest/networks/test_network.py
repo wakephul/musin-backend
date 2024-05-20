@@ -22,6 +22,7 @@ def ComputePSPNorm(tau_mem, C_mem, tau_syn):
             t_max * np.exp(-t_max / tau_syn)))) 
 
 def simulate_network(coherence, par):
+    print('SIMULATING NETWORK')
     # nest.ResetKernel()
     dt_rec = par['dt_rec']
     dt = par['dt']
@@ -56,6 +57,7 @@ def simulate_network(coherence, par):
         "tau_syn": tau_syn
     }
 
+    print('Creating populations')
     nest.CopyModel("iaf_psc_exp_multisynapse", "excitatory_pop", params=exc_neuron_params)
     pop_A = nest.Create("excitatory_pop", NA)
     pop_B = nest.Create("excitatory_pop", NB)
@@ -91,6 +93,7 @@ def simulate_network(coherence, par):
     p_rate_in = 1000.0 * nu_in
 
     #nest.SetDefaults("poisson_generator", {"rate": p_rate_ex})    #poisson generator for the noise in input to popA and popB
+    print('Creating poisson generators for noise input to populations A, B and inh.')
     PG_noise_to_B = nest.Create("poisson_generator")
     PG_noise_to_A = nest.Create("poisson_generator")
 
@@ -102,7 +105,7 @@ def simulate_network(coherence, par):
     noise_syn = {"model": "noise_syn",
                     "receptor_type": 1}
 
-    
+    print('Connecting poisson generators to populations')
     nest.Connect(PG_noise_to_A, pop_A, syn_spec=noise_syn)
     nest.Connect(PG_noise_to_B, pop_B, syn_spec=noise_syn)
     nest.Connect(PG_noise_to_inh, pop_inh, syn_spec=noise_syn)
@@ -114,6 +117,7 @@ def simulate_network(coherence, par):
     imported_stimulus_A = par['imported_stimuli'][0] if 'imported_stimuli' in par else None
     imported_stimulus_B = par['imported_stimuli'][1] if 'imported_stimuli' in par else None
     
+    print('Creating poisson generators for input to populations A and B, if not imported.')
     PG_input_AMPA_A =  nest.Create("poisson_generator") if (not imported_stimulus_A or len(imported_stimulus_A) == 0) else imported_stimulus_A
     PG_input_AMPA_B = nest.Create("poisson_generator") if (not imported_stimulus_B or len(imported_stimulus_B) == 0) else imported_stimulus_B
     
@@ -128,6 +132,7 @@ def simulate_network(coherence, par):
     AMPA_input_syn = {"model": "excitatory_AMPA_input",
                     "receptor_type": 2} 
   
+    print('Connecting inputs to populations A and B')
     nest.Connect(PG_input_AMPA_A, pop_A, syn_spec=AMPA_input_syn)
     nest.Connect(PG_input_AMPA_B, pop_B, syn_spec=AMPA_input_syn)
 
@@ -338,7 +343,7 @@ def simulate_network(coherence, par):
     ret_vals["idx_monitored_neurons_inh"] = idx_monitored_neurons_inh
     
     ret_vals["train"] = []
-    ret_vals["test"] = par["trials_side"]
+    ret_vals["test"] = par["trials_side"] if "trials_side" in par else 1
 
     return ret_vals
 

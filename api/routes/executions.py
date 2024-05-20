@@ -7,36 +7,19 @@ import json
 from csv import DictReader
 from api.utils.images import get_response_image
 
-from api.models.executions import Execution, Executiontype, ExecutionExecutiontypeRelationship, ExecutionNetworkSideInputRelationship, ExecutionResult
+from api.models.executions import Execution, ExecutionNetworkSideInputRelationship, ExecutionResult
 from api.models.inputs import Input
 from api.models.networks import Network, NetworkParameter
 
 from api.src.run import run_execution
 
 executions = Blueprint('executions', __name__)
-@executions.route("/api/executions/types/<_name>/", methods=["GET"])
-@cross_origin()
-def types_details(_name):
-    with open('api_data/config/execution_types.json', 'r') as f:
-        file = json.load(f)
-
-    if _name in file.keys():
-        return jsonify(file[_name])
-    else:
-        return jsonify({'result': 'error'})
     
 @executions.route("/api/executions/list/", methods=["GET"])
 @cross_origin()
 def list():
     executions = Execution.get_all()
-    for execution in executions:
-        executiontypes = ExecutionExecutiontypeRelationship.get_by_execution_code(execution['code'])
-        execution['executiontypes'] = [Executiontype.get_name(executiontype['executiontype_code']) for executiontype in executiontypes]
-        # inputs = ExecutionInputRelationship.get_by_execution_code(execution['code'])
-        # execution['inputs'] = [Input.get_name(input['input_code']) for input in inputs]
-        # print(execution)
-        # networks = ExecutionNetworkRelationship.get_by_execution_code(execution['code'])
-        # execution['networks'] = [Network.get_name(network['network_code']) for network in networks]
+
     return jsonify({'result': executions})
 
 @executions.route("/api/executions/<id>/", methods=["GET"])
@@ -75,7 +58,7 @@ def new():
                 input_code = Input.create(input)
                 params['new_inputs'][inputs.index(input)]['code'] = input_code
         
-        if 'name' in params and params['name'] != '' and 'networks' in params and len(params['networks']) > 0 and 'execution_types' in params and len(params['execution_types']) > 0:
+        if 'name' in params and params['name'] != '' and 'networks' in params and len(params['networks']) > 0:
             #first I run all the checks, then I save stuff in the database
             for network in params['networks']:
                 network_exists = Network.get_one(network['code'])
@@ -84,48 +67,57 @@ def new():
                     # for parameter in network['parameters']:
                     #     NetworkParameter.create(network_code, parameter['name'], parameter['value'])
                     return jsonify({'result': 'error', 'message': 'Network not found'})
-                if 'inputsForSides' in network:
-                    one_input = False
-                    for side in network['inputsForSides']:
-                        if 'inputs' in side and len(side['inputs']) > 0:
-                            for input_code in side['inputs']:
-                                input_exists = Input.get_one(input_code)
-                                if not input_exists:
-                                    return jsonify({'result': 'error', 'message': 'Input not found'})
-                                one_input = True
-                    if not one_input:
-                        return jsonify({'result': 'error', 'message': 'No inputs for sides selected'})
-                else:
-                    return jsonify({'result': 'error', 'message': 'No inputs for sides'})
+                # if 'inputsForSides' in network:
+                #     one_input = False
+                #     for side in network['inputsForSides']:
+                #         if 'inputs' in side and len(side['inputs']) > 0:
+                #             for input_code in side['inputs']:
+                #                 input_exists = Input.get_one(input_code)
+                #                 if not input_exists:
+                #                     return jsonify({'result': 'error', 'message': 'Input not found'})
+                #                 one_input = True
+                #     if not one_input:
+                #         return jsonify({'result': 'error', 'message': 'No inputs for sides selected'})
+                # else:
+                #     return jsonify({'result': 'error', 'message': 'No inputs for sides'})
+            #the structure is --> inputsMap: {input_code: [{network_code: side_index}]}
+            # inputsMap = {}
+            if 'inputsMap' in params:
+                for input_code in params['inputsMap']:
+                    print('input_code', input_code)
+                    for network_code in params['inputsMap'][input_code]:
+                        for side_index in params['inputsMap'][input_code][network_code]:
+                            input_exists = Input.get_one(input_code)
+                            if not input_exists:
+                                return jsonify({'result': 'error', 'message': 'Input not found'})
+                            network_exists = Network.get_one(network_code)
+                            if not network_exists:
+                                return jsonify({'result': 'error', 'message': 'Network not found'})
+            else:
+                return jsonify({'result': 'error', 'message': 'No inputs map'})
+
 
             execution_code = Execution.create(params['name'])
-            #loop through the execution types and save them in the database
-            for execution_type in params['execution_types']:
-                if 'code' not in execution_type:
-                    return jsonify({'result': 'error', 'message': 'Execution type broken'})
-                execution_type_code = execution_type['code']
-                execution_type_exists = Executiontype.get_one(execution_type_code)
-                if not execution_type_exists:
-                    return jsonify({'result': 'error', 'message': 'Execution type not found'})
-                ExecutionExecutiontypeRelationship.create(execution_code, execution_type_code)
-            #loop through the networks and save them in the database
-            for network in params['networks']:
-                network_code = network['code']
-                for side in network['inputsForSides']:
-                    for input_code in side['inputs']:
-                        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, network['inputsForSides'].index(side), input_code)
+            #TODO - check: loop through the relations between inputs and networks and save them in the database (table: ExecutionNetworkSideInputRelationship)
+            for input_code in params['inputsMap']:
+                for network_code in params['inputsMap'][input_code]:
+                    for side_index in params['inputsMap'][input_code][network_code]:
+                        ExecutionNetworkSideInputRelationship.create(execution_code, network_code, side_index, input_code)
+
+            # for network in params['networks']:
+            #     network_code = network['code']
+            #     for side in network['inputsForSides']:
+            #         for input_code in side['inputs']:
+            #             ExecutionNetworkSideInputRelationship.create(execution_code, network_code, network['inputsForSides'].index(side), input_code)
         else:
             return jsonify({'result': 'error', 'message': 'Missing some description to run'})
         
+
+        if not 'pairedInputs' in params:
+            params['pairedInputs'] = True
+            
         run_execution(params)
         
         return jsonify({'result': 'success'})
     else:
         return jsonify({'result': 'error'})
-    
-#add route to get all execution types
-@executions.route("/api/executions/types/", methods=["GET"])
-@cross_origin()
-def types():
-    executiontypes = Executiontype.get_all()
-    return jsonify({'result': executiontypes})

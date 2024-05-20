@@ -205,6 +205,7 @@ def simulate_network(par):
         random_side = bool(getrandbits(1))
         stimulus = imported_stimulus_A if random_side else imported_stimulus_B
         try:
+            #ogni granule riceve due input per tipo (due uditivi e due visivi)
             stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
             stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
             stim_2_1 = stimulus['type_2'][randint(0, max_pos)]

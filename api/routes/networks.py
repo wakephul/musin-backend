@@ -22,7 +22,9 @@ def list():
 @networks.route("/api/networks/<_type>/<_name>/", methods=["GET"])
 @cross_origin()
 def details(_type, _name):
-    filename = Path('api_data/config/networks/'+_type+'/'+_name+'.json')
+    network = Network.get_one(_name)
+    parameters = NetworkParameter.get_by_network_code(network['code'])
+    filename = Path('api/src/nest/networks/'+_type+'/'+_name+'.json')
     if filename.is_file():
         return send_file(filename)
     else: 
