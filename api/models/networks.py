@@ -63,7 +63,7 @@ class NetworkParameter(db.Model):
 
     network_code = Column(String(36), ForeignKey("network.code"), primary_key=True)
     name = Column(String(100), nullable=False, primary_key=True)
-    value = Column(Float, nullable=False)
+    value = Column(String(100), nullable=False)
 
     def __init__(self, network_code: str, name: str, value: float):
         self.network_code = network_code

@@ -1,7 +1,7 @@
 import nest
 import random
 
-def nest_reset(seed = random.randint(0,1000)):
+def nest_reset(seed = random.randint(0,10000)):
     nest.ResetKernel()
     dt = 0.10
     msd = seed

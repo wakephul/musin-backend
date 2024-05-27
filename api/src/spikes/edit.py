@@ -8,93 +8,44 @@ import pdb
 # uso questi booleani per definire se un trial è dx o sx
 # ovvero: replico lo stimolo ma solo nei periodi in cui esiste
 # ad esempio avrò A con tempi da 0 a 1000 e poi da 4000 a 5000, mentre B avrà tempi da 1000 a 4000 e poi da 5000 a 6000 e così via
-def editSpikesForSimulation(spikes, durations, train_time, test_time, test_number):
-    # import pdb
-    # pdb.set_trace()
-    number_of_train_stimuli = int(train_time/durations)
-    number_of_test_stimuli = int(test_time/durations)
-    train_trials = [True if x%2 else False for x in range(number_of_train_stimuli)]
-    test_trials = [True if x%2 else False for x in range(number_of_test_stimuli)]
+def editSpikesForSimulation(
+        spikes=[],
+        duration=0,
+        train_time=0,
+        test_time=0,
+        amount_of_test_types=0,
+        amount_of_sides=0,
+    ):
+    print('EDITING SPIKES FOR SIMULATION')
+    amount_of_train_trials = int(train_time/duration)
+    amount_of_test_trials = int(test_time/duration)
+    train_sides_sequence = [random.randint(0, amount_of_sides-1) for x in range(amount_of_train_trials)]
+    test_sides_sequence = [random.randint(0, amount_of_sides-1) for x in range(amount_of_test_trials)]
     random.seed(1234)
-    random.shuffle(train_trials)
-    random.shuffle(test_trials)
-    print('TRAIN TRIALS', train_trials)
-    print('TEST TRIALS', test_trials)
-    #invece che usare un for lo faccio a mano per le due diverse popolazioni, mi sembra più facile da vedere e da capire
-    #TODO: questo va decisamente reso automatico
-    # spikes_A = spikes[0]
-    # spikes_A_status = nest.GetStatus(spikes_A)
-    # spikes_B = spikes[1]
-    # spikes_B_status = nest.GetStatus(spikes_B)
-    # for neuron_index, neuron in enumerate(spikes_A_status):
-    #     new_spike_times = []
-    #     spike_times = neuron['spike_times'].tolist()
-    #     i=0
+    random.shuffle(train_sides_sequence)
+    random.shuffle(test_sides_sequence)
+    sequence = train_sides_sequence+(amount_of_test_types*test_sides_sequence)
 
-    #     for trial_index, trial in enumerate(train_trials):
-    #         if trial:
-    #             new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
-    #         i+=2
+    # the structure is --> spikes: {input_code: [{network_code: [neurons]}]}
 
-    #     for test_index in range(test_number):
-    #         i=0
-    #         for trial_index, trial in enumerate(test_trials):
-    #             if trial:
-    #                 new_spike_times.extend(list(map(lambda x:(x+(train_time*3)+(test_index*test_time*3)+((trial_index+i)*durations)), spike_times)))
-    #             i+=2
-
-    #     new_spike_times.sort()
-    #     nest.SetStatus([spikes_A[neuron_index]], {'spike_times': new_spike_times})
-    # spikes_A_status = nest.GetStatus(spikes_A)
-
-    # for neuron_index, neuron in enumerate(spikes_B_status):
-    #     new_spike_times = []
-    #     spike_times = neuron['spike_times'].tolist()
-
-    #     i=0
-    #     for trial_index, trial in enumerate(train_trials):
-    #         if not trial:
-    #             new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
-    #         i+=2
-
-    #     for test_index in range(test_number):
-    #         i=0
-    #         for trial_index, trial in enumerate(test_trials):
-    #             if not trial:
-    #                 new_spike_times.extend(list(map(lambda x:(x+(train_time*3)+(test_index*test_time*3)+((trial_index+i)*durations)), spike_times)))
-    #             i+=2
-
-    #     new_spike_times.sort()
-    #     nest.SetStatus([spikes_B[neuron_index]], {'spike_times': new_spike_times})
-    # spikes_B_status = nest.GetStatus(spikes_B)
-
-    spike_types = [spikes[i] for i in range(len(spikes))]
-    spike_types_status = [nest.GetStatus(spikes_type) for spikes_type in spike_types]
-
-    for spikes_type_index, spikes_type in enumerate(spike_types):
-        spikes_status = spike_types_status[spikes_type_index]
-
-        for neuron_index, neuron in enumerate(spikes_status):
-            new_spike_times = []
-            spike_times = neuron['spike_times'].tolist()
-            i = 0
-
-            for trial_index, trial in enumerate(train_trials):
-                if (trial and spikes_type_index == 0) or (not trial and spikes_type_index != 0):
-                    new_spike_times.extend(list(map(lambda x:(x+((trial_index+i)*durations)), spike_times)))
-                i += 2
-
-            for test_index in range(test_number):
-                i = 0
-                for trial_index, trial in enumerate(test_trials):
-                    if (trial and spikes_type_index == 0) or (not trial and spikes_type_index != 0):
-                        new_spike_times.extend(list(map(lambda x:(x+(train_time*3)+(test_index*test_time*3)+((trial_index+i)*durations)), spike_times)))
-                    i += 2
-
-            new_spike_times.sort()
-            nest.SetStatus([spikes_type[neuron_index]], {'spike_times': new_spike_times})
-
-        spike_types_status[spikes_type_index] = nest.GetStatus(spikes_type)
-
+    for input_code in spikes:
+        for network_code in spikes[input_code]:
+            for network_side in range(len(spikes[input_code][network_code])):
+                sequence_mask = [1 if x == network_side else 0 for x in sequence]
+                # print('SEQUENCE MASK', sequence_mask)
+                for neuron in spikes[input_code][network_code][network_side]:
+                    neuron_status = nest.GetStatus([neuron])
+                    # print('NEURON STATUS', neuron_status)
+                    new_spike_times = []
+                    spike_times = neuron_status[0]['spike_times'].tolist()
+                    new_spike_times = [spike_time+(trial_index*duration) for spike_time in spike_times for trial_index, trial in enumerate(sequence_mask) if trial == 1]
+                    new_spike_times.sort()
+                    # print('NEW SPIKE TIMES', new_spike_times)
+                    nest.SetStatus([neuron], {'spike_times': new_spike_times})
+                    neuron_status_final = nest.GetStatus([neuron])
+                    # print('NEURON STATUS FINAL', neuron_status_final)
     
-    return train_trials+test_trials
+    print('SAMPLE SPIKES STATUS 0', nest.GetStatus([spikes['18cb633a-25b3-48c1-a3c1-df8e08ed10fb']['81acaf32-c7ea-4a20-b365-8c90bf8a9ee1'][0][0]])[0]['spike_times'])
+    print('SAMPLE SPIKES STATUS 1', nest.GetStatus([spikes['18cb633a-25b3-48c1-a3c1-df8e08ed10fb']['81acaf32-c7ea-4a20-b365-8c90bf8a9ee1'][1][0]])[0]['spike_times'])
+
+    return sequence

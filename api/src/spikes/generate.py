@@ -28,7 +28,6 @@ def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
     return dict(ordered_events) # tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
 
 def generateSpikesFromTimes(times_dict):
-    print('times_dics', times_dict)
     import numpy as np
     #neuron = nest.Create('iaf_cond_alpha')
     spikes = []

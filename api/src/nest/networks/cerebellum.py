@@ -132,14 +132,11 @@ def simulate_network(par):
                                         'tau_syn_ex': 0.5,
                                         'tau_syn_in': 10.0})
 
-
-    imported_stimulus_A = par['imported_stimulus_A']
-    imported_stimulus_B = par['imported_stimulus_B']
     # Cell numbers
-    GR_num = par['GR_num']
-    PC_num = par["PC_num"]
-    IO_num = PC_num
-    DCN_num = PC_num//2
+    GR_num = int(par['GR_num'])
+    PC_num = int(par["PC_num"])
+    IO_num = int(PC_num)
+    DCN_num = int(PC_num//2)
     # DCN_num = PC_num
 
     train_time = par['train_time']
@@ -147,8 +144,18 @@ def simulate_network(par):
     test_types = par['test_types']
     stimulus_duration = par['t_stimulus_duration']
 
+    imported_stimulus_A = []
+    imported_stimulus_B = []
+    print("par['imported_stimuli']: ", par['imported_stimuli'])
+    for input_code in par['imported_stimuli']:
+        imported_stimulus_A.append(par['imported_stimuli'][input_code][0])
+        imported_stimulus_B.append(par['imported_stimuli'][input_code][1])
+
+    print("imported_stimulus_A: ", imported_stimulus_A)
+    print("imported_stimulus_B: ", imported_stimulus_B)
 
     # MF = nest.Create("parrot_neuron", MF_num)
+    print("Creating neurons")
     GR = nest.Create("granular_neuron", GR_num)
     PC = nest.Create("purkinje_neuron", PC_num)
     IO = nest.Create("parrot_neuron", IO_num)
@@ -186,10 +193,10 @@ def simulate_network(par):
     #nel test mi devo mettere sia il caso audiovisivo che il caso semplice solo audio o solo visivo
     # "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7}, questo posso usarlo per gestire la distribuzione dei pesi
 
-    input_a_1 = imported_stimulus_A['type_1']
-    input_b_1 = imported_stimulus_B['type_1']
-    input_a_2 = imported_stimulus_A['type_2']
-    input_b_2 = imported_stimulus_B['type_2']
+    input_a_1 = imported_stimulus_A[0]
+    input_b_1 = imported_stimulus_B[0]
+    input_a_2 = imported_stimulus_A[1]
+    input_b_2 = imported_stimulus_B[1]
 
     trials_side = par['trials_side']
 
@@ -206,13 +213,12 @@ def simulate_network(par):
         stimulus = imported_stimulus_A if random_side else imported_stimulus_B
         try:
             #ogni granule riceve due input per tipo (due uditivi e due visivi)
-            stim_1_1 = stimulus['type_1'][randint(0, max_pos)]
-            stim_1_2 = stimulus['type_1'][randint(0, max_pos)]
-            stim_2_1 = stimulus['type_2'][randint(0, max_pos)]
-            stim_2_2 = stimulus['type_2'][randint(0, max_pos)]
+            stim_1_1 = stimulus[0][randint(0, max_pos)]
+            stim_1_2 = stimulus[0][randint(0, max_pos)]
+            stim_2_1 = stimulus[1][randint(0, max_pos)]
+            stim_2_2 = stimulus[1][randint(0, max_pos)]
         except Exception as e:
-            print("exception in cerebellum_simple, line 213")
-            print(e)
+            print("exception in cerebellum_simple, line 221: ", e)
         array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
     nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)
