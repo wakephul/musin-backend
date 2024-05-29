@@ -29,8 +29,8 @@ def sample_db():
         user_code = User.create('test', 'test@test.com', True)
         execution_code = Execution.create('test_exec')
         
-        input_code_visual = Input.create('visual', False, 10.0, None, None, 10.0, None, None, 10, None, None, 100, None, None)
-        input_code_auditory = Input.create('auditory', False, 20.0, None, None, 20.0, None, None, 20, None, None, 200, None, None)
+        input_code_visual = Input.create('visual', False, 30.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
+        input_code_auditory = Input.create('auditory', False, 30.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
 
         network_code_cortex = Network.create('cortex', 2)
         NetworkParameter.create(network_code_cortex, 'order', '400.0')

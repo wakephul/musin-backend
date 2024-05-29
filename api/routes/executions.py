@@ -7,9 +7,9 @@ import json
 from csv import DictReader
 from api.utils.images import get_response_image
 
-from api.models.executions import Execution, ExecutionNetworkSideInputRelationship, ExecutionResult
+from api.models.executions import Execution, ExecutionNetworkSideInputRelationship
 from api.models.inputs import Input
-from api.models.networks import Network, NetworkParameter
+from api.models.networks import Network
 
 from api.src.run import run_execution
 
@@ -116,8 +116,9 @@ def new():
         if not 'pairedInputs' in params:
             params['pairedInputs'] = True
             
+        params['execution_code'] = execution_code
         run_execution(params)
         
-        return jsonify({'result': 'success'})
+        return jsonify({'result': 'success', 'message': 'Execution should have finished successfully'})
     else:
         return jsonify({'result': 'error'})

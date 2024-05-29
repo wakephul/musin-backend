@@ -1,8 +1,6 @@
 import nest
 nest.set_verbosity('M_ERROR')
 
-from random import randint
-
 from importlib import import_module
 
 from api.src.reset.reset import nest_reset
@@ -14,9 +12,7 @@ from api.src.nest.simulation.results import manage_results
 
 from api.models.inputs import Input
 
-from api.models.networks import Network, NetworkParameter
-
-from typing import List
+from api.src.managers import file_handling
 
 def run_execution(params):
     # the structure is --> inputsMap: {input_code: [{network_code: side_index}]}
@@ -96,6 +92,9 @@ def run_execution(params):
 
         simulation_results = {}
         try:
+            data_path = f"simulations/output/{params['execution_code']}/nest_data/"
+            file_handling.create_folder(data_path)
+            nest.SetKernelStatus({'data_path': data_path})
             network_module = import_module('api.src.nest.networks.'+network['name'])
             print('RUNNING SIMULATION on network: ', network['name'])
             simulation_results = network_module.run(parameters_dict)
@@ -104,7 +103,11 @@ def run_execution(params):
             import traceback
             print(traceback.format_exc())
 
-        print('simulaiton results:', simulation_results)
+        print('simulation results:', simulation_results)
 
-        manage_results(simulation_results)
+        results_management = manage_results(network['name'], simulation_results, params['execution_code'])
+
+        print('results_management: ', results_management)
+
+        return results_management
                 

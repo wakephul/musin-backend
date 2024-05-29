@@ -1,0 +1,28 @@
+{
+  "networks": {
+    "decision_making_nrp": {
+      "plots": [
+        ["spike_monitor_A", "raster", "test"],
+        ["spike_monitor_B", "raster", "test"],
+        ["spike_monitor_inh", "raster", "test"]
+      ]
+    },
+    "cerebellum": {
+      "plots": [
+        ["spike_monitor_GR", "raster", "train"],
+        ["spike_monitor_GR", "raster", "test"],
+        ["spike_monitor_PC", "raster", "train"],
+        ["spike_monitor_PC", "raster", "test"],
+        ["spike_monitor_DCN", "raster", "train", "split_population", "DCN"],
+        ["spike_monitor_DCN", "raster", "test", "split_population", "DCN"]
+      ],
+      "plots_merge": {
+        "rates_DCN": [
+          ["spike_monitor_DCN_test"],
+          ["ma_rates_DCN_a"],
+          ["ma_rates_DCN_b"]
+        ]
+      }
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import pdb
 import nest
+nest.set_verbosity('M_ERROR')
+
 from random import sample, getrandbits, randint
 
 def get_monitors(pop, monitored_subset_size):
@@ -311,6 +313,12 @@ def simulate_network(par):
     ret_vals["test"] = train_test_result["test"]
 
     ret_vals["DCN"] = DCN
+
+    ret_vals["train_time"] = train_time
+    ret_vals["test_time"] = test_time
+    ret_vals["stimulus_duration"] = stimulus_duration
+    ret_vals["trials_side"] = trials_side
+    ret_vals["test_types"] = test_types
 
     return ret_vals
 

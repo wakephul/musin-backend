@@ -1,4 +1,6 @@
 import nest
+nest.set_verbosity('M_ERROR')
+
 import random
 import pdb
 
@@ -44,8 +46,5 @@ def editSpikesForSimulation(
                     nest.SetStatus([neuron], {'spike_times': new_spike_times})
                     neuron_status_final = nest.GetStatus([neuron])
                     # print('NEURON STATUS FINAL', neuron_status_final)
-    
-    print('SAMPLE SPIKES STATUS 0', nest.GetStatus([spikes['18cb633a-25b3-48c1-a3c1-df8e08ed10fb']['81acaf32-c7ea-4a20-b365-8c90bf8a9ee1'][0][0]])[0]['spike_times'])
-    print('SAMPLE SPIKES STATUS 1', nest.GetStatus([spikes['18cb633a-25b3-48c1-a3c1-df8e08ed10fb']['81acaf32-c7ea-4a20-b365-8c90bf8a9ee1'][1][0]])[0]['spike_times'])
 
     return sequence
