@@ -1,4 +1,5 @@
 import nest
+nest.set_verbosity('M_ERROR')
 from random import randint
 from collections import defaultdict
 from api.src.reset.reset import nest_reset

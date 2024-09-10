@@ -24,6 +24,7 @@
 import pdb
 from posixpath import split
 import nest
+nest.set_verbosity('M_ERROR')
 import numpy
 import pylab
 from pylab import show, savefig

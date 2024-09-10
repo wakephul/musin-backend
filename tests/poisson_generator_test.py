@@ -1,4 +1,5 @@
 import nest
+nest.set_verbosity('M_ERROR')
 import matplotlib.pyplot as plt
 
 frequency = 40.0 # Hz

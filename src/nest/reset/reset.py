@@ -1,4 +1,5 @@
 import nest
+nest.set_verbosity('M_ERROR')
 import random
 
 def nest_reset(seed = random.randint(0,1000)):

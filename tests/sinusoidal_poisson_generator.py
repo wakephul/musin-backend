@@ -41,6 +41,7 @@ the ``individual_spike_trains`` switch.
 
 
 import nest
+nest.set_verbosity('M_ERROR')
 import matplotlib.pyplot as plt
 import numpy as np
 

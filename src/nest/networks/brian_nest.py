@@ -13,6 +13,7 @@ online available.                           REVISAAAAR
 
 
 import nest
+nest.set_verbosity('M_ERROR')
 from random import sample, randint
 import numpy.random as rnd
 #from neurodynex3.tools import plot_tools

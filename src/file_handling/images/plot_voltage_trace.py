@@ -24,6 +24,7 @@ Functions to plot voltage traces.
 """
 
 import nest
+nest.set_verbosity('M_ERROR')
 import numpy
 import pylab
 

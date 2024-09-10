@@ -1,5 +1,6 @@
 import pdb
 import nest
+nest.set_verbosity('M_ERROR')
 from collections import defaultdict
 
 def poisson_spikes_generator_parrot(rate, start, stop, number_of_neurons, trial_duration):

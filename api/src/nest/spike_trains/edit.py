@@ -1,4 +1,5 @@
 import nest
+nest.set_verbosity('M_ERROR')
 import random
 import pdb
 

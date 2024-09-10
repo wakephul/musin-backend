@@ -1,5 +1,6 @@
 import pdb
 import nest
+nest.set_verbosity('M_ERROR')
 from random import sample, getrandbits, randint
 
 def get_monitors(pop, monitored_subset_size):

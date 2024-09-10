@@ -1,4 +1,5 @@
 import nest
+nest.set_verbosity('M_ERROR')
 
 def save_raster_results(simulation_results, plot, output_folder = ''):
     

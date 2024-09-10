@@ -3,6 +3,7 @@
 import numpy
 import pylab
 import nest
+nest.set_verbosity('M_ERROR')
 
 # Here we define all parameters necessary for building and simulating the network. We start with the global network parameters.
 NE = 1000      # number of excitatory neurons

@@ -4,6 +4,7 @@ import time
 import os
 import matplotlib.pyplot as plt
 import nest
+nest.set_verbosity('M_ERROR')
 import nest.raster_plot
 import pandas as pd
 import pdb
