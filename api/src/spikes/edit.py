@@ -26,13 +26,20 @@ def editSpikesForSimulation(
     random.seed(1234)
     random.shuffle(train_sides_sequence)
     random.shuffle(test_sides_sequence)
+    print('TRAIN SIDES SEQUENCE', train_sides_sequence)
+    print('AMOUNT OF TEST TYPES', amount_of_test_types)
+    print('TEST SIDES SEQUENCE', test_sides_sequence)
     sequence = train_sides_sequence+(amount_of_test_types*test_sides_sequence)
+    print('SEQUENCE', sequence)
 
     # the structure is --> spikes: {input_code: [{network_code: [neurons]}]}
 
     for input_code in spikes:
+        print('INPUT CODE', input_code)
         for network_code in spikes[input_code]:
+            print('NETWORK CODE', network_code)
             for network_side in range(len(spikes[input_code][network_code])):
+                print('NETWORK SIDE', network_side)
                 sequence_mask = [1 if x == network_side else 0 for x in sequence]
                 # print('SEQUENCE MASK', sequence_mask)
                 for neuron in spikes[input_code][network_code][network_side]:

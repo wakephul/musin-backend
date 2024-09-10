@@ -12,6 +12,7 @@ class Execution(db.Model):
     code = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4().hex))
     name = Column(String(100), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    finished_at = Column(DateTime(timezone=True), nullable=True)
 
     def __init__(self, code: str, name: str):
         self.code = code
@@ -42,8 +43,17 @@ class Execution(db.Model):
 
     @staticmethod
     def get_all():
+        executions = Execution.query.all()
+        executions = sorted(executions, key=lambda x: x.created_at, reverse=True)
         return [{'code': i.code, 'name': i.name, 'created_at': i.created_at}
-                for i in Execution.query.all()]        
+                for i in executions]
+    
+    @staticmethod
+    def update(code, finished_at):
+        execution = Execution.query.get(code)
+        execution.finished_at = finished_at
+        db.session.commit()
+        return {'code': execution.code, 'name': execution.name, 'created_at': execution.created_at, 'finished_at': execution.finished_at}
     
 class ExecutionNetworkSideInputRelationship(db.Model):
     

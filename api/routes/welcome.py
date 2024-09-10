@@ -29,8 +29,11 @@ def sample_db():
         user_code = User.create('test', 'test@test.com', True)
         execution_code = Execution.create('test_exec')
         
-        input_code_visual = Input.create('visual', False, 30.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
-        input_code_auditory = Input.create('auditory', False, 30.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
+        # input_code_visual = Input.create('visual', False, 30.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
+        # input_code_auditory = Input.create('auditory', False, 30.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
+
+        input_code_visual = Input.create('visual', False, 100.0, None, None, 10.0, None, None, 500, None, None, 60, None, None)
+        input_code_auditory = Input.create('auditory', False, 100.0, None, None, 0.0, None, None, 500, None, None, 60, None, None)
 
         network_code_cortex = Network.create('cortex', 2)
         NetworkParameter.create(network_code_cortex, 'order', '400.0')
@@ -80,6 +83,31 @@ def sample_db():
         NetworkParameter.create(network_code_cortex, 't_stimulus_end', '1000.0')
         NetworkParameter.create(network_code_cortex, 't_stimulus_duration', '1000.0')
         
+        # network_code_cerebellum = Network.create('cerebellum', 2)
+        # NetworkParameter.create(network_code_cerebellum, "LTP1", '0.05')
+        # NetworkParameter.create(network_code_cerebellum, "LTD1", '-6.0')
+        # NetworkParameter.create(network_code_cerebellum, "Init_PFPC", '4.0')
+        # NetworkParameter.create(network_code_cerebellum, "LTP2", '1e-5')
+        # NetworkParameter.create(network_code_cerebellum, "LTD2", '-1e-6')
+        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN", '0.07')
+        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN_low", '0.06')
+        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN_high", '0.11')
+        # NetworkParameter.create(network_code_cerebellum, "LTP3", '1e-7')
+        # NetworkParameter.create(network_code_cerebellum, "LTD3", '1e-6')
+        # NetworkParameter.create(network_code_cerebellum, "Init_PCDCN", '-20.0')
+        # NetworkParameter.create(network_code_cerebellum, "PLAST1", '1') #boolean
+        # NetworkParameter.create(network_code_cerebellum, "PLAST2", '0') #boolean
+        # NetworkParameter.create(network_code_cerebellum, "PLAST3", '0') #boolean
+        # NetworkParameter.create(network_code_cerebellum, "GR_num", '2000')
+        # NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
+        # NetworkParameter.create(network_code_cerebellum, "test_types", "1,2,3")
+        # NetworkParameter.create(network_code_cerebellum, "train_time", '4500.0')
+        # NetworkParameter.create(network_code_cerebellum, "test_time", '4500.0')
+        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
+        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
+        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')
+        # NetworkParameter.create(network_code_cerebellum, "number_of_populations", '2')
+
         network_code_cerebellum = Network.create('cerebellum', 2)
         NetworkParameter.create(network_code_cerebellum, "LTP1", '0.05')
         NetworkParameter.create(network_code_cerebellum, "LTD1", '-6.0')
@@ -98,11 +126,11 @@ def sample_db():
         NetworkParameter.create(network_code_cerebellum, "GR_num", '2000')
         NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
         NetworkParameter.create(network_code_cerebellum, "test_types", "1,2,3")
-        NetworkParameter.create(network_code_cerebellum, "train_time", '4500.0')
-        NetworkParameter.create(network_code_cerebellum, "test_time", '4500.0')
+        NetworkParameter.create(network_code_cerebellum, "train_time", '500.0')
+        NetworkParameter.create(network_code_cerebellum, "test_time", '500.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
-        NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
-        NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')
+        NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '100.0')
+        NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '100.0')
         NetworkParameter.create(network_code_cerebellum, "number_of_populations", '2')
 
         ExecutionNetworkSideInputRelationship.create(execution_code, network_code_cortex, 1, input_code_visual)

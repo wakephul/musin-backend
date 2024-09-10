@@ -13,6 +13,8 @@ from api.models.networks import Network
 
 from api.src.run import run_execution
 
+import threading
+
 executions = Blueprint('executions', __name__)
     
 @executions.route("/api/executions/list/", methods=["GET"])
@@ -49,8 +51,11 @@ def details_notes(_id):
 @executions.route("/api/executions/new/", methods=["POST"])
 @cross_origin()
 def new():
+    print('NEW EXECUTION')
+    print('REQUEST', request.data)
     if request.method == 'POST':
-        params = json.loads(request.data)
+        params = json.loads(request.data.decode('utf-8'))
+        print('RECEIVED PARAMS', params.keys())
         #if there are new inputs, save them and their corresponding parameters in the database
         if 'new_inputs' in params and len(params['new_inputs']) > 0:
             inputs = params['new_inputs']
@@ -84,7 +89,6 @@ def new():
             # inputsMap = {}
             if 'inputsMap' in params:
                 for input_code in params['inputsMap']:
-                    print('input_code', input_code)
                     for network_code in params['inputsMap'][input_code]:
                         for side_index in params['inputsMap'][input_code][network_code]:
                             input_exists = Input.get_one(input_code)
@@ -117,8 +121,11 @@ def new():
             params['pairedInputs'] = True
             
         params['execution_code'] = execution_code
+        
+        # thread = threading.Thread(target=run_execution, args=(params, ))
+        # thread.start()
         run_execution(params)
         
-        return jsonify({'result': 'success', 'message': 'Execution should have finished successfully'})
+        return jsonify({'result': 'success', 'message': 'Execution should have started successfully'})
     else:
         return jsonify({'result': 'error'})
