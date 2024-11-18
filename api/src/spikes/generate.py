@@ -1,4 +1,5 @@
 import nest
+import numpy as np
 nest.set_verbosity('M_ERROR')
 from random import randint
 from collections import defaultdict
@@ -29,7 +30,6 @@ def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
     return dict(ordered_events) # tempi ordinati sulla base dell'id del neurone che spara (chiave: id, valore: array di istanti temporali)
 
 def generateSpikesFromTimes(times_dict):
-    import numpy as np
     #neuron = nest.Create('iaf_cond_alpha')
     spikes = []
     for key, value in times_dict.items():

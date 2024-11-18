@@ -277,8 +277,9 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
     if hist:
         ax1 = pylab.axes([0.1, 0.35, 0.85, 0.6])
         if split_population:
-            
+            print("splitting population")
             half_gids = split_population[0] + ((split_population[1] - split_population[0])//2)
+            print('half_gids', half_gids)
                 
             gids_first_half = []
             times_first_half = []
@@ -292,6 +293,12 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                 else:
                     gids_second_half.append(gid)
                     times_second_half.append(time)
+
+            print('gids_first_half', gids_first_half)
+            print('times_first_half', times_first_half)
+
+            print('gids_second_half', gids_second_half)
+            print('times_second_half', times_second_half)
                 
             pylab.plot(times_first_half, gids_first_half, '.', ms=ms, color="blue")
             pylab.plot(times_second_half, gids_second_half, '.', ms=ms, color="green")
@@ -309,12 +316,9 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
             max = numpy.max(gids)
             min = numpy.min(gids)
 
-            # print('_types:', _types)
             tt = type_time+400
             for index, _type in enumerate(_types):
                 side = sides[index]
-                # print('_type:', _type)
-                # print('sides:', sides)
                 # for side_index, side in enumerate(sides):
                 if tt > xlim[0] and tt < xlim[1]:
                     if train_or_test == 'train':
@@ -354,7 +358,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                                 vals_2.append(max)
                     
 
-                tt+=3000.0
+                tt+=1000.0
 
             pylab.plot(times_1, vals_1, '*', ms=ms*10, color="orange")
             pylab.plot(times_2, vals_2, '.', ms=ms*10, color="red")

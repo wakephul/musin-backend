@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
 from api.api import db
 
+import os
 import glob
 import json
 from csv import DictReader
@@ -11,9 +12,7 @@ from api.models.executions import Execution, ExecutionNetworkSideInputRelationsh
 from api.models.inputs import Input
 from api.models.networks import Network
 
-from api.src.run import run_execution
-
-import threading
+from api.src.managers import file_handling
 
 executions = Blueprint('executions', __name__)
     
@@ -27,7 +26,6 @@ def list():
 @executions.route("/api/executions/<id>/", methods=["GET"])
 @cross_origin()
 def details(id):
-    print(id)
     return id
 
 @executions.route("/api/executions/<id>/plots/", methods=["GET"])
@@ -52,10 +50,8 @@ def details_notes(_id):
 @cross_origin()
 def new():
     print('NEW EXECUTION')
-    print('REQUEST', request.data)
     if request.method == 'POST':
         params = json.loads(request.data.decode('utf-8'))
-        print('RECEIVED PARAMS', params.keys())
         #if there are new inputs, save them and their corresponding parameters in the database
         if 'new_inputs' in params and len(params['new_inputs']) > 0:
             inputs = params['new_inputs']
@@ -121,11 +117,16 @@ def new():
             params['pairedInputs'] = True
             
         params['execution_code'] = execution_code
+
+        print('starting execution: ', execution_code)
         
-        # thread = threading.Thread(target=run_execution, args=(params, ))
-        # thread.start()
-        run_execution(params)
+        output_path = f"simulations/output/{params['execution_code']}/"
+        inputs_folder = f"{output_path}inputs/"
+        file_handling.create_folder(inputs_folder)
+        file_handling.dump_to_json(params, f"{inputs_folder}parameters.json")
+
+        os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
         
-        return jsonify({'result': 'success', 'message': 'Execution should have started successfully'})
+        return jsonify({'result': 'success', 'message': f'Execution {execution_code} should have started successfully'})
     else:
         return jsonify({'result': 'error'})

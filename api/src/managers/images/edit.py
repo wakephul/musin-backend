@@ -18,7 +18,7 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
     else:
         width = single_size[0] * len(images)*margin + margin
         height = single_size[1]+margin
-    new_image = Image.new('RGB', (width, height), color)
+    new_image = Image.new('RGB', (int(width), int(height)), color)
 
     column_index = 0
     row_index = 0
@@ -54,7 +54,7 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
         title = plot[0]
         if len(plot) > 2:
             if plot[2] == 'test':
-                for t in range(test_number):
+                for t in range(int(test_number)):
                     _title = title + '_test_' + str(t)
                     filename = output_folder+'plots/'+_title+'.png'
                     filenames.append(filename)
@@ -68,4 +68,4 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
             filename = output_folder+'plots/'+title+'_0.png'
             filenames.append(filename)
 
-    merge_images(filenames, [400, 400], output_folder+merge_title+'.jpg', col_number)
+    merge_images(filenames, [400, 400], output_folder+merge_title+'.jpg', int(col_number))

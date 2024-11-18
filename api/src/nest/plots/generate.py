@@ -38,7 +38,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                         train_or_test = 'test'
                         start_time = train_time+(test_time*(t))
                         end_time = train_time+(test_time*(t+1))
-                        test_start_index = -int(test_time/3000)
+                        test_start_index = -int(test_time/1000)
                         _sides = sides[test_start_index:]
                         _types = test[(t*len(_sides)):((t+1)*len(_sides))]
                         plt.figure()
@@ -47,7 +47,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                         plt.close()
 
                 else:
-                    train_start_index = int(train_time/3000)
+                    train_start_index = int(train_time/1000)
                     _sides = sides[:train_start_index]
                     plt.figure()
                     _title=title+'_0'
