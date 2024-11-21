@@ -57,6 +57,7 @@ def append_to_file(filename, string):
         file.write(string) 
 
 def create_folder(folder_name):
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-    return folder_name + '/'
+    if not folder_name.endswith('/'):
+        folder_name += '/'
+    os.makedirs(folder_name, exist_ok=True)
+    return folder_name

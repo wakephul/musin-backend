@@ -3,7 +3,7 @@ import numpy as np
 nest.set_verbosity('M_ERROR')
 from random import randint
 from collections import defaultdict
-from api.src.reset.reset import nest_reset
+from api.src.nest.reset.reset import nest_reset
 
 def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
     print('generating poisson spikes')

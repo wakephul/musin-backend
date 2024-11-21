@@ -7,11 +7,16 @@ from random import sample, getrandbits, randint
 from api.src.nest.networks.base_network import BaseNetwork
 
 import os
+import matplotlib.pyplot as plt
 from api.utils import cdf
 from api.src.nest.output.rates import calculate_bins
 from api.src.managers import file_handling
 from api.src.nest.plots.generate import moving_average_plot
 from api.src.managers.images.edit import merge_plots
+
+import api.src.managers.images.plot_raster_plot as plot_raster_plot
+import api.src.managers.images.plot_voltage_trace as plot_voltage_trace
+from api.src.nest.plots.save import save_raster_results, save_voltage_results
 
 class Cerebellum(BaseNetwork):
     def __init__(self, **execution_params):
@@ -22,8 +27,11 @@ class Cerebellum(BaseNetwork):
         self.input_b_1 = []
         self.input_a_2 = []
         self.input_b_2 = []
+        self.test_number = 0
+        self.train = []
+        self.test = []
 
-    def get_monitors(self, pop, monitored_subset_size):
+    def get_monitors(self, pop, monitored_subset_size, name):
         """Internal helper.
         Args:
             pop: target population of which we record
@@ -34,32 +42,34 @@ class Cerebellum(BaseNetwork):
         
         idx_monitored_neurons = tuple(sample(list(pop), monitored_subset_size))
 
-        rate_monitor = nest.Create("spike_detector")
-        nest.SetStatus(rate_monitor, {'withgid': False, 'withtime': True, 'time_in_steps': True})
-        nest.SetDefaults('static_synapse', {'weight': 1., 'delay': 0.1})
-        nest.Connect(idx_monitored_neurons, rate_monitor)
+        # rate_monitor = nest.Create("spike_detector")
+        # nest.SetStatus(rate_monitor, {'withgid': False, 'withtime': True, 'time_in_steps': True})
+        # nest.SetDefaults('static_synapse', {'weight': 1., 'delay': 0.1})
+        # nest.Connect(idx_monitored_neurons, rate_monitor)
 
-        spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": True})
-        nest.Connect(idx_monitored_neurons, spike_monitor)
+        spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": True, 'label': name})
+        nest.Connect(idx_monitored_neurons, spike_monitor, 'all_to_all', {'weight': 1., 'delay': 0.1, 'model': 'static_synapse'})
 
         return spike_monitor, idx_monitored_neurons
 
     def train_test(self):
-        #inputs = [uditivo_a, visivo_a, uditivo_b, visivo_b]
-
+        #inputs = [uditivo_dx, visivo_dx, tattile_dx, uditivo_sx, visivo_sx tattile_sx]
+        # [input_a_1, input_a_2, input_b_1, input_b_2]
         all_trains = []
         trial_index = 0
-        for start_time in range(0, int(self.train_time), int(self.stimulus_duration*3)):
+        number_of_stimuli = 2
+        number_of_sides = 2
+        for start_time in range(0, int(self.train_time), int(self.stimulus_duration)):
             end_time = start_time+self.stimulus_duration
-            random_value = getrandbits(1)
+            randomized_input_type = getrandbits(number_of_stimuli-1)
             current_trial = self.trials_side[trial_index]
-            if not current_trial: # if trials --> population A
-                random_value += 2
+            if current_trial:
+                randomized_input_type += number_of_sides
 
-            all_trains.append(random_value)
+            all_trains.append(randomized_input_type)
 
             for input_index in range(len(self.inputs)):
-                if input_index != random_value: #azzero i valori in quell'intervallo
+                if input_index != randomized_input_type: #azzero i valori in quell'intervallo
                     for neuron in self.inputs[input_index]:
                         neu = nest.GetStatus([neuron])[0]
                         spike_times = neu['spike_times'].tolist()
@@ -71,16 +81,17 @@ class Cerebellum(BaseNetwork):
         all_tests = []
         #inputs = [type_1_a, type_2_a, type_1_b, type_2_b]
         inputs_to_keep = []
-        for test_type_index, test_type in enumerate(self.test_types):
+        for test_type_index, test_types in enumerate(self.test_types):
             trial_index = 0
-            if test_type == 3:
-                inputs_to_keep = [0, 1, 2, 3]
-            elif test_type == 1:
-                inputs_to_keep = [0, 2]
-            elif test_type == 2:
-                inputs_to_keep = [1, 3]
-            for start_time in range(int(self.train_time+(self.test_time*(test_type_index))), int(self.train_time+(self.test_time*(test_type_index+1))), int(self.stimulus_duration*3)):
-                all_tests.append(test_type)
+            # if test_type == 3:
+            #     inputs_to_keep = [0, 1, 2, 3]
+            # elif test_type == 1:
+            #     inputs_to_keep = [0, 2]
+            # elif test_type == 2:
+            #     inputs_to_keep = [1, 3]
+            inputs_to_keep = test_types + [tt + number_of_sides for tt in test_types]
+            for start_time in range(int(self.train_time+(self.test_time*(test_type_index))), int(self.train_time+(self.test_time*(test_type_index+1))), int(self.stimulus_duration)):
+                all_tests.append(test_types)
                 end_time = start_time+self.stimulus_duration
                 current_trial = self.trials_side[trial_index]
 
@@ -95,7 +106,12 @@ class Cerebellum(BaseNetwork):
                 
                 trial_index += 1
 
-        return {"train": all_trains, "test": all_tests}
+        self.train = all_trains
+        self.test = all_tests
+
+        print("train: ", self.train)
+        print("test: ", self.test)
+        
 
     def simulate_network(self):
         print('simulating cerebellum')
@@ -166,6 +182,7 @@ class Cerebellum(BaseNetwork):
         self.test_types = self.execution_params['test_types']
         self.stimulus_duration = self.execution_params['t_stimulus_duration']
 
+        self.test_number = len(self.test_types)
         imported_stimulus_A = []
         imported_stimulus_B = []
 
@@ -173,11 +190,7 @@ class Cerebellum(BaseNetwork):
             imported_stimulus_A.append(self.execution_params['imported_stimuli'][input_code][0])
             imported_stimulus_B.append(self.execution_params['imported_stimuli'][input_code][1])
 
-        print("imported_stimulus_A: ", imported_stimulus_A)
-        print("imported_stimulus_B: ", imported_stimulus_B)
-
         # MF = nest.Create("parrot_neuron", MF_num)
-        print("Creating neurons")
         GR = nest.Create("granular_neuron", GR_num)
         PC = nest.Create("purkinje_neuron", PC_num)
         IO = nest.Create("parrot_neuron", IO_num)
@@ -185,22 +198,15 @@ class Cerebellum(BaseNetwork):
         vt = nest.Create("volume_transmitter_alberto",PC_num)
         for n, vti in enumerate(vt):
             nest.SetStatus([vti], {"vt_num": n})
-                
-        # print('MF: ' + str(min(MF)) + " " + str(max(MF)))
-        # print('GR: ' + str(min(GR)) + " " + str(max(GR)))
-        # print('PC: ' + str(min(PC)) + " " + str(max(PC)))
-        # print('IO: ' + str(min(IO)) + " " + str(max(IO)))
-        # print('DCN: ' + str(min(DCN)) + " " + str(max(DCN)))
-        # print('vt: ' + str(min(vt)) + " " + str(max(vt)))
 
         #per PC, IO e DCN crea 2 monitor per le due metà (una + e una -)
-        self.spike_monitor_GR, self.idx_monitored_neurons_GR = self.get_monitors(GR, int(len(GR)))
-        self.spike_monitor_PC, self.idx_monitored_neurons_PC = self.get_monitors(PC, int(len(PC)))
-        self.spike_monitor_IO, self.idx_monitored_neurons_IO = self.get_monitors(IO, int(len(IO)))
-        self.spike_monitor_DCN, self.idx_monitored_neurons_DCN = self.get_monitors(DCN, int(len(DCN)))
+        self.spike_monitor_GR, self.idx_monitored_neurons_GR = self.get_monitors(GR, int(len(GR)), "GR")
+        self.spike_monitor_PC, self.idx_monitored_neurons_PC = self.get_monitors(PC, int(len(PC)), "PC")
+        self.spike_monitor_IO, self.idx_monitored_neurons_IO = self.get_monitors(IO, int(len(IO)), "IO")
+        self.spike_monitor_DCN, self.idx_monitored_neurons_DCN = self.get_monitors(DCN, int(len(DCN)), "DCN")
 
-        self.spike_monitor_DCN_a, self.idx_monitored_neurons_DCN_a = self.get_monitors(DCN[:len(DCN)//2], int(len(DCN))//2)
-        self.spike_monitor_DCN_b, self.idx_monitored_neurons_DCN_b = self.get_monitors(DCN[len(DCN)//2:], int(len(DCN))//2)
+        self.spike_monitor_DCN_a, self.idx_monitored_neurons_DCN_a = self.get_monitors(DCN[:len(DCN)//2], int(len(DCN))//2, "DCN_A")
+        self.spike_monitor_DCN_b, self.idx_monitored_neurons_DCN_b = self.get_monitors(DCN[len(DCN)//2:], int(len(DCN))//2, "DCN_B")
 
         # Connectivity
 
@@ -216,22 +222,22 @@ class Cerebellum(BaseNetwork):
         # "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7}, questo posso usarlo per gestire la distribuzione dei pesi
 
         input_a_1 = imported_stimulus_A[0]
-        input_b_1 = imported_stimulus_B[0]
         input_a_2 = imported_stimulus_A[1]
+        input_b_1 = imported_stimulus_B[0]
         input_b_2 = imported_stimulus_B[1]
 
         self.inputs = [input_a_1, input_a_2, input_b_1, input_b_2]
 
         self.trials_side = self.execution_params['trials_side']
 
-        train_test_result = self.train_test()
+        self.train_test()
 
         input_dendrites_gr = 4
         
         array_pre = []
         array_post = [ item for item in GR for _ in range(input_dendrites_gr) ] 
 
-        max_pos = len(imported_stimulus_A)-1
+        max_pos = len(imported_stimulus_A[0])-1
         for n in range(len(GR)):
             random_side = bool(getrandbits(1))
             stimulus = imported_stimulus_A if random_side else imported_stimulus_B
@@ -242,7 +248,7 @@ class Cerebellum(BaseNetwork):
                 stim_2_1 = stimulus[1][randint(0, max_pos)]
                 stim_2_2 = stimulus[1][randint(0, max_pos)]
             except Exception as e:
-                print("exception in cerebellum_simple, line 221: ", e)
+                print("exception in cerebellum, line 245: ", e)
             array_pre.extend([stim_1_1, stim_1_2, stim_2_1, stim_2_2])
 
         nest.Connect(array_pre, array_post, "one_to_one", MFGR_conn_param)
@@ -287,7 +293,7 @@ class Cerebellum(BaseNetwork):
         IO_a = IO[:len(IO)//2]
         IO_b = IO[len(IO)//2:]
         for i in range(len(self.trials_side)):
-            pg = nest.Create('poisson_generator', params = {'rate': 8.5, 'start': float((i*3000.00)+300.00), 'stop': float((i*3000.00)+600.00)})
+            pg = nest.Create('poisson_generator', params = {'rate': 8.5, 'start': float((i*1000.00)+300.00), 'stop': float((i*1000.00)+600.00)})
             if self.trials_side[i]:
                 nest.Connect(pg, IO_a)
             else:
@@ -329,9 +335,6 @@ class Cerebellum(BaseNetwork):
         self.simulation_results["spike_monitor_DCN"] = self.spike_monitor_DCN
         self.simulation_results["idx_monitored_neurons_DCN"] = self.idx_monitored_neurons_DCN
 
-        self.simulation_results["train"] = train_test_result["train"]
-        self.simulation_results["test"] = train_test_result["test"]
-
         self.simulation_results["DCN"] = DCN
 
         self.simulation_results["train_time"] = self.train_time
@@ -348,51 +351,182 @@ class Cerebellum(BaseNetwork):
             print(e)
             print("cerebmodule already installed")
 
-        self.simulation_results = self.simulate_network()
+        self.simulate_network()
     
     def plot(self):
 
-        test_number = self.test_time/self.stimulus_duration
+        self.generate_plots()
 
         senders_spike_monitor_DCN_a = nest.GetStatus(self.spike_monitor_DCN_a, 'events')[0]['senders']
         times_spike_monitor_DCN_a = nest.GetStatus(self.spike_monitor_DCN_a, 'events')[0]['times']
         senders_spike_monitor_DCN_b = nest.GetStatus(self.spike_monitor_DCN_b, 'events')[0]['senders']
         times_spike_monitor_DCN_b = nest.GetStatus(self.spike_monitor_DCN_b, 'events')[0]['times']
 
+        print('senders_spike_monitor_DCN_a: ', senders_spike_monitor_DCN_a)
+        print('times_spike_monitor_DCN_a: ', times_spike_monitor_DCN_a)
+        print('senders_spike_monitor_DCN_b: ', senders_spike_monitor_DCN_b)
+        print('times_spike_monitor_DCN_b: ', times_spike_monitor_DCN_b)
+        print('self.train_time: ', self.train_time)
+        print('self.test_time: ', self.test_time)
+        print('self.test_number: ', self.test_number)
+        print('len(self.idx_monitored_neurons_DCN_a): ', len(self.idx_monitored_neurons_DCN_a))
+        print('len(self.idx_monitored_neurons_DCN_b): ', len(self.idx_monitored_neurons_DCN_b))
+        print('self.test_types', self.test_types)
+
+        dict_of_info = {
+            'senders_spike_monitor_DCN_a': senders_spike_monitor_DCN_a,
+            'times_spike_monitor_DCN_a': times_spike_monitor_DCN_a,
+            'senders_spike_monitor_DCN_b': senders_spike_monitor_DCN_b,
+            'times_spike_monitor_DCN_b': times_spike_monitor_DCN_b,
+            'train_time': self.train_time,
+            'test_time': self.test_time,
+            'test_number': self.test_number,
+            'len_idx_monitored_neurons_DCN_a': len(self.idx_monitored_neurons_DCN_a),
+            'len_idx_monitored_neurons_DCN_b': len(self.idx_monitored_neurons_DCN_b),
+            'test_types': self.test_types
+        }
+
+        file_handling.dict_to_json(dict_of_info, self.files_folder+'info')
+
+
         bin_size = 5
         
         times_spike_monitor_DCN_a = [t for t in times_spike_monitor_DCN_a if t > self.train_time]
         times_spike_monitor_DCN_b = [t for t in times_spike_monitor_DCN_b if t > self.train_time]
-        bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(self.idx_monitored_neurons_DCN_a)//2, bin_size, self.train_time, self.train_time+(self.test_time*test_number), test_number)
-        bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(self.idx_monitored_neurons_DCN_a)//2, bin_size, self.train_time, self.train_time+(self.test_time*test_number), test_number)
+        bin_rates_DCN_complete_a = calculate_bins(senders_spike_monitor_DCN_a, times_spike_monitor_DCN_a, len(self.idx_monitored_neurons_DCN_a)//2, bin_size, self.train_time, self.train_time+(self.test_time*self.test_number), self.test_number)
+        bin_rates_DCN_complete_b = calculate_bins(senders_spike_monitor_DCN_b, times_spike_monitor_DCN_b, len(self.idx_monitored_neurons_DCN_a)//2, bin_size, self.train_time, self.train_time+(self.test_time*self.test_number), self.test_number)
 
         cdf_plots = []
         
         for tt_index, tt in enumerate(self.test_types):
             bin_rates_a_portion = bin_rates_DCN_complete_a[tt_index]
             bin_rates_b_portion = bin_rates_DCN_complete_b[tt_index]
-            os.makedirs(self.output_folder+'files', exist_ok=True)
-            json_title_a = file_handling.dict_to_json(bin_rates_a_portion, self.output_folder+'files/bin_rates_DCN_a_test_'+str(tt_index))
-            json_title_b = file_handling.dict_to_json(bin_rates_b_portion, self.output_folder+'files/bin_rates_DCN_b_test_'+str(tt_index))
+            json_title_a = file_handling.dict_to_json(bin_rates_a_portion, self.files_folder+'/bin_rates_DCN_a_test_'+str(tt_index))
+            json_title_b = file_handling.dict_to_json(bin_rates_b_portion, self.files_folder+'/bin_rates_DCN_b_test_'+str(tt_index))
 
-            moving_average_plot(bin_rates_a_portion, self.output_folder, 'ma_rates_DCN_a_test_'+str(tt_index), (self.train_time+(self.test_time*tt_index), self.train_time+self.test_time+(self.test_time*tt_index)))
+            moving_average_plot(bin_rates_a_portion, self.plots_folder, 'ma_rates_DCN_a_test_'+str(tt_index), (self.train_time+(self.test_time*tt_index), self.train_time+self.test_time+(self.test_time*tt_index)))
 
-            cdf.calculate([json_title_a, json_title_b], self.output_folder, 'cdf_test_'+str(tt_index), 5, 'save')
+            cdf.calculate([json_title_a, json_title_b], self.plots_folder, 'cdf_test_'+str(tt_index), 5, 'save')
 
             # ma_plots.append(['ma_rates_DCN_a', 'ma_rates', 'test'])
             cdf_plots.append(['cdf', 'cdf', 'test'])
         
-        # merge_plots(output_folder, cdf_plots, 'cdf_plots', len(test_types))
 
-        # create_folder(output_folder+'multimeters')
-        # create_folder(output_folder+'spike_detectors')
-        # multimeters_merge(output_folder+'multimeters/')
-        # spike_detectors_merge(output_folder+'spike_detectors/')
+    def generate_plots(self):
 
-        # # monitors = ['spike_monitor_DCN_a', 'spike_monitor_DCN_b']
-        # # monitored_populations = ['idx_monitored_neurons_DCN_a', 'idx_monitored_neurons_DCN_b']
+        print('generating plots for cerebellum')
 
-        # # rates = calculate_average_rate(simulation_results=simulation_results, max_time=test_time*test_number, monitors=monitors, monitored_populations=monitored_populations)
+        plots_to_create = [
+            ["spike_monitor_GR", "raster", "train"],
+            ["spike_monitor_GR", "raster", "test"],
+            ["spike_monitor_PC", "raster", "train"],
+            ["spike_monitor_PC", "raster", "test"],
+            ["spike_monitor_DCN", "raster", "train", "split_population", "DCN"],
+            ["spike_monitor_DCN", "raster", "test", "split_population", "DCN"],
+        ]
 
-        # # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nRates: " + ', '.join(map(str, zip(monitors, rates))))
-        # file_handling.append_to_file(output_folder+'simulation_notes.txt', f"\nExecution: " + json.dumps(execution))
+        for plot in plots_to_create:    
+            title = plot[0]
+            if len(plot) > 2:
+                title = title + '_' + plot[2]
+
+            if plot[1] == 'raster':
+                try:
+                    split_population = []
+                    if (len(plot) > 3 and plot[3] == 'split_population'):
+                        split_population = [min(self.simulation_results[plot[4]]), max(self.simulation_results[plot[4]])]
+                    
+                    start_time = 0.0
+                    end_time = self.train_time
+                    _types = self.train
+
+                    if len(plot) > 2 and plot[2] == 'test':
+                        for t in range(self.test_number):
+                            _title=title+'_'+str(t)
+                            start_time = self.train_time+(self.test_time*(t))
+                            end_time = self.train_time+(self.test_time*(t+1))
+                            index_start = int(start_time/1000)
+                            index_end = int(end_time/1000)
+                            _sides = self.trials_side[index_start:index_end]
+                            _types = self.test[(t*len(_sides)):((t+1)*len(_sides))]
+                            
+                            plt.figure()    
+                            plot_raster_plot.from_device(self.simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test='test')
+                            plt.savefig(self.plots_folder+_title+'.png')
+                            plt.close()
+
+                    else:
+                        index_start = int(start_time/1000)
+                        index_end = int(end_time/1000)
+                        _sides = self.trials_side[index_start:index_end]
+                        _title=title+'_0'
+
+                        print('TRAIN!!!')
+                        print('index_start: ', index_start)
+                        print('index_end: ', index_end)
+                        print('title: ', title)
+                        print('start_time: ', start_time)
+                        print('end_time: ', end_time)
+                        print('sides: ', self.trials_side)
+                        print('updated sides: ', _sides)
+                        print('self.test: ', self.test)
+                        print('types: ', _types)
+                        print('split_population: ', split_population)
+
+                        plt.figure()
+                        plot_raster_plot.from_device(self.simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test='train')
+                        plt.savefig(self.plots_folder+_title+'.png')
+                        plt.close()
+
+                except Exception as e:
+                    print('error while generating raster: ', plot[0])
+                    print(e)
+                    import traceback
+                    print(traceback.format_exc())
+
+                # save_raster_results(simulation_results, plot)
+
+            elif plot[1] == 'voltage':
+                try:
+                    plt.figure()
+                    _title=plot[0]
+                    plot_voltage_trace.from_device(self.simulation_results[plot[0]], None, title=_title, xlim=(start_time, end_time))
+                    plt.savefig(self.plots_folder+_title+'.png')
+                    plt.close()
+                except:
+                    print('error while generating voltage trace: ', plot[0])
+
+        merge_plots(self.plots_folder, plots_to_create, 'plots', self.test_number+1, self.test_number)
+
+    def moving_average_plot(self, plot_data, plot_name, xlim = []):
+
+        times = list(map(int, list(plot_data.keys())))
+        values = list(plot_data.values())
+        values = [x for _, x in sorted(zip(times, values))]
+        times = sorted(times)
+
+        window_size = 10
+        i = window_size//2
+        ma = []
+
+        values = [0 for x in range(window_size//2)] + values + [0 for x in range(window_size//2)]
+
+        while i < (len(values) - window_size//2):
+            
+            window = values[(i - window_size//2) : (i + window_size//2)]
+            window_average = round(sum(window) / window_size, 2)
+            
+            ma.append(window_average)
+            
+            i += 1
+        
+        plt.figure()
+        plt.title(plot_name)
+        
+        if xlim:
+            plt.xlim(xlim)
+
+        plt.plot(times, ma)
+        plt.savefig(self.plots_folder+plot_name+'.png')
+
+        return ma

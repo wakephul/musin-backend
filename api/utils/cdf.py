@@ -1,8 +1,11 @@
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+
 from src.nest.plots.generate import moving_average_plot_no_save
 from src.nest.output.rates import calculate_response_times
-import json
 
-def calculate(filenames = [], output_folder = '', output_title = 'cdf', threshold = 15, plot_type='save'):
+def calculate(filenames = [], plots_folder = '', output_title = 'cdf', threshold = 15, plot_type='save'):
     if len(filenames) > 1:
         with open(filenames[0], 'r') as j:
             bin_rates = json.loads(j.read())
@@ -27,10 +30,6 @@ def calculate(filenames = [], output_folder = '', output_title = 'cdf', threshol
 
     print('RESPONSE TIMES: ', response_times)
 
-    # CDF plot for spike times
-    import numpy as np
-    import matplotlib.pyplot as plt
-
     def cdf_calc(data):
         count, bins_count = np.histogram(data, bins=10)
         try:
@@ -52,4 +51,4 @@ def calculate(filenames = [], output_folder = '', output_title = 'cdf', threshol
         plt.show()
 
     elif plot_type == 'save':
-        plt.savefig(output_folder+output_title+'.png')
+        plt.savefig(plots_folder+output_title+'.png')

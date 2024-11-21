@@ -45,9 +45,9 @@ def merge_images(images, single_size, filename, col_number = 0, color = (240, 24
 
     new_image.save(filename ,"JPEG")
 
-def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_title', col_number = 3, test_number = 1):
+def merge_plots(plots_folder = '', plots_to_merge = [], merge_title = 'merged_plots', col_number = 3, test_number = 1):
 
-    if (not output_folder or not plots_to_merge): return
+    if (not plots_folder or not plots_to_merge): return
     
     filenames = []
     for plot in plots_to_merge:
@@ -56,16 +56,16 @@ def merge_plots(output_folder = '', plots_to_merge = [], merge_title = 'merge_ti
             if plot[2] == 'test':
                 for t in range(int(test_number)):
                     _title = title + '_test_' + str(t)
-                    filename = output_folder+'plots/'+_title+'.png'
+                    filename = plots_folder+_title+'.png'
                     filenames.append(filename)
             else:
                 if plot[2] == 'train':
                     title = title + '_' + plot[2]
-                filename = output_folder+'plots/'+title+'_0.png'
+                filename = plots_folder+title+'_0.png'
                 filenames.append(filename)
 
         else:
-            filename = output_folder+'plots/'+title+'_0.png'
+            filename = plots_folder+title+'_0.png'
             filenames.append(filename)
 
-    merge_images(filenames, [400, 400], output_folder+merge_title+'.jpg', int(col_number))
+    merge_images(filenames, [400, 400], plots_folder+merge_title+'.jpg', int(col_number))

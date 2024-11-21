@@ -7,13 +7,13 @@ import src.file_handling.images.plot_voltage_trace as plot_voltage_trace
 from src.nest.plots.save import save_raster_results, save_voltage_results
 from src.file_handling.images.edit import merge_plots
 
-def generate_plots(plots_to_create = [], output_folder = '', simulation_results = {}, train_time = 1000, test_time = 1000, test_number = 1, train = [], test = [], sides = []):
+def generate_plots(plots_to_create = [], plots_folder = '', simulation_results = {}, train_time = 1000, test_time = 1000, test_number = 1, train = [], test = [], sides = []):
     
-    if (not plots_to_create or not output_folder or not simulation_results): return
+    if (not plots_to_create or not plots_folder or not simulation_results): return
 
 
-    create_folder(output_folder+'/values')
-    create_folder(output_folder+'/plots')
+    create_folder(plots_folder+'/values')
+    create_folder(plots_folder+'/plots')
 
     for plot in plots_to_create:
         
@@ -43,7 +43,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                         _types = test[(t*len(_sides)):((t+1)*len(_sides))]
                         plt.figure()
                         plot_raster_plot.from_device(simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test=train_or_test)
-                        plt.savefig(output_folder+'plots/'+_title+'.png')
+                        plt.savefig(plots_folder+'plots/'+_title+'.png')
                         plt.close()
 
                 else:
@@ -52,7 +52,7 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                     plt.figure()
                     _title=title+'_0'
                     plot_raster_plot.from_device(simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test=train_or_test)
-                    plt.savefig(output_folder+'plots/'+_title+'.png')
+                    plt.savefig(plots_folder+'plots/'+_title+'.png')
                     plt.close()
 
             except Exception as e:
@@ -68,14 +68,14 @@ def generate_plots(plots_to_create = [], output_folder = '', simulation_results 
                 plt.figure()
                 _title=plot[0]
                 plot_voltage_trace.from_device(simulation_results[plot[0]], None, title=_title, xlim=(start_time, end_time))
-                plt.savefig(output_folder+'plots/'+_title+'.png')
+                plt.savefig(plots_folder+'plots/'+_title+'.png')
                 plt.close()
             except:
                 print('error while generating voltage trace: ', plot[0])
 
-    merge_plots(output_folder, plots_to_create, 'plots', 1+test_number, test_number)
+    merge_plots(plots_folder, plots_to_create, 'plots', 1+test_number, test_number)
 
-def moving_average_plot(plot_data, output_folder, plot_name, xlim = []):
+def moving_average_plot(plot_data, plots_folder, plot_name, xlim = []):
 
     times = list(map(int, list(plot_data.keys())))
     values = list(plot_data.values())
@@ -104,7 +104,7 @@ def moving_average_plot(plot_data, output_folder, plot_name, xlim = []):
         plt.xlim(xlim)
 
     plt.plot(times, ma)
-    plt.savefig(output_folder+plot_name+'.png')
+    plt.savefig(plots_folder+plot_name+'.png')
 
     return ma
 

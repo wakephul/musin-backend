@@ -17,7 +17,7 @@ def calculate(filenames = [], output_folder = '', output_title = 'cdf', threshol
     else:
         ma_rates, times = moving_average_plot_no_save(bin_rates)
 
-    trial_time = 3000
+    trial_time = 1000
     bin_size = 5
 
     response_times = []

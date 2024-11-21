@@ -4,8 +4,12 @@ class BaseNetwork():
         self.execution_params = execution_params
         self.output_folder = ''
 
-    def set_output_folder(self, output_folder):
-        self.output_folder = output_folder
+    def set_simulation_folder(self, simulation_folder):
+        self.input_folder = f"{simulation_folder}/input/"
+        self.output_folder = f"{simulation_folder}/output/"
+        self.plots_folder = f"{self.output_folder}plots/"
+        self.files_folder = f"{self.output_folder}files/"
+        self.nest_data_folder = f"{self.files_folder}nest/"
     
     @staticmethod
     def run():

@@ -120,12 +120,23 @@ def new():
 
         print('starting execution: ', execution_code)
         
-        output_path = f"simulations/output/{params['execution_code']}/"
-        inputs_folder = f"{output_path}inputs/"
-        file_handling.create_folder(inputs_folder)
-        file_handling.dump_to_json(params, f"{inputs_folder}parameters.json")
+        simulation_folder = f"simulations/output/{params['execution_code']}/"
+        file_handling.create_folder(simulation_folder)
+        input_folder = f"{simulation_folder}/input"
+        output_folder = f"{simulation_folder}/output"
+        plots_folder = f"{output_folder}/plots"
+        files_folder = f"{output_folder}/files"
+        nest_data_path = f"{files_folder}/nest"
+        file_handling.create_folder(input_folder)
+        file_handling.create_folder(output_folder)
+        file_handling.create_folder(plots_folder)
+        file_handling.create_folder(files_folder)
+        file_handling.create_folder(nest_data_path)
+        file_handling.dump_to_json(params, f"{input_folder}parameters.json")
 
-        os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
+        # os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
+        from api.src.run import run
+        run(simulation_folder)
         
         return jsonify({'result': 'success', 'message': f'Execution {execution_code} should have started successfully'})
     else:

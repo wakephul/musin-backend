@@ -5,7 +5,7 @@ import datetime
 
 from importlib import import_module
 
-from api.src.reset.reset import nest_reset
+from api.src.nest.reset.reset import nest_reset
 from api.src.spikes.spikes import spikesValuesFromInput
 from api.src.spikes.generate import generatePoissonSpikes, generateSpikesFromTimes
 from api.src.spikes.edit import editSpikesForSimulation
@@ -22,24 +22,14 @@ from api.src.nest.networks.cerebellum import Cerebellum
 
 import argparse
 
+def run(simulation_folder):
 
-if __name__ == '__main__':
-    #use an argument parser to get the parameters
-    parser = argparse.ArgumentParser(description='Run a simulation')
-    parser.add_argument('output_path', type=str, help='The path to the data folder')
-    args = parser.parse_args()
-
-    output_path = args['output_path']
-
-    params = file_handling.read_json(output_path+'inputs/params.json')
-
-    data_path = f"{output_path}nest_data/"
-    file_handling.create_folder(data_path)
+    params = file_handling.read_json(simulation_folder+'input/parameters.json')
 
     # the structure is --> inputsMap: {input_code: [{network_code: side_index}]}
     print('running execution')
     spikes_times_for_inputs = {}
-    
+
     for input_code in params['inputsMap']:
         input = Input.get_one(input_code)
         spikes_times_for_inputs[input_code] = {}
@@ -64,7 +54,7 @@ if __name__ == '__main__':
         for key, value in parameters_dict.items():
             if not '[' in value:
                 parameters_dict[key] = float(value)
-    
+
         parameters_dict['test_types'] = test_types
 
         duration = parameters_dict.get('t_stimulus_duration', 1000)
@@ -109,7 +99,7 @@ if __name__ == '__main__':
         # parameters_dict['sim_time'] = max_time = sim_time
 
         try:
-            nest.SetKernelStatus({'data_path': data_path})
+            nest.SetKernelStatus({'data_path': f"{simulation_folder}/output/nest"})
             # network_module = import_module('api.src.nest.networks.'+network['name'])
             # print('RUNNING SIMULATION on network: ', network['name'])
             # simulation_results = network_module.run(parameters_dict)
@@ -127,7 +117,7 @@ if __name__ == '__main__':
             selected_network.run()
 
             output_folder = create_output_folder(params['execution_code'])
-            selected_network.set_output_folder(output_folder)
+            selected_network.set_simulation_folder(output_folder)
 
             try:
                 selected_network.plot()
@@ -139,7 +129,7 @@ if __name__ == '__main__':
             #TODO: save results in the database
             #in particular, save the fact that the simulation finished
             Execution.update(params['execution_code'], finished_at=datetime.datetime.now())
-            ExecutionResult.create(result_path=output_path, image_path=output_path+'plots/')
+            ExecutionResult.create(result_path=simulation_folder, image_path=simulation_folder+'plots/')
         
         except Exception as e:
             print(e)
