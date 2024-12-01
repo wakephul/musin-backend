@@ -197,6 +197,9 @@ def from_device(detec, plot_lid=False, **kwargs):
 
         ts, gids = _from_memory(detec)
 
+        print('ts', ts)
+        print('gids', gids)
+
         if not len(ts):
             raise nest.kernel.NESTError("No events recorded!")
 
@@ -210,6 +213,7 @@ def from_device(detec, plot_lid=False, **kwargs):
             xlabel = "Steps"
         else:
             xlabel = "Time (ms)"
+
 
         return _make_plot(ts, ts, gids, gids, xlabel=xlabel, **kwargs)
 
@@ -322,7 +326,7 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                 # for side_index, side in enumerate(sides):
                 if tt > xlim[0] and tt < xlim[1]:
                     if train_or_test == 'train':
-                        if _type == 0 or _type == 2:
+                        if not (_type % 2):
                             times_1.append(tt)
                             if side:
                                 vals_1.append(min)
@@ -335,19 +339,20 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                             else:
                                 vals_2.append(max)
                     elif train_or_test == 'test':
-                        if _type == 1: #type1
-                            times_1.append(tt)
-                            if side:
-                                vals_1.append(min)
-                            else:
-                                vals_1.append(max)
-                        elif _type == 2: #type2
-                            times_2.append(tt)
-                            if side:
-                                vals_2.append(min)
-                            else:
-                                vals_2.append(max)
-                        elif _type == 3: #both
+                        if len(_type) == 1:
+                            if _type[0] == 0:
+                                times_1.append(tt)
+                                if side:
+                                    vals_1.append(min)
+                                else:
+                                    vals_1.append(max)
+                            elif _type[0] == 1:
+                                times_2.append(tt)
+                                if side:
+                                    vals_2.append(min)
+                                else:
+                                    vals_2.append(max)
+                        else: #audiovisual
                             times_1.append(tt)
                             times_2.append(tt)
                             if side:

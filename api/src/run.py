@@ -18,7 +18,7 @@ from api.src.managers import file_handling
 from api.models.executions import Execution, ExecutionResult
 
 from api.src.nest.networks.cerebellum import Cerebellum
-# from api.src.nest.networks.cerebellum import Cortex
+from api.src.nest.networks.decision_making import DecisionMaking
 
 import argparse
 
@@ -99,13 +99,13 @@ def run(simulation_folder):
         # parameters_dict['sim_time'] = max_time = sim_time
 
         try:
-            nest.SetKernelStatus({'data_path': f"{simulation_folder}/output/nest"})
+            nest.SetKernelStatus({'data_path': f"{simulation_folder}/output/files/nest"})
             # network_module = import_module('api.src.nest.networks.'+network['name'])
             # print('RUNNING SIMULATION on network: ', network['name'])
             # simulation_results = network_module.run(parameters_dict)
             available_networks = {
                 'cerebellum': Cerebellum,
-                # 'cortex': Cortex
+                'cortex': DecisionMaking
             }
             if network['name'] in available_networks:
                 selected_network = available_networks[network['name']](**parameters_dict)

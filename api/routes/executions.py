@@ -132,7 +132,7 @@ def new():
         file_handling.create_folder(plots_folder)
         file_handling.create_folder(files_folder)
         file_handling.create_folder(nest_data_path)
-        file_handling.dump_to_json(params, f"{input_folder}parameters.json")
+        file_handling.dump_to_json(params, f"{input_folder}/parameters.json")
 
         # os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
         from api.src.run import run

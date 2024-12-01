@@ -10,6 +10,7 @@ welcome = Blueprint('welcome', __name__)
 
 @welcome.route("/api/")
 def api_welcome():
+    print('api is up and running')
     return "APIs are up and running correctly!"
 
 @welcome.route("/api/delete_db_and_populate_sample")
@@ -29,10 +30,10 @@ def sample_db():
         user_code = User.create('test', 'test@test.com', True)
         execution_code = Execution.create('test_exec')
         
-        # input_code_visual = Input.create('visual', False, 100.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
-        # input_code_auditory = Input.create('auditory', False, 100.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
-        input_code_visual = Input.create('visual', False, 300.0, None, None, 220.0, None, None, 10, None, None, 600, None, None)
-        input_code_auditory = Input.create('auditory', False, 300.0, None, None, 150.0, None, None, 10, None, None, 600, None, None)
+        input_code_visual = Input.create('visual', False, 100.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
+        input_code_auditory = Input.create('auditory', False, 100.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
+        # input_code_visual = Input.create('visual', False, 300.0, None, None, 220.0, None, None, 10, None, None, 600, None, None)
+        # input_code_auditory = Input.create('auditory', False, 300.0, None, None, 150.0, None, None, 10, None, None, 600, None, None)
 
         network_code_cortex = Network.create('cortex', 2)
         NetworkParameter.create(network_code_cortex, 'order', '400.0')
@@ -102,11 +103,12 @@ def sample_db():
         NetworkParameter.create(network_code_cerebellum, "train_types", "[0], [1]") #havent considered the case of non-merged stimuli yet
         NetworkParameter.create(network_code_cerebellum, "test_types", "[0], [1], [0, 1]") #this should be fixed with a pivot table at some point
         NetworkParameter.create(network_code_cerebellum, "train_time", '10000.0')
-        NetworkParameter.create(network_code_cerebellum, "test_time", '1000.0')
+        NetworkParameter.create(network_code_cerebellum, "test_time", '10000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "number_of_populations", '2')
+        NetworkParameter.create(network_code_cerebellum, "randomize_tests", '1')
 
         # network_code_cerebellum = Network.create('cerebellum', 2)
         # NetworkParameter.create(network_code_cerebellum, "LTP1", '0.05')

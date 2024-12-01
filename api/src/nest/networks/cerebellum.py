@@ -1,4 +1,3 @@
-import pdb
 import nest
 nest.set_verbosity('M_ERROR')
 
@@ -6,17 +5,11 @@ from random import sample, getrandbits, randint
 
 from api.src.nest.networks.base_network import BaseNetwork
 
-import os
-import matplotlib.pyplot as plt
 from api.utils import cdf
 from api.src.nest.output.rates import calculate_bins
 from api.src.managers import file_handling
 from api.src.nest.plots.generate import moving_average_plot
 from api.src.managers.images.edit import merge_plots
-
-import api.src.managers.images.plot_raster_plot as plot_raster_plot
-import api.src.managers.images.plot_voltage_trace as plot_voltage_trace
-from api.src.nest.plots.save import save_raster_results, save_voltage_results
 
 class Cerebellum(BaseNetwork):
     def __init__(self, **execution_params):
@@ -30,6 +23,14 @@ class Cerebellum(BaseNetwork):
         self.test_number = 0
         self.train = []
         self.test = []
+        self.plots_to_create = [
+            ["spike_monitor_GR", "raster", "train"],
+            ["spike_monitor_GR", "raster", "test"],
+            ["spike_monitor_PC", "raster", "train"],
+            ["spike_monitor_PC", "raster", "test"],
+            ["spike_monitor_DCN", "raster", "train", "split_population", "DCN"],
+            ["spike_monitor_DCN", "raster", "test", "split_population", "DCN"],
+        ]
 
     def get_monitors(self, pop, monitored_subset_size, name):
         """Internal helper.
@@ -109,10 +110,6 @@ class Cerebellum(BaseNetwork):
         self.train = all_trains
         self.test = all_tests
 
-        print("train: ", self.train)
-        print("test: ", self.test)
-        
-
     def simulate_network(self):
         print('simulating cerebellum')
 
@@ -175,12 +172,13 @@ class Cerebellum(BaseNetwork):
         PC_num = int(self.execution_params["PC_num"])
         IO_num = int(PC_num)
         DCN_num = int(PC_num//2)
-        # DCN_num = PC_num
 
         self.train_time = self.execution_params['train_time']
         self.test_time = self.execution_params['test_time']
         self.test_types = self.execution_params['test_types']
         self.stimulus_duration = self.execution_params['t_stimulus_duration']
+        
+        self.randomize_tests = self.execution_params.get('randomize_tests', 0)
 
         self.test_number = len(self.test_types)
         imported_stimulus_A = []
@@ -209,11 +207,6 @@ class Cerebellum(BaseNetwork):
         self.spike_monitor_DCN_b, self.idx_monitored_neurons_DCN_b = self.get_monitors(DCN[len(DCN)//2:], int(len(DCN))//2, "DCN_B")
 
         # Connectivity
-
-        # MF-GR excitatory connections
-        # MFGR_conn_param = {"model": "static_synapse",
-        #                     "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7},
-        #                     "delay": 1.0}
         MFGR_conn_param = {"model": "static_synapse",
                             "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 1.5},
                             "delay": 1.0}
@@ -278,9 +271,6 @@ class Cerebellum(BaseNetwork):
                             "weight": 1.0, "delay": 1.0})
                 
         # MF-DCN excitatory connections
-        # MFDCN_conn_param = {"model":  "static_synapse",
-        #                     "weight": Init_MFDCN,
-        #                     "delay":  10.0}
         MFDCN_conn_param = {"model":  "static_synapse",
                             "weight": {'distribution' : 'uniform', 'low': Init_MFDCN_low, 'high': Init_MFDCN_high},
                             "delay":  20.0}
@@ -311,11 +301,23 @@ class Cerebellum(BaseNetwork):
                                 'one_to_one', PCDCN_conn_param)
             if P % 2 == 1:
                 count_DCN += 1
-                    
+
+        # poisson generator for the DCN to randomize the response a little bit 
+        for i in range(len(self.trials_side)):
+            pg = nest.Create('poisson_generator', params = {'rate': 10.0, 'start': float((i*1000.00)), 'stop': float((i*1000.00)+600.00)})
+            nest.Connect(pg, DCN)
+
         nest.Simulate(self.train_time)
         nest.SetDefaults('stdp_synapse_sinexp', {"A_minus": 0.0, "A_plus":0.0})
         for i in range(len(self.test_types)):
-            nest.Simulate(self.test_time)
+            if self.randomize_tests:
+                print("randomizing tests")
+                num_test_trials_per_type = int(self.test_time//self.stimulus_duration)
+                for n in range(num_test_trials_per_type):
+                    nest.SetKernelStatus({'grng_seed': randint(0, (num_test_trials_per_type))})
+                    nest.Simulate(self.stimulus_duration)
+            else:
+                nest.Simulate(self.test_time)
 
         self.simulation_results["spike_monitor_GR"] = self.spike_monitor_GR
         self.simulation_results["idx_monitored_neurons_GR"] = self.idx_monitored_neurons_GR
@@ -362,17 +364,6 @@ class Cerebellum(BaseNetwork):
         senders_spike_monitor_DCN_b = nest.GetStatus(self.spike_monitor_DCN_b, 'events')[0]['senders']
         times_spike_monitor_DCN_b = nest.GetStatus(self.spike_monitor_DCN_b, 'events')[0]['times']
 
-        print('senders_spike_monitor_DCN_a: ', senders_spike_monitor_DCN_a)
-        print('times_spike_monitor_DCN_a: ', times_spike_monitor_DCN_a)
-        print('senders_spike_monitor_DCN_b: ', senders_spike_monitor_DCN_b)
-        print('times_spike_monitor_DCN_b: ', times_spike_monitor_DCN_b)
-        print('self.train_time: ', self.train_time)
-        print('self.test_time: ', self.test_time)
-        print('self.test_number: ', self.test_number)
-        print('len(self.idx_monitored_neurons_DCN_a): ', len(self.idx_monitored_neurons_DCN_a))
-        print('len(self.idx_monitored_neurons_DCN_b): ', len(self.idx_monitored_neurons_DCN_b))
-        print('self.test_types', self.test_types)
-
         dict_of_info = {
             'senders_spike_monitor_DCN_a': senders_spike_monitor_DCN_a,
             'times_spike_monitor_DCN_a': times_spike_monitor_DCN_a,
@@ -406,127 +397,9 @@ class Cerebellum(BaseNetwork):
 
             moving_average_plot(bin_rates_a_portion, self.plots_folder, 'ma_rates_DCN_a_test_'+str(tt_index), (self.train_time+(self.test_time*tt_index), self.train_time+self.test_time+(self.test_time*tt_index)))
 
-            cdf.calculate([json_title_a, json_title_b], self.plots_folder, 'cdf_test_'+str(tt_index), 5, 'save')
+            cdf.calculate([json_title_a, json_title_b], self.plots_folder, 'cdf_test_'+str(tt_index), 15, 'save')
 
             # ma_plots.append(['ma_rates_DCN_a', 'ma_rates', 'test'])
-            cdf_plots.append(['cdf', 'cdf', 'test'])
         
-
-    def generate_plots(self):
-
-        print('generating plots for cerebellum')
-
-        plots_to_create = [
-            ["spike_monitor_GR", "raster", "train"],
-            ["spike_monitor_GR", "raster", "test"],
-            ["spike_monitor_PC", "raster", "train"],
-            ["spike_monitor_PC", "raster", "test"],
-            ["spike_monitor_DCN", "raster", "train", "split_population", "DCN"],
-            ["spike_monitor_DCN", "raster", "test", "split_population", "DCN"],
-        ]
-
-        for plot in plots_to_create:    
-            title = plot[0]
-            if len(plot) > 2:
-                title = title + '_' + plot[2]
-
-            if plot[1] == 'raster':
-                try:
-                    split_population = []
-                    if (len(plot) > 3 and plot[3] == 'split_population'):
-                        split_population = [min(self.simulation_results[plot[4]]), max(self.simulation_results[plot[4]])]
-                    
-                    start_time = 0.0
-                    end_time = self.train_time
-                    _types = self.train
-
-                    if len(plot) > 2 and plot[2] == 'test':
-                        for t in range(self.test_number):
-                            _title=title+'_'+str(t)
-                            start_time = self.train_time+(self.test_time*(t))
-                            end_time = self.train_time+(self.test_time*(t+1))
-                            index_start = int(start_time/1000)
-                            index_end = int(end_time/1000)
-                            _sides = self.trials_side[index_start:index_end]
-                            _types = self.test[(t*len(_sides)):((t+1)*len(_sides))]
-                            
-                            plt.figure()    
-                            plot_raster_plot.from_device(self.simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test='test')
-                            plt.savefig(self.plots_folder+_title+'.png')
-                            plt.close()
-
-                    else:
-                        index_start = int(start_time/1000)
-                        index_end = int(end_time/1000)
-                        _sides = self.trials_side[index_start:index_end]
-                        _title=title+'_0'
-
-                        print('TRAIN!!!')
-                        print('index_start: ', index_start)
-                        print('index_end: ', index_end)
-                        print('title: ', title)
-                        print('start_time: ', start_time)
-                        print('end_time: ', end_time)
-                        print('sides: ', self.trials_side)
-                        print('updated sides: ', _sides)
-                        print('self.test: ', self.test)
-                        print('types: ', _types)
-                        print('split_population: ', split_population)
-
-                        plt.figure()
-                        plot_raster_plot.from_device(self.simulation_results[plot[0]], False, title=_title, hist=True, xlim=(start_time, end_time), sides=_sides, _types=_types, split_population=split_population, train_or_test='train')
-                        plt.savefig(self.plots_folder+_title+'.png')
-                        plt.close()
-
-                except Exception as e:
-                    print('error while generating raster: ', plot[0])
-                    print(e)
-                    import traceback
-                    print(traceback.format_exc())
-
-                # save_raster_results(simulation_results, plot)
-
-            elif plot[1] == 'voltage':
-                try:
-                    plt.figure()
-                    _title=plot[0]
-                    plot_voltage_trace.from_device(self.simulation_results[plot[0]], None, title=_title, xlim=(start_time, end_time))
-                    plt.savefig(self.plots_folder+_title+'.png')
-                    plt.close()
-                except:
-                    print('error while generating voltage trace: ', plot[0])
-
-        merge_plots(self.plots_folder, plots_to_create, 'plots', self.test_number+1, self.test_number)
-
-    def moving_average_plot(self, plot_data, plot_name, xlim = []):
-
-        times = list(map(int, list(plot_data.keys())))
-        values = list(plot_data.values())
-        values = [x for _, x in sorted(zip(times, values))]
-        times = sorted(times)
-
-        window_size = 10
-        i = window_size//2
-        ma = []
-
-        values = [0 for x in range(window_size//2)] + values + [0 for x in range(window_size//2)]
-
-        while i < (len(values) - window_size//2):
-            
-            window = values[(i - window_size//2) : (i + window_size//2)]
-            window_average = round(sum(window) / window_size, 2)
-            
-            ma.append(window_average)
-            
-            i += 1
-        
-        plt.figure()
-        plt.title(plot_name)
-        
-        if xlim:
-            plt.xlim(xlim)
-
-        plt.plot(times, ma)
-        plt.savefig(self.plots_folder+plot_name+'.png')
-
-        return ma
+        cdf_plots = ['cdf', 'cdf', 'test']
+        merge_plots(self.plots_folder, cdf_plots, 'cdf', self.test_number, self.test_number)
