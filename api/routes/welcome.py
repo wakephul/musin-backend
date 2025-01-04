@@ -30,8 +30,8 @@ def sample_db():
         user_code = User.create('test', 'test@test.com', True)
         execution_code = Execution.create('test_exec')
         
-        input_code_visual = Input.create('visual', False, 100.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
-        input_code_auditory = Input.create('auditory', False, 100.0, None, None, 150.0, None, None, 80, None, None, 600, None, None)
+        input_code_visual = Input.create('visual', False, 30.0, None, None, 220.0, None, None, 80, None, None, 600, None, None)
+        input_code_auditory = Input.create('auditory', False, 30.0, None, None, 180.0, None, None, 80, None, None, 600, None, None)
         # input_code_visual = Input.create('visual', False, 300.0, None, None, 220.0, None, None, 10, None, None, 600, None, None)
         # input_code_auditory = Input.create('auditory', False, 300.0, None, None, 150.0, None, None, 10, None, None, 600, None, None)
 
@@ -102,8 +102,8 @@ def sample_db():
         NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
         NetworkParameter.create(network_code_cerebellum, "train_types", "[0], [1]") #havent considered the case of non-merged stimuli yet
         NetworkParameter.create(network_code_cerebellum, "test_types", "[0], [1], [0, 1]") #this should be fixed with a pivot table at some point
-        NetworkParameter.create(network_code_cerebellum, "train_time", '10000.0')
-        NetworkParameter.create(network_code_cerebellum, "test_time", '10000.0')
+        NetworkParameter.create(network_code_cerebellum, "train_time", '30000.0')
+        NetworkParameter.create(network_code_cerebellum, "test_time", '5000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')
