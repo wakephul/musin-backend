@@ -72,6 +72,8 @@ In order to interact with the available endpoints, we are working on a web appli
 
 In the meanwhile, you can use an API platform such as [Postman](https://www.postman.com/).
 
+In folder postman/, you can find a collection and an environment, which are already ready to use out of the box.
+
 ##### Simulating a network
 
 1. Make sure that your network is implemented correctly
