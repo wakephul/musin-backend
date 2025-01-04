@@ -1,0 +1,246 @@
+{
+	"info": {
+		"_postman_id": "48618b34-c43a-4960-8047-ac4541696300",
+		"name": "MuSiN",
+		"description": "run BASE to check that everything is working\n\nrun NEW_DB to setup new database instance (it creates whatever values you set in welcome.py)\n\nto run cerebellum experiment:\n\n- run GET Network\n    \n- run Inputs CEREBELLUM\n    \n- run START EXECUTION --> when it is done, you will get a message with the code of the finished execution. just go in the backend folder, under simulations/ and find your execution folder with the output files",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10659637"
+	},
+	"item": [
+		{
+			"name": "BASE",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_endpoint}}",
+					"host": [
+						"{{api_endpoint}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NEW_DB",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_endpoint}}/delete_db_and_populate_sample",
+					"host": [
+						"{{api_endpoint}}"
+					],
+					"path": [
+						"delete_db_and_populate_sample"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Networks",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if(pm.response.code === 200) {",
+							"    let result = pm.response.json().result;",
+							"    let final_dict = pm.environment.get('final_dict');",
+							"    if (!final_dict) {",
+							"        final_dict = {};",
+							"    }",
+							"    for (let i = 0; i < result.length; i++){",
+							"        network = result[i];",
+							"        if (network.name == 'cerebellum') {",
+							"            pm.environment.set('cerebellum_network_code', network.code);",
+							"            final_dict['networks'] = [network];",
+							"            pm.environment.set('networks', [network]);",
+							"        }",
+							"        if(network.name =='cortex') {",
+							"            pm.environment.set('cortex_network_code', network.code);",
+							"            final_dict['networks'] = [network];",
+							"            pm.environment.set('networks', [network]);",
+							"        }",
+							"    }",
+							"    pm.environment.set('final_dict', final_dict);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_endpoint}}/networks/list/",
+					"host": [
+						"{{api_endpoint}}"
+					],
+					"path": [
+						"networks",
+						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inputs CEREBELLUM",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if(pm.response.code === 200) {",
+							"    let inputs = pm.response.json().result;",
+							"    let final_dict = pm.environment.get('final_dict');",
+							"    if (!final_dict) {",
+							"        final_dict = {};",
+							"    }",
+							"    final_dict['inputs'] = inputs;",
+							"    final_dict['inputsMap'] = {};",
+							"    cerebellum_network_code = pm.environment.get('cerebellum_network_code');",
+							"    if (cerebellum_network_code) {",
+							"        for (let i = 0; i < inputs.length; i++){",
+							"            input = inputs[i];",
+							"            input_code = input['code'];",
+							"            final_dict['inputsMap'][input_code] = {[cerebellum_network_code]: [0, 1]};",
+							"        }",
+							"    }",
+							"    pm.environment.set('inputsMap', final_dict['inputsMap']);",
+							"    pm.environment.set('final_dict', final_dict);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_endpoint}}/inputs/list/",
+					"host": [
+						"{{api_endpoint}}"
+					],
+					"path": [
+						"inputs",
+						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Inputs  CORTEX",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if(pm.response.code === 200) {",
+							"    let inputs = pm.response.json().result;",
+							"    let final_dict = pm.environment.get('final_dict');",
+							"    if (!final_dict) {",
+							"        final_dict = {};",
+							"    }",
+							"    final_dict['inputs'] = inputs;",
+							"    final_dict['inputsMap'] = {};",
+							"    cortex_network_code = pm.environment.get('cortex_network_code');",
+							"    if (cortex_network_code) {",
+							"        for (let i = 0; i < inputs.length; i++){",
+							"            input = inputs[i];",
+							"            input_code = input['code'];",
+							"            final_dict['inputsMap'][input_code] = {[cortex_network_code]: [0, 1]};",
+							"        }",
+							"    }",
+							"    pm.environment.set('inputsMap', final_dict['inputsMap']);",
+							"    pm.environment.set('final_dict', final_dict);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_endpoint}}/inputs/list/",
+					"host": [
+						"{{api_endpoint}}"
+					],
+					"path": [
+						"inputs",
+						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "START EXECUTION",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let final_dict = pm.environment.get('final_dict');",
+							"final_dict['name'] = new Date().toDateString();",
+							"final_dict['new_inputs'] = [];",
+							"final_dict['pairedInputs'] = true;",
+							"pm.environment.set('name', new Date().toDateString());",
+							"pm.environment.set('new_inputs', []);",
+							"pm.environment.set('pairedInputs', true);",
+							"console.log(final_dict);",
+							"pm.environment.set('final_dict_stringified', JSON.stringify(final_dict));",
+							"pm.environment.set('final_dict', final_dict);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{final_dict_stringified}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_endpoint}}/executions/new/",
+					"host": [
+						"{{api_endpoint}}"
+					],
+					"path": [
+						"executions",
+						"new",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "api_endpoint",
+			"value": "127.0.0.1:5555/api/"
+		}
+	]
+}
