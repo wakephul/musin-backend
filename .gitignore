@@ -56,7 +56,7 @@ Thumbs.db
 __pycache__
 */__pycache__
 
-output/
+simulations/*
 
 multiple_trials/
 
