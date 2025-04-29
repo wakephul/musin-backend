@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> This repository is under active development
+> If you want to replicate the results from "Cerebellar contribution to multisensory integration: A computational modeling exploration"
+> then you want to take a look at this release https://github.com/wakephul/musin-backend/releases/tag/v1.0.0
+
 ## General Information
 
 The whole project has been developed and tested with Python 3.6 and NEST 2.18. In fact, these have been proven as the only conditions under which we were able to correctly install and import CerebNEST without big changes.
