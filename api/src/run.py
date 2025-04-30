@@ -20,7 +20,7 @@ from api.models.executions import Execution, ExecutionResult
 from api.src.nest.networks.cerebellum import Cerebellum
 from api.src.nest.networks.decision_making import DecisionMaking
 
-import argparse
+from api.utils.helpers import normalize_param_value, parse_test_types, safe_int
 
 def run(simulation_folder):
 
@@ -32,7 +32,8 @@ def run(simulation_folder):
 
     for input_code in params['inputsMap']:
         input = Input.get_one(input_code)
-        spikes_times_for_inputs[input_code] = {}
+        # spikes_times_for_inputs[input_code] = {}
+        spikes_times_for_inputs[input_code] = []
         spikes_values = spikesValuesFromInput(input)
         for spikes in spikes_values:
             nest_reset()
@@ -42,28 +43,35 @@ def run(simulation_folder):
             trial_duration = spikes['trial_duration']
             #this will be a dictionary with sender(keys)-times(array values) pairs
             poisson_spikes = generatePoissonSpikes(rate, start, number_of_neurons, trial_duration)
-            # print('poisson_spikes: ', poisson_spikes)
-            spikes_times_for_inputs[input_code] = poisson_spikes
+            spikes_times_for_inputs.setdefault(input_code, []).append(poisson_spikes)
 
     for network in params['networks']:
+        print('running network: ', network)
         nest_reset()
         parameters_dict = {parameter['name']: parameter['value'] for parameter in network['parameters']}
-        test_types = eval('['+parameters_dict['test_types']+']')
-        parameters_dict.pop('test_types')
-
+        
         for key, value in parameters_dict.items():
-            if not '[' in value:
-                parameters_dict[key] = float(value)
+            parameters_dict[key] = normalize_param_value(value)
+        
+        test_types = parse_test_types(parameters_dict['test_types'])
 
         parameters_dict['test_types'] = test_types
 
-        duration = parameters_dict.get('t_stimulus_duration', 1000)
-        # sim_time = parameters_dict.get('sim_time', duration)
-        train_time = parameters_dict.get('train_time', 0)
-        test_time = parameters_dict.get('test_time', 20000)
+        duration = safe_int(parameters_dict.get('t_stimulus_duration', 1000), default=1000)
+        train_time = safe_int(parameters_dict.get('train_time', 0), default=0)
+        test_time  = safe_int(parameters_dict.get('test_time', 20000), default=20000)
+        stimulus_start = safe_int(parameters_dict.get('t_stimulus_start', 0), default=0)
+        stimulus_end = safe_int(parameters_dict.get('t_stimulus_end', 1000), default=1000)
+        trial_duration = stimulus_end - stimulus_start
+        
+        parameters_dict['duration'] = duration
+        parameters_dict['train_time'] = train_time
+        parameters_dict['test_time'] = test_time
+        parameters_dict['stimulus_start'] = stimulus_start
+        parameters_dict['stimulus_end'] = stimulus_end
+        parameters_dict['trial_duration'] = trial_duration
 
         # total_simulation_time = int(parameters_dict['test_time'])+int(parameters_dict['train_time'])
-        trial_duration = int(parameters_dict['t_stimulus_end'])-int(parameters_dict['t_stimulus_start'])
         # number_of_trials = int(total_simulation_time/trial_duration)
 
         #TODO: manage difference if stimuli are merged or not
@@ -81,8 +89,11 @@ def run(simulation_folder):
                 for network_code in params['inputsMap'][input_code]:
                     input_sides = params['inputsMap'][input_code][network_code]
                     for input_side in input_sides:
-                        spikes_from_times = generateSpikesFromTimes(spikes_times_for_inputs[input_code])
-                        spikes[input_code][network_code].append(spikes_from_times)
+                        # spikes_from_times = generateSpikesFromTimes(spikes_times_for_inputs[input_code])
+                        # spikes[input_code][network_code].append(spikes_from_times)
+                        for poisson_spikes in spikes_times_for_inputs[input_code]:
+                            spikes_from_times = generateSpikesFromTimes(poisson_spikes)
+                            spikes[input_code][network_code].append(spikes_from_times)
 
         input_for_network = {}
         for input_code in spikes:

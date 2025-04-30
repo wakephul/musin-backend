@@ -1,11 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
-from api.api import db
 
-import os
 import glob
 import json
-from csv import DictReader
 from api.utils.images import get_response_image
 
 from api.models.executions import Execution, ExecutionNetworkSideInputRelationship
@@ -13,6 +10,8 @@ from api.models.inputs import Input
 from api.models.networks import Network
 
 from api.src.managers import file_handling
+
+from multiprocessing import Process
 
 executions = Blueprint('executions', __name__)
     
@@ -136,8 +135,20 @@ def new():
 
         # os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
         from api.src.run import run
-        run(simulation_folder)
+        # run(simulation_folder)
+        # return jsonify({'result': 'success', 'message': f'Execution {execution_code} should have started successfully'})
+        p = Process(target=run, args=(simulation_folder,), daemon=True)
+        p.start()
         
-        return jsonify({'result': 'success', 'message': f'Execution {execution_code} should have started successfully'})
+        Execution.update(execution_code, process_id=p.pid)
+
+        return (
+            jsonify({
+                'result': 'accepted',
+                'execution_code': execution_code,
+                'message': 'Execution queued; check status with /api/executions/<id>/'
+            }),
+            202
+        )
     else:
         return jsonify({'result': 'error'})

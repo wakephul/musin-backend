@@ -60,8 +60,8 @@ class Cerebellum(BaseNetwork):
         trial_index = 0
         number_of_stimuli = 2
         number_of_sides = 2
-        for start_time in range(0, int(self.train_time), int(self.stimulus_duration)):
-            end_time = start_time+self.stimulus_duration
+        for start_time in range(0, int(self.train_time), int(self.duration)):
+            end_time = start_time+self.duration
             randomized_input_type = getrandbits(number_of_stimuli-1)
             current_trial = self.trials_side[trial_index]
             if current_trial:
@@ -91,9 +91,9 @@ class Cerebellum(BaseNetwork):
             # elif test_type == 2:
             #     inputs_to_keep = [1, 3]
             inputs_to_keep = test_types + [tt + number_of_sides for tt in test_types]
-            for start_time in range(int(self.train_time+(self.test_time*(test_type_index))), int(self.train_time+(self.test_time*(test_type_index+1))), int(self.stimulus_duration)):
+            for start_time in range(int(self.train_time+(self.test_time*(test_type_index))), int(self.train_time+(self.test_time*(test_type_index+1))), int(self.duration)):
                 all_tests.append(test_types)
-                end_time = start_time+self.stimulus_duration
+                end_time = start_time+self.duration
                 current_trial = self.trials_side[trial_index]
 
                 for input_index in range(len(self.inputs)):
@@ -176,7 +176,7 @@ class Cerebellum(BaseNetwork):
         self.train_time = self.execution_params['train_time']
         self.test_time = self.execution_params['test_time']
         self.test_types = self.execution_params['test_types']
-        self.stimulus_duration = self.execution_params['t_stimulus_duration']
+        self.duration = self.execution_params['duration']
         
         self.randomize_tests = self.execution_params.get('randomize_tests', 0)
 
@@ -193,7 +193,7 @@ class Cerebellum(BaseNetwork):
         PC = nest.Create("purkinje_neuron", PC_num)
         IO = nest.Create("parrot_neuron", IO_num)
         DCN = nest.Create("nuclear_neuron", DCN_num)
-        vt = nest.Create("volume_transmitter_alberto",PC_num)
+        vt = nest.Create("volume_transmitter_alberto", PC_num)
         for n, vti in enumerate(vt):
             nest.SetStatus([vti], {"vt_num": n})
 
@@ -312,10 +312,10 @@ class Cerebellum(BaseNetwork):
         for i in range(len(self.test_types)):
             if self.randomize_tests:
                 print("randomizing tests")
-                num_test_trials_per_type = int(self.test_time//self.stimulus_duration)
+                num_test_trials_per_type = int(self.test_time//self.duration)
                 for n in range(num_test_trials_per_type):
                     nest.SetKernelStatus({'grng_seed': randint(0, (num_test_trials_per_type))})
-                    nest.Simulate(self.stimulus_duration)
+                    nest.Simulate(self.duration)
             else:
                 nest.Simulate(self.test_time)
 
@@ -341,7 +341,7 @@ class Cerebellum(BaseNetwork):
 
         self.simulation_results["train_time"] = self.train_time
         self.simulation_results["test_time"] = self.test_time
-        self.simulation_results["stimulus_duration"] = self.stimulus_duration
+        self.simulation_results["stimulus_duration"] = self.duration
         self.simulation_results["trials_side"] = self.trials_side
         self.simulation_results["test_types"] = self.test_types
 

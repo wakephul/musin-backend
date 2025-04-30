@@ -102,8 +102,8 @@ def sample_db():
         NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
         NetworkParameter.create(network_code_cerebellum, "train_types", "[0], [1]") #havent considered the case of non-merged stimuli yet
         NetworkParameter.create(network_code_cerebellum, "test_types", "[0], [1], [0, 1]") #this should be fixed with a pivot table at some point
-        NetworkParameter.create(network_code_cerebellum, "train_time", '30000.0')
-        NetworkParameter.create(network_code_cerebellum, "test_time", '5000.0')
+        NetworkParameter.create(network_code_cerebellum, "train_time", '60000.0')
+        NetworkParameter.create(network_code_cerebellum, "test_time", '30000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')

@@ -49,9 +49,13 @@ class Execution(db.Model):
                 for i in executions]
     
     @staticmethod
-    def update(code, finished_at):
+    def update(code, finished_at=None, process_id=None):
         execution = Execution.query.get(code)
-        execution.finished_at = finished_at
+        if finished_at:
+            execution.finished_at = finished_at
+        if process_id:
+            execution.process_id = process_id
+        db.session.add(execution)
         db.session.commit()
         return {'code': execution.code, 'name': execution.name, 'created_at': execution.created_at, 'finished_at': execution.finished_at}
     
