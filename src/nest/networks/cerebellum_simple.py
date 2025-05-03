@@ -311,7 +311,6 @@ def simulate_network(par):
 def run(simulation_parameters):
     try:
         nest.Install("cerebmodule")
-        print("cerebmodule installed correctly")
     except Exception as e:  # DynamicModuleManagementError
         print(e)
         print("cerebmodule already installed")

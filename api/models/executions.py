@@ -11,6 +11,7 @@ class Execution(db.Model):
 
     code = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4().hex))
     name = Column(String(100), nullable=False)
+    process_id = Column(String(100), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -31,7 +32,7 @@ class Execution(db.Model):
         result = Execution.query.get(code)
         if not result:
             return None
-        return {'code': result.code, 'name': result.name, 'created_at': result.created_at}
+        return {'code': result.code, 'name': result.name, 'created_at': result.created_at, 'finished_at': result.finished_at}
     
     @staticmethod
     def get_execution_details(code):
@@ -45,7 +46,7 @@ class Execution(db.Model):
     def get_all():
         executions = Execution.query.all()
         executions = sorted(executions, key=lambda x: x.created_at, reverse=True)
-        return [{'code': i.code, 'name': i.name, 'created_at': i.created_at}
+        return [{'code': i.code, 'name': i.name, 'created_at': i.created_at, 'finished_at': i.finished_at}
                 for i in executions]
     
     @staticmethod

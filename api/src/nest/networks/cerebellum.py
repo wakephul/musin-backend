@@ -43,10 +43,10 @@ class Cerebellum(BaseNetwork):
         
         idx_monitored_neurons = tuple(sample(list(pop), monitored_subset_size))
 
-        # rate_monitor = nest.Create("spike_detector")
-        # nest.SetStatus(rate_monitor, {'withgid': False, 'withtime': True, 'time_in_steps': True})
-        # nest.SetDefaults('static_synapse', {'weight': 1., 'delay': 0.1})
-        # nest.Connect(idx_monitored_neurons, rate_monitor)
+        rate_monitor = nest.Create("spike_detector")
+        nest.SetStatus(rate_monitor, {'withgid': False, 'withtime': True, 'time_in_steps': True})
+        nest.SetDefaults('static_synapse', {'weight': 1., 'delay': 0.1})
+        nest.Connect(idx_monitored_neurons, rate_monitor)
 
         spike_monitor = nest.Create("spike_detector", params={"withgid": True, "withtime": True, "to_file": True, 'label': name})
         nest.Connect(idx_monitored_neurons, spike_monitor, 'all_to_all', {'weight': 1., 'delay': 0.1, 'model': 'static_synapse'})
@@ -208,7 +208,7 @@ class Cerebellum(BaseNetwork):
 
         # Connectivity
         MFGR_conn_param = {"model": "static_synapse",
-                            "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 1.5},
+                            "weight": {'distribution' : 'uniform', 'low': 0.55, 'high': 0.7},
                             "delay": 1.0}
 
         #nel test mi devo mettere sia il caso audiovisivo che il caso semplice solo audio o solo visivo
@@ -311,7 +311,6 @@ class Cerebellum(BaseNetwork):
         nest.SetDefaults('stdp_synapse_sinexp', {"A_minus": 0.0, "A_plus":0.0})
         for i in range(len(self.test_types)):
             if self.randomize_tests:
-                print("randomizing tests")
                 num_test_trials_per_type = int(self.test_time//self.duration)
                 for n in range(num_test_trials_per_type):
                     nest.SetKernelStatus({'grng_seed': randint(0, (num_test_trials_per_type))})
@@ -348,7 +347,6 @@ class Cerebellum(BaseNetwork):
     def run(self):
         try:
             nest.Install("cerebmodule")
-            print("cerebmodule installed correctly")
         except Exception as e:
             print(e)
             print("cerebmodule already installed")

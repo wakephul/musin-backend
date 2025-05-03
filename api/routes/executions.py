@@ -10,8 +10,10 @@ from api.models.inputs import Input
 from api.models.networks import Network
 
 from api.src.managers import file_handling
+from api.src.run import run
 
-from multiprocessing import Process
+import multiprocessing as mp
+mp.set_start_method("fork", force=True)
 
 executions = Blueprint('executions', __name__)
     
@@ -25,12 +27,17 @@ def list():
 @executions.route("/api/executions/<id>/", methods=["GET"])
 @cross_origin()
 def details(id):
-    return id
+    execution = Execution.get_one(id)
+    if not execution:
+        return jsonify({'result': 'error', 'message': 'Execution not found'})
+    
+    return jsonify({'result': execution})
 
 @executions.route("/api/executions/<id>/plots/", methods=["GET"])
 @cross_origin()
 def details_plots(id):
-    plots_path = 'output/executions/'+id+'/simulations/cerebellum_simple/1/plots/'
+    #print current working directory
+    plots_path = f'./simulations/output/{id}/output/plots/'
     result = glob.glob(plots_path+'*.png')
     encoded_imges = []
     for image_path in result:
@@ -87,6 +94,7 @@ def new():
                     for network_code in params['inputsMap'][input_code]:
                         for side_index in params['inputsMap'][input_code][network_code]:
                             input_exists = Input.get_one(input_code)
+                            
                             if not input_exists:
                                 return jsonify({'result': 'error', 'message': 'Input not found'})
                             network_exists = Network.get_one(network_code)
@@ -132,12 +140,11 @@ def new():
         file_handling.create_folder(files_folder)
         file_handling.create_folder(nest_data_path)
         file_handling.dump_to_json(params, f"{input_folder}/parameters.json")
-
-        # os.system(f"python3 api/src/run.py {inputs_folder}parameters.json")
-        from api.src.run import run
+        
         # run(simulation_folder)
         # return jsonify({'result': 'success', 'message': f'Execution {execution_code} should have started successfully'})
-        p = Process(target=run, args=(simulation_folder,), daemon=True)
+        
+        p = mp.Process(target=run, args=(simulation_folder,), daemon=True)
         p.start()
         
         Execution.update(execution_code, process_id=p.pid)

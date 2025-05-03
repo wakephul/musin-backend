@@ -6,7 +6,6 @@ from collections import defaultdict
 from api.src.nest.reset.reset import nest_reset
 
 def generatePoissonSpikes(rate, start, number_of_neurons, trial_duration):
-    print('generating poisson spikes')
     # TO DISCUSS: should we reset the nest kernel here?
     # TO DISCUSS: should we have a seed for the random number generator to allow reproducibility?
     nest_reset(randint(0, 10000))

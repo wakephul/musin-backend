@@ -25,9 +25,7 @@ from api.utils.helpers import normalize_param_value, parse_test_types, safe_int
 def run(simulation_folder):
 
     params = file_handling.read_json(simulation_folder+'input/parameters.json')
-
     # the structure is --> inputsMap: {input_code: [{network_code: side_index}]}
-    print('running execution')
     spikes_times_for_inputs = {}
 
     for input_code in params['inputsMap']:
@@ -46,7 +44,6 @@ def run(simulation_folder):
             spikes_times_for_inputs.setdefault(input_code, []).append(poisson_spikes)
 
     for network in params['networks']:
-        print('running network: ', network)
         nest_reset()
         parameters_dict = {parameter['name']: parameter['value'] for parameter in network['parameters']}
         
@@ -100,8 +97,6 @@ def run(simulation_folder):
             for network_code in spikes[input_code]:
                 if network_code == network['code']:
                     input_for_network[input_code] = spikes[input_code][network_code]
-
-        print('input_for_network: ', input_for_network)
 
         parameters_dict['imported_stimuli'] = input_for_network
         sides_sequence = editSpikesForSimulation(spikes=spikes, duration=duration, train_time=train_time, test_time=test_time, amount_of_test_types=len(test_types), amount_of_sides=network['sides'])

@@ -102,38 +102,13 @@ def sample_db():
         NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
         NetworkParameter.create(network_code_cerebellum, "train_types", "[0], [1]") #havent considered the case of non-merged stimuli yet
         NetworkParameter.create(network_code_cerebellum, "test_types", "[0], [1], [0, 1]") #this should be fixed with a pivot table at some point
-        NetworkParameter.create(network_code_cerebellum, "train_time", '60000.0')
-        NetworkParameter.create(network_code_cerebellum, "test_time", '30000.0')
+        NetworkParameter.create(network_code_cerebellum, "train_time", '50000.0')
+        NetworkParameter.create(network_code_cerebellum, "test_time", '50000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '1000.0')
         NetworkParameter.create(network_code_cerebellum, "number_of_populations", '2')
         NetworkParameter.create(network_code_cerebellum, "randomize_tests", '1')
-
-        # network_code_cerebellum = Network.create('cerebellum', 2)
-        # NetworkParameter.create(network_code_cerebellum, "LTP1", '0.05')
-        # NetworkParameter.create(network_code_cerebellum, "LTD1", '-6.0')
-        # NetworkParameter.create(network_code_cerebellum, "Init_PFPC", '4.0')
-        # NetworkParameter.create(network_code_cerebellum, "LTP2", '1e-5')
-        # NetworkParameter.create(network_code_cerebellum, "LTD2", '-1e-6')
-        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN", '0.07')
-        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN_low", '0.06')
-        # NetworkParameter.create(network_code_cerebellum, "Init_MFDCN_high", '0.11')
-        # NetworkParameter.create(network_code_cerebellum, "LTP3", '1e-7')
-        # NetworkParameter.create(network_code_cerebellum, "LTD3", '1e-6')
-        # NetworkParameter.create(network_code_cerebellum, "Init_PCDCN", '-20.0')
-        # NetworkParameter.create(network_code_cerebellum, "PLAST1", '1') #boolean
-        # NetworkParameter.create(network_code_cerebellum, "PLAST2", '0') #boolean
-        # NetworkParameter.create(network_code_cerebellum, "PLAST3", '0') #boolean
-        # NetworkParameter.create(network_code_cerebellum, "GR_num", '2000')
-        # NetworkParameter.create(network_code_cerebellum, "PC_num", '100')
-        # NetworkParameter.create(network_code_cerebellum, "test_types", "1,2,3")
-        # NetworkParameter.create(network_code_cerebellum, "train_time", '500.0')
-        # NetworkParameter.create(network_code_cerebellum, "test_time", '500.0')
-        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_start", '0.0')
-        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_end", '100.0')
-        # NetworkParameter.create(network_code_cerebellum, "t_stimulus_duration", '100.0')
-        # NetworkParameter.create(network_code_cerebellum, "number_of_populations", '2')
 
         ExecutionNetworkSideInputRelationship.create(execution_code, network_code_cortex, 1, input_code_visual)
         ExecutionNetworkSideInputRelationship.create(execution_code, network_code_cortex, 2, input_code_auditory)

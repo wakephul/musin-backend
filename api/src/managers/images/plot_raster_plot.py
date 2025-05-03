@@ -197,8 +197,8 @@ def from_device(detec, plot_lid=False, **kwargs):
 
         ts, gids = _from_memory(detec)
 
-        print('ts', ts)
-        print('gids', gids)
+        # print('ts', ts)
+        # print('gids', gids)
 
         if not len(ts):
             raise nest.kernel.NESTError("No events recorded!")
@@ -283,7 +283,6 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
         if split_population:
             print("splitting population")
             half_gids = split_population[0] + ((split_population[1] - split_population[0])//2)
-            print('half_gids', half_gids)
                 
             gids_first_half = []
             times_first_half = []
@@ -297,12 +296,6 @@ def _make_plot(ts, ts1, gids, neurons, hist=True, hist_binwidth=5.0,
                 else:
                     gids_second_half.append(gid)
                     times_second_half.append(time)
-
-            print('gids_first_half', gids_first_half)
-            print('times_first_half', times_first_half)
-
-            print('gids_second_half', gids_second_half)
-            print('times_second_half', times_second_half)
                 
             pylab.plot(times_first_half, gids_first_half, '.', ms=ms, color="blue")
             pylab.plot(times_second_half, gids_second_half, '.', ms=ms, color="green")
