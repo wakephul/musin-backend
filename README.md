@@ -1,5 +1,6 @@
 > [!IMPORTANT]
-> This repository is under active development
+> This repository is no longer developed: the new version of MuSiN lives at https://github.com/wakephul/musin
+>
 > If you want to replicate the results from "Cerebellar contribution to multisensory integration: A computational modeling exploration"
 > then you want to take a look at this release https://github.com/wakephul/musin-backend/releases/tag/v1.0.0
 
@@ -113,3 +114,4 @@ For support and suggestions, please feel free to open an issue or to email me at
 - [@albertoantonietti](https://github.com/alberto-antonietti)
 
 ![Logo](https://i.ibb.co/zffhCBm/Mu-Si-N-logo.png)
+
